@@ -1,61 +1,24 @@
 import { useCallback, useEffect, useState } from 'react';
 import './App.css'
 import { BlocklyWorkspace } from 'react-blockly';
-import { ToolboxInfo } from "blockly/core/utils/toolbox";
 import ConfigFiles from './initialContent/content';
 import * as Blockly from "blockly/core";
 import { pythonGenerator } from "blockly/python";
-import { useTranslation } from "react-i18next"
+// import { useTranslation } from "react-i18next"
 import { defineLEDBlocks  } from './customBlock/ledBlock';
 
 function App() {
   const [generatedCode, setGeneratedCode] = useState("");
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [generatedXml, setGeneratedXml] = useState("");
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [generatedJson, setGeneratedJson] = useState("");
-  const [toolboxConfiguration, setToolboxConfiguration] = useState<ToolboxInfo>(ConfigFiles.INITIAL_TOOLBOX_JSON);
+  // const [toolboxConfiguration, setToolboxConfiguration] = useState<Blockly.utils.toolbox.ToolboxDefinition>(ConfigFiles.INITIAL_TOOLBOX_JSON);
   const [serialState, setSerialState] = useState<"XML" | "JSON">("XML");
 
-  const {t} = useTranslation()
+  // const {t} = useTranslation()
 
   useEffect(() => {
     // Định nghĩa custom blocks khi component được mount
     defineLEDBlocks();
-  }, []);
-
-  useEffect(() => {
-    const timeoutId = window.setTimeout(() => {
-      setToolboxConfiguration((prevConfig: ToolboxInfo) => {
-        const exists = prevConfig.contents.some(
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          (item:any) => item.kind === "category" && item.name === t("PQT")
-        );
-        
-        if (exists) return prevConfig;
-  
-        return {
-          ...prevConfig,
-          contents: [
-            ...prevConfig.contents,
-            {
-              kind: "category",
-              name: t("PQT"),
-              contents: [
-                { kind: "block", type: "text" },
-                {
-                  kind: "block",
-                  blockxml:
-                    '<block type="text_print"><value name="TEXT"><shadow type="text">abc</shadow></value></block>',
-                },
-              ],
-            },
-          ],
-        };
-      });
-    }, 1000);
-  
-    return () => window.clearTimeout(timeoutId);
   }, []);
 
   const onWorkspaceChange = useCallback((workspace : Blockly.Workspace) => {
@@ -104,7 +67,7 @@ function App() {
             snap: true,
           },
         }}       
-        toolboxConfiguration={toolboxConfiguration} 
+        toolboxConfiguration={ConfigFiles.INITIAL_TOOLBOX_JSON} 
         onWorkspaceChange={onWorkspaceChange}
         onXmlChange={onXmlChange}
         onJsonChange={onJsonChange}
@@ -129,7 +92,9 @@ function App() {
           {serialState == "XML" ? "JSON" : "XML"}{" "}
         </button>
         <button onClick={() =>{
-            console.log(generatedCode)
+          console.log(generatedXml);
+          console.log(generatedJson);
+          console.log(generatedCode)
           }
           }>
           Print

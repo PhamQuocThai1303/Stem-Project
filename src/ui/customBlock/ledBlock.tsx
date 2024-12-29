@@ -167,7 +167,7 @@ export const defineLEDBlocks  = () => {
 
   // Định nghĩa Python generators
   pythonGenerator.forBlock['led_setup'] = function() {
-    return `import RPi.GPIO as GPIO\nimport time\nGPIO.setmode(GPIO.BCM)`;
+    return `import RPi.GPIO as GPIO\nimport time\nGPIO.setmode(GPIO.BCM)\n`;
   };
 
   pythonGenerator.forBlock['led_blink'] = function(block: Block) {
