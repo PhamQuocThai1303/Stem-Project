@@ -19,9 +19,14 @@
   "dependencies": {
     "blockly": "^11.2.0",
     "cross-env": "^7.0.3",
+    "i18next": "^24.2.0",
+    "i18next-browser-languagedetector": "^8.0.2",
+    "i18next-http-backend": "^3.0.1",
+    "i18next-xhr-backend": "^3.2.2",
     "react": "^18.3.1",
     "react-blockly": "^9.0.0",
-    "react-dom": "^18.3.1"
+    "react-dom": "^18.3.1",
+    "react-i18next": "^15.2.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.15.0",

@@ -5,6 +5,7 @@ import { ToolboxInfo } from "blockly/core/utils/toolbox";
 import ConfigFiles from './initialContent/content';
 import * as Blockly from "blockly/core";
 import { pythonGenerator } from "blockly/python";
+import { useTranslation } from "react-i18next"
 
 function App() {
   const [generatedCode, setGeneratedCode] = useState("");
@@ -15,12 +16,14 @@ function App() {
   const [toolboxConfiguration, setToolboxConfiguration] = useState<ToolboxInfo>(ConfigFiles.INITIAL_TOOLBOX_JSON);
   const [serialState, setSerialState] = useState<"XML" | "JSON">("XML");
 
+  const {t} = useTranslation()
+
   useEffect(() => {
     const timeoutId = window.setTimeout(() => {
       setToolboxConfiguration((prevConfig: ToolboxInfo) => {
         const exists = prevConfig.contents.some(
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          (item:any) => item.kind === "category" && item.name === "PQT"
+          (item:any) => item.kind === "category" && item.name === t("PQT")
         );
         
         if (exists) return prevConfig;
@@ -31,7 +34,7 @@ function App() {
             ...prevConfig.contents,
             {
               kind: "category",
-              name: "PQT",
+              name: t("PQT"),
               contents: [
                 { kind: "block", type: "text" },
                 {
