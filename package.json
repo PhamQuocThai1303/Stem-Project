@@ -17,8 +17,10 @@
     "dist:linux": "npm run transpile:electron && npm run build && electron-builder --linux --x64"
   },
   "dependencies": {
+    "blockly": "^11.2.0",
     "cross-env": "^7.0.3",
     "react": "^18.3.1",
+    "react-blockly": "^9.0.0",
     "react-dom": "^18.3.1"
   },
   "devDependencies": {
