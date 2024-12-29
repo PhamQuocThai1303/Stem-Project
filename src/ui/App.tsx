@@ -6,6 +6,7 @@ import ConfigFiles from './initialContent/content';
 import * as Blockly from "blockly/core";
 import { pythonGenerator } from "blockly/python";
 import { useTranslation } from "react-i18next"
+import { defineLEDBlocks  } from './customBlock/ledBlock';
 
 function App() {
   const [generatedCode, setGeneratedCode] = useState("");
@@ -17,6 +18,11 @@ function App() {
   const [serialState, setSerialState] = useState<"XML" | "JSON">("XML");
 
   const {t} = useTranslation()
+
+  useEffect(() => {
+    // Định nghĩa custom blocks khi component được mount
+    defineLEDBlocks();
+  }, []);
 
   useEffect(() => {
     const timeoutId = window.setTimeout(() => {
@@ -47,16 +53,15 @@ function App() {
           ],
         };
       });
-    }, 2000);
+    }, 1000);
   
-    // Dọn dẹp timeout khi component unmount
     return () => window.clearTimeout(timeoutId);
   }, []);
 
-  const onWorkspaceChange = useCallback((workspace) => {
-    workspace.registerButtonCallback("myFirstButtonPressed", () => {
-      alert("button is pressed");
-    });
+  const onWorkspaceChange = useCallback((workspace : Blockly.Workspace) => {
+    // workspace.registerButtonCallback("myFirstButtonPressed", () => {
+    //   alert("button is pressed");
+    // });
     const newXml = Blockly.Xml.domToText(Blockly.Xml.workspaceToDom(workspace));
     setGeneratedXml(newXml);
     const newJson = JSON.stringify(
@@ -67,13 +72,14 @@ function App() {
     setGeneratedCode(code);
   }, []);
 
-  const onXmlChange = useCallback((newXml) => {
+  const onXmlChange = useCallback((newXml : string) => {
     setGeneratedXml(newXml);
   }, []);
 
-  const onJsonChange = useCallback((newJson) => {
+  const onJsonChange = useCallback((newJson : object) => {
     setGeneratedJson(JSON.stringify(newJson));
   }, []);
+
 
   return (
     <div className='app'>
