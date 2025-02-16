@@ -13,6 +13,7 @@ function App() {
   const [generatedJson, setGeneratedJson] = useState("");
   // const [toolboxConfiguration, setToolboxConfiguration] = useState<Blockly.utils.toolbox.ToolboxDefinition>(ConfigFiles.INITIAL_TOOLBOX_JSON);
   const [serialState, setSerialState] = useState<"XML" | "JSON">("XML");
+  const [response, setResponse] = useState("");
 
   // const {t} = useTranslation()
 
@@ -43,6 +44,19 @@ function App() {
     setGeneratedJson(JSON.stringify(newJson));
   }, []);
 
+  const handleRunSSH = async () => {
+    try {
+      const res = await fetch("http://localhost:5000/run-ssh");
+      const data = await res.json();
+      setResponse(data.message + "\n" + data.output);
+      console.log(data);
+      
+    } catch (error: any) {
+      console.log(error);
+      
+      setResponse("Error: " + error.message);
+    }
+  };
 
   return (
     <div className='app'>
@@ -86,6 +100,7 @@ function App() {
             setSerialState(
               (e.target as HTMLElement).innerText == "XML" ? "XML" : "JSON"
             )
+            
           }
           }
         >
@@ -95,6 +110,7 @@ function App() {
           console.log(generatedXml);
           console.log(generatedJson);
           console.log(generatedCode)
+          handleRunSSH()
           }
           }>
           Print
