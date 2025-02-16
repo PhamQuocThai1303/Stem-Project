@@ -8,7 +8,6 @@ export const defineLEDBlocks  = () => {
     {
       "type": "led_setup",
       "message0": "Thiết lập thư viện",
-      "previousStatement": null,
       "nextStatement": null,
       "colour": 230,
       "tooltip": "Thiết lập thư viện LED"
@@ -149,13 +148,15 @@ export const defineLEDBlocks  = () => {
           {
             "type": "field_input",
             "name": "PINS",
-            "text": "18,23,24"
+            "text": "11,23,24"
           },
           {
-            "type": "field_number",
-            "name": "DELAY",
-            "value": 0.5,
-            "min": 0.1
+            "type": "field_dropdown",
+            "name": "STATUS",
+            "options": [
+        ["Tắt", "0"],
+        ["Bật", "1"]
+      ]
           }
         ],
         "previousStatement": null,
@@ -205,8 +206,8 @@ export const defineLEDBlocks  = () => {
 
   pythonGenerator.forBlock['led_sequential_blink'] = function(block: Block) {
     const pins = block.getFieldValue('PINS');
-    const delay = block.getFieldValue('DELAY');
-    return `led_pins = [${pins}]\nwhile True:\n  try:\n    for pin in led_pins:\n      GPIO.output(pin, GPIO.HIGH)\n      time.sleep(${delay})\n      GPIO.output(pin, GPIO.LOW)\n  except KeyboardInterrupt:\n    break\n`;
+    const STATUS = block.getFieldValue('STATUS');
+    return `led_pins = [${pins}]\nwhile True:\n  try:\n    for pin in led_pins:\n      GPIO.output(pin, GPIO.HIGH)\n      time.sleep(${STATUS})\n      GPIO.output(pin, GPIO.LOW)\n  except KeyboardInterrupt:\n    break\n`;
   };
 
 };
