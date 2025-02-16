@@ -1,6 +1,9 @@
 const express = require("express");
 const cors = require("cors");
 const { connectSSH, execCommand, closeSSHConnection } = require("./sshClient");
+const bodyParser = require("body-parser");
+const path = require("path");
+const fs = require("fs");
 
 const app = express();
 app.use(cors({
@@ -8,6 +11,7 @@ app.use(cors({
   methods: "GET,POST,PUT,DELETE",
   credentials: true,
 }));
+app.use(bodyParser.json());
 
 // Kết nối SSH khi server khởi động
 connectSSH().catch(err => console.error("SSH Connection Failed:", err));
@@ -20,6 +24,20 @@ app.get("/run-ssh", async (req, res) => {
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
+});
+
+const FILE_PATH = path.join(__dirname, "data", "data.txt");
+
+// API ghi nội dung vào file
+app.post("/write-file", (req, res) => {
+  const { generatedCode } = req.body;
+  
+  fs.writeFile(FILE_PATH, generatedCode, (err) => {
+    if (err) {
+      return res.status(500).json({ message: "Lỗi ghi file", error: err });
+    }
+    res.json({ message: "Ghi file thành công" });
+  });
 });
 
 // Khi server tắt, gửi lệnh 'exit' để đóng SSH

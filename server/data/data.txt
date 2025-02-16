@@ -1,0 +1,7 @@
+'JSON'
+
+import RPi.GPIO as GPIO
+import time
+GPIO.setmode(GPIO.BCM)
+LED_PIN = 18
+GPIO.setup(LED_PIN, GPIO.OUT)

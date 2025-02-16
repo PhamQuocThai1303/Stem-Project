@@ -6,12 +6,14 @@ import * as Blockly from "blockly/core";
 import { pythonGenerator } from "blockly/python";
 // import { useTranslation } from "react-i18next"
 import { defineLEDBlocks  } from './customBlock/ledBlock';
+import { saveAs } from "file-saver";
 
 function App() {
   const [generatedCode, setGeneratedCode] = useState("");
   const [generatedXml, setGeneratedXml] = useState("");
   const [generatedJson, setGeneratedJson] = useState("");
   // const [toolboxConfiguration, setToolboxConfiguration] = useState<Blockly.utils.toolbox.ToolboxDefinition>(ConfigFiles.INITIAL_TOOLBOX_JSON);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [serialState, setSerialState] = useState<"XML" | "JSON">("XML");
   const [response, setResponse] = useState("");
 
@@ -58,6 +60,18 @@ function App() {
     }
   };
 
+   
+  const handleSave = async () => {
+    const response = await fetch("http://localhost:5000/write-file", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({generatedCode}),
+    });
+
+    const result = await response.json();
+    alert(result.message);
+  };
+
   return (
     <div className='app'>
       <div className='container'>
@@ -65,13 +79,9 @@ function App() {
       <div className="blockly-wrapper">
       <div className="blockly-container">
       <BlocklyWorkspace
-      key={serialState}
         className="fill-height" 
-        initialXml={
-          serialState === "XML" ? ConfigFiles.INITIAL_XML : undefined
-        } 
         initialJson={
-          serialState === "JSON" ? ConfigFiles.INITIAL_JSON : undefined
+          ConfigFiles.INITIAL_JSON
         }
         workspaceConfiguration={{
           grid: {
@@ -100,11 +110,11 @@ function App() {
             setSerialState(
               (e.target as HTMLElement).innerText == "XML" ? "XML" : "JSON"
             )
-            
+            handleSave()
           }
           }
         >
-          {serialState == "XML" ? "JSON" : "XML"}{" "}
+          Import
         </button>
         <button onClick={() =>{
           console.log(generatedXml);
