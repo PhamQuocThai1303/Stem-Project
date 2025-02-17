@@ -4,9 +4,9 @@ import Backend from 'i18next-xhr-backend'
 import { initReactI18next } from 'react-i18next'
 import LanguageDetector from 'i18next-browser-languagedetector'
 
-const lag = window.localStorage.getItem('i18nextLng')
-i18n
+const lag = window.localStorage.getItem('i18nextLng') || 'vi' // Mặc định là 'vi' nếu không có dữ liệu trong localStorage
 
+i18n
   // Enables the i18next backend
   .use(Backend)
 
@@ -16,21 +16,22 @@ i18n
   // Enables the hook initialization module
   .use(initReactI18next)
   .init({
-    lng: lag ? lag : 'vi',
+    lng: lag,
     backend: {
-      /* translation file path */
-      loadPath: `public/locales/vi/translation.json`
+      /* translation file paths */
+      loadPath: `/locales/{{lng}}.json`, 
     },
-    fallbackLng: lag ? lag : 'vi',
+    fallbackLng: 'vi',
     debug: false,
     keySeparator: false,
     react: {
-      useSuspense: false
+      useSuspense: false,
     },
     interpolation: {
       escapeValue: false,
-      formatSeparator: ','
-    }
+      formatSeparator: ',',
+    },
+    supportedLngs: ['vi', 'en'],
   })
 
 export default i18n

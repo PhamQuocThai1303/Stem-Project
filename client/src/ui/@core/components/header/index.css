@@ -1,0 +1,35 @@
+.nav-container {
+    display: flex;
+    gap: 20px; /* Khoảng cách giữa các nút */
+  }
+  
+.nav-item-custom {
+    color: #333;
+    display: flex;
+    align-items: center;
+    font-weight: 500;
+    padding: 8px 15px;
+    border-radius: 5px;
+    transition: all 0.3s ease;
+  }
+  
+  .nav-item-custom:hover {
+    background-color: #ff6600; /* Màu cam */
+    color: white !important; /* Chữ trắng */
+  }
+
+  .nav-item-custom.active {
+    background-color: #ff6600;
+    color: white !important;
+  }
+
+  .dropdown-language {
+    .country-flag {
+      height: 18px !important;
+      width: 18px !important;
+    }
+  
+    .dropdown-menu {
+      left: auto !important;
+    }
+  }
