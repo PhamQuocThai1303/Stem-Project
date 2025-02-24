@@ -1,4 +1,6 @@
 const { Client } = require("ssh2");
+const fs = require("fs");
+const path = require("path");
 
 const conn = new Client();
 let isConnected = false;
@@ -67,6 +69,33 @@ function execCommand(command) {
   });
 }
 
+function uploadFile(localPath, remotePath) {
+  return new Promise((resolve, reject) => {
+    if (!isConnected) {
+      return reject(new Error("SSH is not connected"));
+    }
+
+    conn.sftp((err, sftp) => {
+      if (err) return reject(err);
+
+      const readStream = fs.createReadStream(localPath);
+      const writeStream = sftp.createWriteStream(remotePath);
+
+      writeStream.on("close", () => {
+        console.log(`File uploaded: ${localPath} ➜ ${remotePath}`);
+        resolve();
+      });
+
+      writeStream.on("error", (err) => {
+        console.error("SFTP upload error:", err);
+        reject(err);
+      });
+
+      readStream.pipe(writeStream); // Bắt đầu upload
+    });
+  });
+}
+
 function closeSSHConnection() {
   if (isConnected) {
     console.log("Closing SSH connection...");
@@ -74,4 +103,4 @@ function closeSSHConnection() {
   }
 }
 
-module.exports = { connectSSH, execCommand, closeSSHConnection };
+module.exports = { connectSSH, execCommand, closeSSHConnection, uploadFile };

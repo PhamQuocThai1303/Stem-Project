@@ -168,8 +168,31 @@ export const defineLEDBlocks  = () => {
 
   // Định nghĩa Python generators
   pythonGenerator.forBlock['led_setup'] = function() {
-    return `import RPi.GPIO as GPIO\nimport time\nGPIO.setmode(GPIO.BCM)\n`;
-  };
+    return "import LEDs\n" +
+           "import time\n\n" +
+           "# Alias for time\n" +
+           "delay = time.sleep\n\n" +
+           "try:\n" +
+           "    while True:\n" +
+           "        LEDs.update(1,1)\n" +
+           "        delay(1)\n" +
+           "        LEDs.update(2,1)\n" +
+           "        delay(1)\n" +
+           "        LEDs.update(3,1)\n" +
+           "        delay(1)\n" +
+           "        LEDs.update(4,1)\n" +
+           "        delay(1)\n\n" +
+           "        LEDs.update(1,0)\n" +
+           "        delay(1)\n" +
+           "        LEDs.update(2,0)\n" +
+           "        delay(1)\n" +
+           "        LEDs.update(3,0)\n" +
+           "        delay(1)\n" +
+           "        LEDs.update(4,0)\n" +
+           "        delay(1)\n\n" +
+           "except KeyboardInterrupt:\n" +
+           "    LEDs.clear()\n";
+};
 
   pythonGenerator.forBlock['led_blink'] = function(block: Block) {
     const times = block.getFieldValue('TIMES');

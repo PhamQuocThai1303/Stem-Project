@@ -55,10 +55,20 @@ function App() {
 
    
   const handleSave = async () => {
-    const response = await fetch("http://localhost:5000/write-file", {
+    const response = await fetch("http://localhost:5000/write-and-upload", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({generatedCode}),
+    });
+
+    const result = await response.json();
+    alert(result.message);
+  };
+
+  const handleStop = async () => {
+    const response = await fetch("http://localhost:5000/stop", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
     });
 
     const result = await response.json();
@@ -112,6 +122,13 @@ function App() {
           }
           }>
           Print
+        </button>
+
+        <button onClick={() =>{
+          handleStop()
+          }
+          }>
+          Stop
         </button>
         </div>
       
