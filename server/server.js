@@ -15,7 +15,7 @@ app.use(cors({
 app.use(bodyParser.json());
 
 const FILE_PATH = path.join(__dirname, "data", "data.txt");
-const remoteFilePath = "/home/pi/Documents/example/data.txt";
+const remoteFilePath = "/home/pi3/Documents/example/data.txt";
 
 // Kết nối SSH khi server khởi động
 connectSSH().catch(err => console.error("SSH Connection Failed:", err));
@@ -42,7 +42,7 @@ app.post("/write-and-upload", async (req, res) => {
     await uploadFile(FILE_PATH, remoteFilePath);
     console.log(`File uploaded to Raspberry Pi: ${remoteFilePath}`);
 
-    const command = `cd /home/pi/Documents/example && sudo python data.txt`;
+    const command = `cd /home/pi3/Documents/example && sudo python data.txt`;
     const output = await execCommand(command);
     console.log(`Command output: ${output}`);
 
@@ -65,10 +65,12 @@ app.post("/stop", async (req, res) => {
     }
 
     const firstPid = pids[0];
-
-    
-    await execCommand(`sudo kill -SIGINT ${firstPid}`);
+if(firstPid){
+  await execCommand(`sudo kill -SIGINT ${firstPid}`);
     console.log("✅ Tiến trình đã dừng an toàn.");
+}
+    
+    
   } catch (error) {
     console.error("❌ Lỗi khi dừng tiến trình:", error);
   }

@@ -35,10 +35,10 @@ function connectSSH() {
     });
 
     conn.connect({
-      host: "raspberrypi",
+      host: "RPi",
       port: 22,
-      username: "pi",
-      password: "1",
+      username: "pi3",
+      password: "21021634",
     });
   });
 }
