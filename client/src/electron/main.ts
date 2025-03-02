@@ -7,8 +7,9 @@ app.on('ready', () => {
     const mainWindow = new BrowserWindow({
         width: width,   
         height: height, 
-        
+        focusable: true
       })
+
       if (isDev()) {
         mainWindow.loadURL('http://localhost:1303');
       } else {

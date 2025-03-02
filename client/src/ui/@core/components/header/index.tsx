@@ -1,25 +1,52 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { Navbar, Nav, Container  } from "react-bootstrap";
+import { Navbar, Nav, Container, Button  } from "react-bootstrap";
 import { FaAtom } from "react-icons/fa";
 import { AiOutlineRobot } from "react-icons/ai";
 import { BsChatDots } from "react-icons/bs";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import './index.css'
 import { useTranslation } from "react-i18next";
 import ReactCountryFlag from 'react-country-flag'
 import { UncontrolledDropdown, DropdownMenu, DropdownItem, DropdownToggle } from 'reactstrap'
+import { useAuth } from "../../../context/AuthContext";
+import { toast } from "react-toastify";
 
 const Header = () => {
   const location = useLocation();
   const { i18n } = useTranslation()
   const {t} = useTranslation()
-
+  const { logout } = useAuth();
+  const navigate = useNavigate();
+  
   const handleLangUpdate = (e: any, lang: any) => {
     e.preventDefault()
     i18n.changeLanguage(lang)
     window.localStorage.setItem('i18nextLng', lang)
   }
   
+  const handleLogout = async () => {
+    try {
+      const response = await fetch("http://localhost:5000/disconnect", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+      });
+  
+      if (!response.ok) {
+        toast.error(`HTTP error! status: ${response.status}`);
+        return;
+      }
+  
+      console.log("✅ SSH connection closed successfully.");
+  
+      logout();
+  toast.success("🎉 Đăng xuất thành công!");
+      navigate("/login" , { replace: true });
+    } catch (error) {
+      toast.error("❌ Đăng xuất thất bại!");
+      console.error("❌ Lỗi ngắt kết nối SSH:", error);
+    }
+  };
+
   return (
     <Navbar bg="white" expand="lg" className="shadow-sm px-3 position-relative">
       <Container fluid>
@@ -47,6 +74,10 @@ const Header = () => {
           </Nav>
         </Navbar.Collapse>
 
+        <Button color="danger" onClick={handleLogout}>
+            {t("Đăng xuất")}
+          </Button>
+          
         <UncontrolledDropdown href='/' className='dropdown-language nav-item'>
       <DropdownToggle href='/' tag='a' className='nav-link gap-2 d-flex align-items-center' onClick={e => e.preventDefault()}>
       <div>{t('Chọn ngôn ngữ')}</div>

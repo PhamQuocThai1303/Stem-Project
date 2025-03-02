@@ -6,6 +6,7 @@ import * as Blockly from "blockly/core";
 import { pythonGenerator } from "blockly/python";
 import { useTranslation } from "react-i18next"
 import { defineLEDBlocks  } from '../../customBlock/ledBlock';
+import { toast } from 'react-toastify';
 
 function App() {
   const [generatedCode, setGeneratedCode] = useState("");
@@ -62,7 +63,7 @@ function App() {
     });
 
     const result = await response.json();
-    alert(result.message);
+    toast.info(result.message);
   };
 
   const handleStop = async () => {
@@ -72,7 +73,7 @@ function App() {
     });
 
     const result = await response.json();
-    alert(result.message);
+    toast.info(result.message);
   };
 
   return (

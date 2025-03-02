@@ -146,9 +146,9 @@ export const defineLEDBlocks  = () => {
         "message0": "Bật LED trên chân %1 với trạng thái %2",
         "args0": [
           {
-            "type": "field_input",
+            "type": "field_number",
             "name": "PINS",
-            "text": "1"
+            "value": 1
           },
           {
             "type": "field_dropdown",

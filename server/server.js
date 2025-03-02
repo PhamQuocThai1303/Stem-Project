@@ -14,12 +14,45 @@ app.use(cors({
 }));
 app.use(bodyParser.json());
 
+let sshSession = {
+  host: "",
+  username: "",
+};
+
 const FILE_PATH = path.join(__dirname, "data", "data.txt");
-const remoteFilePath = "/home/pi3/Documents/example/data.txt";
+// const remoteFilePath = `/home/${sshSession.username}/Documents/example/data.txt`;
 
 // Kết nối SSH khi server khởi động
-connectSSH().catch(err => console.error("SSH Connection Failed:", err));
+// connectSSH().catch(err => console.error("SSH Connection Failed:", err));
 
+app.post("/connect", async (req, res) => {
+  const { host, username, password } = req.body;
+
+  try {
+    await connectSSH({ host, username, password });
+    res.status(200).json({ message: "Kết nối thành công!" });
+    sshSession = { host, username };
+  } catch (error) {
+    console.error("❌ Lỗi kết nối SSH:", error);
+    res.status(500).json({ message: "Kết nối thất bại!", error: error.message });
+  }
+});
+
+app.post("/disconnect", async (req, res) => {
+  try {
+    closeSSHConnection();
+    console.log("🔌 SSH connection closed.");
+    sshSession = { host: "", username: "" };
+    res.status(200).json({ message: "Ngắt kết nối thành công" });
+  } catch (error) {
+    console.error("❌ Lỗi khi ngắt kết nối SSH:", error);
+    res.status(500).json({ message: "Lỗi khi ngắt kết nối" });
+  }
+});
+
+app.get("/session-info", (req, res) => {
+  res.json({ session: sshSession });
+});
 
 app.get("/run-ssh", async (req, res) => {
   try {
@@ -39,10 +72,10 @@ app.post("/write-and-upload", async (req, res) => {
     console.log(`File written successfully: ${FILE_PATH}`);
 
     
-    await uploadFile(FILE_PATH, remoteFilePath);
-    console.log(`File uploaded to Raspberry Pi: ${remoteFilePath}`);
+    await uploadFile(FILE_PATH, `/home/${sshSession.username}/Documents/example/data.txt`);
+    console.log(`File uploaded to Raspberry Pi: ${`/home/${sshSession.username}/Documents/example/data.txt`}`);
 
-    const command = `cd /home/pi3/Documents/example && sudo python data.txt`;
+    const command = `cd /home/${sshSession.username}/Documents/example && sudo python data.txt`;
     const output = await execCommand(command);
     console.log(`Command output: ${output}`);
 

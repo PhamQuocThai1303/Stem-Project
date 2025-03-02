@@ -5,7 +5,7 @@ const path = require("path");
 const conn = new Client();
 let isConnected = false;
 
-function connectSSH() {
+function connectSSH({ host, username, password }) {
   return new Promise((resolve, reject) => {
     if (isConnected) {
       console.log("SSH is already connected.");
@@ -34,12 +34,7 @@ function connectSSH() {
       isConnected = false;
     });
 
-    conn.connect({
-      host: "RPi",
-      port: 22,
-      username: "pi3",
-      password: "21021634",
-    });
+    conn.connect({ host, port: 22, username, password });
   });
 }
 
