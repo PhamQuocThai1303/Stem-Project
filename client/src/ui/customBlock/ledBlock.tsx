@@ -95,20 +95,20 @@ export const defineLEDBlocks  = () => {
       // 4. Khối tắt LED
     {
         "type": "led_turn_off",
-        "message0": "Tắt LED ở chân %1",
+        "message0": "Khối chờ %1 giây",
         "args0": [
           {
             "type": "field_number",
             "name": "PIN",
-            "value": 18,
+            "value": 0,
             "min": 0,
-            "max": 27
+            "max": 100
           }
         ],
         "previousStatement": null,
         "nextStatement": null,
         "colour": 160,
-        "tooltip": "Tắt LED"
+        // "tooltip": "Tắt LED"
       },
       // 5. Khối nhấp nháy LED đơn
     {
@@ -140,15 +140,15 @@ export const defineLEDBlocks  = () => {
         "colour": 160,
         "tooltip": "Nhấp nháy LED với số lần và độ trễ chỉ định"
       },
-      // 6. Khối nhấp nháy tuần tự
+      // 6. Khối nhấp nháy led
     {
         "type": "led_sequential_blink",
-        "message0": "Nhấp nháy tuần tự LED trên các chân %1 với độ trễ %2 giây",
+        "message0": "Bật LED trên chân %1 với trạng thái %2",
         "args0": [
           {
             "type": "field_input",
             "name": "PINS",
-            "text": "11,23,24"
+            "text": "1"
           },
           {
             "type": "field_dropdown",
@@ -170,28 +170,7 @@ export const defineLEDBlocks  = () => {
   pythonGenerator.forBlock['led_setup'] = function() {
     return "import LEDs\n" +
            "import time\n\n" +
-           "# Alias for time\n" +
-           "delay = time.sleep\n\n" +
-           "try:\n" +
-           "    while True:\n" +
-           "        LEDs.update(1,1)\n" +
-           "        delay(1)\n" +
-           "        LEDs.update(2,1)\n" +
-           "        delay(1)\n" +
-           "        LEDs.update(3,1)\n" +
-           "        delay(1)\n" +
-           "        LEDs.update(4,1)\n" +
-           "        delay(1)\n\n" +
-           "        LEDs.update(1,0)\n" +
-           "        delay(1)\n" +
-           "        LEDs.update(2,0)\n" +
-           "        delay(1)\n" +
-           "        LEDs.update(3,0)\n" +
-           "        delay(1)\n" +
-           "        LEDs.update(4,0)\n" +
-           "        delay(1)\n\n" +
-           "except KeyboardInterrupt:\n" +
-           "    LEDs.clear()\n";
+           "# Alias for time\n"
 };
 
   pythonGenerator.forBlock['led_blink'] = function(block: Block) {
@@ -217,7 +196,7 @@ export const defineLEDBlocks  = () => {
 
   pythonGenerator.forBlock['led_turn_off'] = function(block: Block) {
     const pin = block.getFieldValue('PIN');
-    return `GPIO.output(${pin}, GPIO.LOW)\n`;
+    return `time.sleep(${pin})\n`;
   };
 
   pythonGenerator.forBlock['led_blink_single'] = function(block: Block) {
@@ -230,7 +209,7 @@ export const defineLEDBlocks  = () => {
   pythonGenerator.forBlock['led_sequential_blink'] = function(block: Block) {
     const pins = block.getFieldValue('PINS');
     const STATUS = block.getFieldValue('STATUS');
-    return `led_pins = [${pins}]\nwhile True:\n  try:\n    for pin in led_pins:\n      GPIO.output(pin, GPIO.HIGH)\n      time.sleep(${STATUS})\n      GPIO.output(pin, GPIO.LOW)\n  except KeyboardInterrupt:\n    break\n`;
+    return `LEDs.update(${pins},${STATUS})\n`
   };
 
 };
