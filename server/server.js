@@ -20,7 +20,7 @@ const remoteFilePath = "/home/pi3/Documents/example/data.txt";
 // Kết nối SSH khi server khởi động
 connectSSH().catch(err => console.error("SSH Connection Failed:", err));
 
-// Route để chạy lệnh trên SSH
+
 app.get("/run-ssh", async (req, res) => {
   try {
     const output = await execCommand("ls -l");
@@ -34,17 +34,17 @@ app.post("/write-and-upload", async (req, res) => {
   const { generatedCode } = req.body;
 
   try {
-    // Ghi nội dung vào file cục bộ
+    
     await fs.promises.writeFile(FILE_PATH, generatedCode);
-    console.log(`✅ File written successfully: ${FILE_PATH}`);
+    console.log(`File written successfully: ${FILE_PATH}`);
 
-    // Upload file lên Raspberry Pi
+    
     await uploadFile(FILE_PATH, remoteFilePath);
-    console.log(`🚀 File uploaded to Raspberry Pi: ${remoteFilePath}`);
+    console.log(`File uploaded to Raspberry Pi: ${remoteFilePath}`);
 
     const command = `cd /home/pi3/Documents/example && sudo python data.txt`;
     const output = await execCommand(command);
-    console.log(`📟 Command output: ${output}`);
+    console.log(`Command output: ${output}`);
 
     res.json({ message: "Ghi file và upload thành công!" });
   } catch (error) {
@@ -55,18 +55,18 @@ app.post("/write-and-upload", async (req, res) => {
 
 app.post("/stop", async (req, res) => {
   try {
-    // Lấy PID của tiến trình Python
+    
     const output = await execCommand(`pgrep -f "python data.txt"`);
     const pids = output.trim().split("\n");
 
     if (pids.length === 0) {
-      console.log("🚫 Không tìm thấy tiến trình!");
+      console.log("Không tìm thấy tiến trình!");
       return;
     }
 
-    const firstPid = pids[0]; // Lấy PID đầu tiên
+    const firstPid = pids[0];
 
-    // Gửi tín hiệu SIGINT để dừng an toàn
+    
     await execCommand(`sudo kill -SIGINT ${firstPid}`);
     console.log("✅ Tiến trình đã dừng an toàn.");
   } catch (error) {
