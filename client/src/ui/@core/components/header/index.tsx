@@ -74,7 +74,7 @@ const Header = () => {
           </Nav>
         </Navbar.Collapse>
 
-        <Button color="danger" onClick={handleLogout}>
+        <Button style={{marginRight: 10}} color="danger" onClick={handleLogout}>
             {t("Đăng xuất")}
           </Button>
           

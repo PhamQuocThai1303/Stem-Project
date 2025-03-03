@@ -1,11 +1,21 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
+import { sevenSegmentToolboxConfig } from "../customBlock/7SegmentBlock";
+import { ButtonToolboxConfig } from "../customBlock/ButtonBlock";
+import { BuzzerToolboxConfig } from "../customBlock/BuzzerBlock";
 import { colorToolboxConfig } from "../customBlock/colorBlock";
+import { DHTToolboxConfig } from "../customBlock/DHTBlock";
+import { FanToolboxConfig } from "../customBlock/FanBlock";
 import { functionToolboxConfig } from "../customBlock/functionBlock";
 import { ledToolboxConfig } from "../customBlock/ledBlock";
 import { listToolboxConfig } from "../customBlock/listBlock";
 import { logicToolboxConfig } from "../customBlock/logicBlock";
 import { loopToolboxConfig } from "../customBlock/loopBlock";
 import { mathToolboxConfig } from "../customBlock/mathBlock";
+import { ServoToolboxConfig } from "../customBlock/ServoBlock";
+import { SonarToolboxConfig } from "../customBlock/SonarBlock";
+import { SwitchToolboxConfig } from "../customBlock/SwitchBlock";
 import { textToolboxConfig } from "../customBlock/textBlock";
+import { timeToolboxConfig } from "../customBlock/timeBlock";
 
 const INITIAL_XML =
   '<xml xmlns="http://www.w3.org/1999/xhtml"><block type="text" x="70" y="30"><field name="TEXT">XML</field></block></xml>';
@@ -17,6 +27,15 @@ const INITIAL_TOOLBOX_JSON = {
   contents: [
       ledToolboxConfig
     ,
+    timeToolboxConfig,
+    sevenSegmentToolboxConfig,
+    DHTToolboxConfig,
+    BuzzerToolboxConfig,
+    SonarToolboxConfig,
+    ServoToolboxConfig,
+    SwitchToolboxConfig,
+    ButtonToolboxConfig,
+    FanToolboxConfig,
     logicToolboxConfig
     ,
     loopToolboxConfig
@@ -27,27 +46,27 @@ const INITIAL_TOOLBOX_JSON = {
     ,
     listToolboxConfig
     ,
-    colorToolboxConfig
-    ,
+    // colorToolboxConfig
+    // ,
     { kind: "sep" },
-    {
-      kind: "category",
-      name: "Custom Button",
-      colour: 19,
-      contents: [
-        {
-          kind: "button",
-          text: "A button",
-          callbackKey: "myFirstButtonPressed",
-        },
-      ],
-    },
-    {
-      kind: "category",
-      name: "Variables",
-      custom: "VARIABLE",
-      colour: 330,
-    },
+    // {
+    //   kind: "category",
+    //   name: "Custom Button",
+    //   colour: 19,
+    //   contents: [
+    //     {
+    //       kind: "button",
+    //       text: "A button",
+    //       callbackKey: "myFirstButtonPressed",
+    //     },
+    //   ],
+    // },
+    // {
+    //   kind: "category",
+    //   name: "Variables",
+    //   custom: "VARIABLE",
+    //   colour: 330,
+    // },
     functionToolboxConfig
   ],
 };

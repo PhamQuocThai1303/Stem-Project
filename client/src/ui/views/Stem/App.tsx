@@ -7,6 +7,15 @@ import { pythonGenerator } from "blockly/python";
 import { useTranslation } from "react-i18next"
 import { defineLEDBlocks  } from '../../customBlock/ledBlock';
 import { toast } from 'react-toastify';
+import { defineTimeBlocks } from '../../customBlock/timeBlock';
+import { define7SegmentBlocks } from '../../customBlock/7SegmentBlock';
+import { defineDHTBlocks } from '../../customBlock/DHTBlock';
+import { defineBuzzerBlocks } from '../../customBlock/BuzzerBlock';
+import { defineSonarBlocks } from '../../customBlock/SonarBlock';
+import { defineServoBlocks } from '../../customBlock/ServoBlock';
+import { defineSwitchBlocks } from '../../customBlock/SwitchBlock';
+import { defineButtonBlocks } from '../../customBlock/ButtonBlock';
+import { defineFanBlocks } from '../../customBlock/FanBlock';
 
 function App() {
   const [generatedCode, setGeneratedCode] = useState("");
@@ -21,6 +30,15 @@ function App() {
   useEffect(() => {
     // Định nghĩa custom blocks khi component được mount
     defineLEDBlocks();
+    defineTimeBlocks();
+    define7SegmentBlocks();
+    defineDHTBlocks();
+    defineBuzzerBlocks();
+    defineSonarBlocks();
+    defineServoBlocks();
+    defineSwitchBlocks();
+    defineButtonBlocks();
+    defineFanBlocks();
   }, []);
 
   const onWorkspaceChange = useCallback((workspace : Blockly.Workspace) => {

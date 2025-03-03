@@ -149,5 +149,13 @@ export const mathToolboxConfig = {
         kind: "block",
         type: "math_random_float",
       },
+      // {
+      //   kind: "block",
+      //   blockxml:
+      //     '    <block type="text_print">\n' +
+      //     '      <value name="NUMBER">\n' +
+      //     "      </value>\n" +
+      //     "    </block>\n",
+      // },
     ],
   }

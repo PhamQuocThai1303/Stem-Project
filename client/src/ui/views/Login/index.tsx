@@ -34,11 +34,11 @@ const Login = () => {
             toast.error(`HTTP error! status: ${response.status}`);
             return;
           }
-          toast.success("🎉 Đăng nhập thành công!");
+          toast.success("🎉 Kết nối thành công!");
       login()
       navigate("/");
     } catch (error) {
-      toast.error("❌ Đăng nhập thất bại!");
+      toast.error("❌ Kết nối thất bại!");
       console.error("❌ Lỗi kết nối SSH:", error);
     }
   };
