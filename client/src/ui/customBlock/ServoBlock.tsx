@@ -52,20 +52,20 @@ export const defineServoBlocks  = () => {
 
   // Định nghĩa Python generators
   pythonGenerator.forBlock['Servo_setup'] = function() {
-    return "import Servo\n"
+    return "import SERVO\n"
 };
 
 pythonGenerator.forBlock['Servo_start'] = function () {
-    return "Servo.on()\n"
+    return "SERVO.on()\n"
   };
  
   pythonGenerator.forBlock['Servo_stop'] = function () {
-    return "Servo.off()\n"
+    return "SERVO.off()\n"
   };
 
   pythonGenerator.forBlock['Servo_angle'] = function(block: Block) {
     const pin = block.getFieldValue('ANGLE');
-    return `Servo.angle(${pin})\n`;
+    return `SERVO.angle(${pin})\n`;
   };
 
 };

@@ -25,11 +25,11 @@ export const defineSonarBlocks  = () => {
 
   // Định nghĩa Python generators
   pythonGenerator.forBlock['Sonar_setup'] = function() {
-    return "import Sonar\n"
+    return "import SONAR\n"
 };
 
 pythonGenerator.forBlock['Sonar_distance'] = function () {
-    return ['Sonar.distance()', pythonGenerator.ORDER_ATOMIC];
+    return ['SONAR.distance()', pythonGenerator.ORDER_ATOMIC];
   };
  
 

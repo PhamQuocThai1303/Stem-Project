@@ -72,10 +72,10 @@ app.post("/write-and-upload", async (req, res) => {
     console.log(`File written successfully: ${FILE_PATH}`);
 
     
-    await uploadFile(FILE_PATH, `/home/${sshSession.username}/Documents/example/data.txt`);
-    console.log(`File uploaded to Raspberry Pi: ${`/home/${sshSession.username}/Documents/example/data.txt`}`);
+    await uploadFile(FILE_PATH, `/home/${sshSession.username}/Documents/code/data.txt`);
+    console.log(`File uploaded to Raspberry Pi: ${`/home/${sshSession.username}/Documents/code/data.txt`}`);
 
-    const command = `cd /home/${sshSession.username}/Documents/example && sudo python data.txt`;
+    const command = `cd /home/${sshSession.username}/Documents/code && sudo python data.txt`;
     const output = await execCommand(command);
     console.log(`Command output: ${output}`);
 

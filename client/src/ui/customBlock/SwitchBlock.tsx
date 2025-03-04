@@ -35,12 +35,12 @@ export const defineSwitchBlocks  = () => {
 
   // Định nghĩa Python generators
   pythonGenerator.forBlock['Switch_setup'] = function() {
-    return "import Switch\n"
+    return "import SWITCH\n"
 };
 
 pythonGenerator.forBlock['Read_switch'] = function (block: Block) {
     const pin = block.getFieldValue('PIN');
-    return [`Switch.read_switch(${pin})\n`, pythonGenerator.ORDER_ATOMIC];
+    return [`SWITCH.read_switch(${pin})\n`, pythonGenerator.ORDER_ATOMIC];
   };
  
 };

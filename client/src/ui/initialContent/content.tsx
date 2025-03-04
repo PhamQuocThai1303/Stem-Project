@@ -3,9 +3,11 @@ import { sevenSegmentToolboxConfig } from "../customBlock/7SegmentBlock";
 import { ButtonToolboxConfig } from "../customBlock/ButtonBlock";
 import { BuzzerToolboxConfig } from "../customBlock/BuzzerBlock";
 import { colorToolboxConfig } from "../customBlock/colorBlock";
+import { CommonToolboxConfig } from "../customBlock/CommonBlock";
 import { DHTToolboxConfig } from "../customBlock/DHTBlock";
 import { FanToolboxConfig } from "../customBlock/FanBlock";
 import { functionToolboxConfig } from "../customBlock/functionBlock";
+import { LCDToolboxConfig } from "../customBlock/LCDBlock";
 import { ledToolboxConfig } from "../customBlock/ledBlock";
 import { listToolboxConfig } from "../customBlock/listBlock";
 import { logicToolboxConfig } from "../customBlock/logicBlock";
@@ -25,6 +27,7 @@ const INITIAL_JSON = {"blocks":{"languageVersion":0,"blocks":[{"type":"text","id
 const INITIAL_TOOLBOX_JSON = {
   kind: "categoryToolbox",
   contents: [
+    CommonToolboxConfig,
       ledToolboxConfig
     ,
     timeToolboxConfig,
@@ -36,6 +39,7 @@ const INITIAL_TOOLBOX_JSON = {
     SwitchToolboxConfig,
     ButtonToolboxConfig,
     FanToolboxConfig,
+    LCDToolboxConfig,
     logicToolboxConfig
     ,
     loopToolboxConfig

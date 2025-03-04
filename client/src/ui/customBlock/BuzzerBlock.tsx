@@ -35,15 +35,15 @@ export const defineBuzzerBlocks  = () => {
 
   // Định nghĩa Python generators
   pythonGenerator.forBlock['Buzzer_setup'] = function() {
-    return "import Buzzer\n"
+    return "import BUZZER\n"
 };
 
 pythonGenerator.forBlock['Buzzer_on'] = function () {
-    return "Buzzer.on()\n"
+    return "BUZZER.on()\n"
   };
  
   pythonGenerator.forBlock['Buzzer_off'] = function () {
-    return "Buzzer.off()\n"
+    return "BUZZER.off()\n"
   };
 
 };

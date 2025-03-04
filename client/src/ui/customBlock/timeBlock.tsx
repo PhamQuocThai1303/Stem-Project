@@ -55,26 +55,7 @@ export const defineTimeBlocks  = () => {
         "tooltip": "Trả về thời gian tiến trình bắt đầu chạy",
         "helpUrl": ""
       },
-      {
-        "type": "create_variable",
-        "message0": "let %1 = %2",
-        "args0": [
-          {
-            "type": "field_input",
-            "name": "VAR_NAME",
-            "text": "a"
-          },
-          {
-            "type": "input_value",
-            "name": "VALUE"
-          }
-        ],
-        "previousStatement": null,
-        "nextStatement": null,
-        "colour": 230,
-        "tooltip": "Tạo biến mới",
-        "helpUrl": ""
-      }
+      
   ]);
 
   // Định nghĩa Python generators
@@ -97,15 +78,7 @@ export const defineTimeBlocks  = () => {
   pythonGenerator.forBlock['time_perf'] = function () {
     return ['time.perf_time()', pythonGenerator.ORDER_ATOMIC];
   };
-
-  pythonGenerator.forBlock['create_variable'] = function (block) {
-    const varName = block.getFieldValue('VAR_NAME');
-    const value = pythonGenerator.valueToCode(block, 'VALUE', pythonGenerator.ORDER_ATOMIC) || 'None';
-    
-    return `${varName} = ${value}\n`;
-  };
   
-
 };
 
 export const timeToolboxConfig = {
@@ -121,10 +94,6 @@ export const timeToolboxConfig = {
       { kind: "block", type: "time_process" },
       { kind: "block", type: "time_thread" },
       { kind: "block", type: "time_perf" },
-      {
-        kind: "block",
-        type: "create_variable"
-      }
       
     ]
   };

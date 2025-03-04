@@ -16,6 +16,8 @@ import { defineServoBlocks } from '../../customBlock/ServoBlock';
 import { defineSwitchBlocks } from '../../customBlock/SwitchBlock';
 import { defineButtonBlocks } from '../../customBlock/ButtonBlock';
 import { defineFanBlocks } from '../../customBlock/FanBlock';
+import { defineCommonBlocks } from '../../customBlock/CommonBlock';
+import { defineLCDBlocks } from '../../customBlock/LCDBlock';
 
 function App() {
   const [generatedCode, setGeneratedCode] = useState("");
@@ -29,6 +31,7 @@ function App() {
 
   useEffect(() => {
     // Định nghĩa custom blocks khi component được mount
+    defineCommonBlocks();
     defineLEDBlocks();
     defineTimeBlocks();
     define7SegmentBlocks();
@@ -39,6 +42,7 @@ function App() {
     defineSwitchBlocks();
     defineButtonBlocks();
     defineFanBlocks();
+    defineLCDBlocks()
   }, []);
 
   const onWorkspaceChange = useCallback((workspace : Blockly.Workspace) => {

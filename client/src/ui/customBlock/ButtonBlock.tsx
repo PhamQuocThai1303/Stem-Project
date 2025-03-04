@@ -35,12 +35,12 @@ export const defineButtonBlocks  = () => {
 
   // Định nghĩa Python generators
   pythonGenerator.forBlock['Button_setup'] = function() {
-    return "import Button\n"
+    return "import BUTTON\n"
 };
 
 pythonGenerator.forBlock['Read_button'] = function (block: Block) {
     const pin = block.getFieldValue('PIN');
-    return [`Switch.read_button(${pin})\n`, pythonGenerator.ORDER_ATOMIC];
+    return [`BUTTON.read_button(${pin})\n`, pythonGenerator.ORDER_ATOMIC];
   };
  
 };

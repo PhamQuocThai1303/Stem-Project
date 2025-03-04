@@ -14,39 +14,28 @@ export const define7SegmentBlocks  = () => {
       "tooltip": "Thiết lập thư viện LED 7 đoạn"
     },
     {
-        "type": "led_7_dot_on",
-        "message0": "Bật chấm ở LED %1",
-        "args0": [
-          {
-            "type": "field_number",
-            "name": "PIN",
-            "value": 0,
-            "min": 0,
-            "max": 100
-          }
-        ],
-        "previousStatement": null,
-        "nextStatement": null,
-        "colour": 160,
-        // "tooltip": "Tắt LED"
-      },
-      {
-        "type": "led_7_dot_off",
-        "message0": "Tắt chấm ở LED %1",
-        "args0": [
-          {
-            "type": "field_number",
-            "name": "PIN",
-            "value": 0,
-            "min": 0,
-            "max": 100
-          }
-        ],
-        "previousStatement": null,
-        "nextStatement": null,
-        "colour": 160,
-        // "tooltip": "Tắt LED"
-      },
+      "type": "dot_7_turn_on",
+      "message0": "Bật chấm trên LED %1 với trạng thái %2",
+      "args0": [
+        {
+          "type": "field_number",
+          "name": "PINS",
+          "value": 1
+        },
+        {
+          "type": "field_dropdown",
+          "name": "STATUS",
+          "options": [
+      ["Tắt", "0"],
+      ["Bật", "1"]
+    ]
+        }
+      ],
+      "previousStatement": null,
+      "nextStatement": null,
+      "colour": 160,
+      "tooltip": "Bật chấm"
+    },
       {
         "type": "led_7_start",
         "message0": "Khởi động LED 7 đoạn",
@@ -91,14 +80,10 @@ export const define7SegmentBlocks  = () => {
     return "import SEG7\n"
 };
 
-pythonGenerator.forBlock['led_7_dot_on'] = function(block: Block) {
-    const pin = block.getFieldValue('PIN');
-    return `SEG7.dot_on(${pin})\n`;
-  };
-
-  pythonGenerator.forBlock['led_7_dot_off'] = function(block: Block) {
-    const pin = block.getFieldValue('PIN');
-    return `SEG7.dot_off(${pin})\n`;
+pythonGenerator.forBlock['dot_7_turn_on'] = function(block: Block) {
+  const pins = block.getFieldValue('PINS');
+  const STATUS = block.getFieldValue('STATUS');
+  return `SEG7.dot_update(${pins},${STATUS})\n`
   };
 
   pythonGenerator.forBlock['led_7_start'] = function() {
@@ -128,11 +113,7 @@ export const sevenSegmentToolboxConfig = {
       },
       {
         kind: "block",
-        type: "led_7_dot_on"
-      },
-      {
-        kind: "block",
-        type: "led_7_dot_off"
+        type: "dot_7_turn_on"
       },
       {
         kind: "block",

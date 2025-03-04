@@ -35,15 +35,15 @@ export const defineFanBlocks  = () => {
 
   // Định nghĩa Python generators
   pythonGenerator.forBlock['Fan_setup'] = function() {
-    return "import Fan\n"
+    return "import FAN\n"
 };
 
 pythonGenerator.forBlock['Fan_on'] = function () {
-    return "Fan.on()\n"
+    return "FAN.on()\n"
   };
  
   pythonGenerator.forBlock['Fan_off'] = function () {
-    return "Fan.off()\n"
+    return "FAN.off()\n"
   };
 
 };
