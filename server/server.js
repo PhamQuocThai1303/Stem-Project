@@ -109,10 +109,9 @@ if(firstPid){
   }
 });
 
-// API kiểm tra kết nối mạng của Ubuntu
 app.get("/check-network", async (req, res) => {
   try {
-    // Lấy tên mạng Wi-Fi (SSID) - chỉ hoạt động trên Ubuntu với nmcli
+    // Lấy tên mạng Wi-Fi (SSID)
     const wifiName = await execCommand(
       "nmcli -t -f active,ssid dev wifi | grep '^yes' | cut -d: -f2"
     ).catch(() => null);
@@ -122,7 +121,7 @@ app.get("/check-network", async (req, res) => {
       "ip -o -4 addr show eth0 | awk '{print $4}'"
     ).catch(() => null);
 
-    // Kiểm tra kết nối Internet
+    // Kiểm tra kết nối mạng
     const hasInternet = await execCommand("ping -c 1 google.com")
       .then(() => true)
       .catch(() => false);
@@ -157,10 +156,8 @@ app.get("/check-network", async (req, res) => {
 
 app.get("/wifi-list", async (req, res) => {
   try {
-    // Dùng nmcli để lấy đầy đủ thông tin mạng Wi-Fi
     const wifiList = await execCommand("nmcli -t -f ssid,signal dev wifi list");
 
-    // Xử lý kết quả trả về thành mảng JSON
     const networks = wifiList
       .trim()
       .split("\n")
@@ -203,7 +200,6 @@ app.post("/connect-wifi", async (req, res) => {
       });
     }
 
-    // Thực thi lệnh nmcli để kết nối Wi-Fi
     const connectCommand = `sudo nmcli device wifi connect "${ssid}" password "${password}"`;
     await execCommand(connectCommand);
 
@@ -224,7 +220,7 @@ app.post("/connect-wifi", async (req, res) => {
 app.post("/disconnect-wifi", async (req, res) => {
   try {
     const { ssid } = req.body;
-    await execCommand(`sudo nmcli connection delete ${ssid}`); // Hủy kết nối
+    await execCommand(`sudo nmcli connection delete ${ssid}`);
     res.status(200).json({
       success: true,
       message: "Đã hủy kết nối Wi-Fi.",

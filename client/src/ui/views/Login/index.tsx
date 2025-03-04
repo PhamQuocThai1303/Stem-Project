@@ -132,7 +132,6 @@ const Login = () => {
   return (
     <div className="container mt-5">
   <div className="row">
-    {/* 📟 Cột trái: Nhập thông tin Raspberry Pi */}
     <div className="col-md-6 border-end">
       <h2>Đăng nhập Raspberry Pi</h2>
       <form onSubmit={handleSubmit}>
@@ -181,7 +180,6 @@ const Login = () => {
       </form>
     </div>
 
-    {/* 📡 Cột phải: Danh sách mạng Wi-Fi */}
     <div className="col-md-6">
       <h4>🔍 Chọn mạng Wi-Fi:</h4>
       {wifiList.length > 0 ? (
@@ -207,7 +205,6 @@ const Login = () => {
     </div>
   </div>
 
-  {/* 🔒 Modal: Nhập mật khẩu Wi-Fi */}
   <Modal show={showWifiModal} onHide={() => setShowWifiModal(false)} centered>
     <Modal.Header closeButton>
       <Modal.Title>🔒 Nhập mật khẩu cho {selectedWifi}</Modal.Title>

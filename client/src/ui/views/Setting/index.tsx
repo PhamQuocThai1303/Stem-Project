@@ -112,7 +112,6 @@ const Setting = () => {
 
   const handleWifiAction = async (ssid: string) => {
     if (ssid === currentWifi) {
-      // Hủy kết nối nếu mạng trùng khớp
       try {
         await fetch("http://localhost:5000/disconnect-wifi", {
           method: "POST",
@@ -136,7 +135,6 @@ const Setting = () => {
   return (
     <div className="container mt-5">
   <div className="row">
-    {/* 📡 Cột phải: Danh sách mạng Wi-Fi */}
     <div className="">
       <h4>🔍 Chọn mạng Wi-Fi:</h4>
       <Button variant="primary" onClick={fetchWifiList}>
@@ -169,7 +167,6 @@ const Setting = () => {
     </div>
   </div>
 
-  {/* 🔒 Modal: Nhập mật khẩu Wi-Fi */}
   <Modal show={showWifiModal} onHide={() => setShowWifiModal(false)} centered>
     <Modal.Header closeButton>
       <Modal.Title>🔒 Nhập mật khẩu cho {selectedWifi}</Modal.Title>
