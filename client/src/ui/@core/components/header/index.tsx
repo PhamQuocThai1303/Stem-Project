@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { Navbar, Nav, Container, Button  } from "react-bootstrap";
-import { FaAtom } from "react-icons/fa";
+import { FaAtom, FaCog } from "react-icons/fa";
 import { AiOutlineRobot } from "react-icons/ai";
 import { BsChatDots } from "react-icons/bs";
 import { Link, useLocation, useNavigate } from "react-router-dom";
@@ -73,6 +73,10 @@ const Header = () => {
             </Nav.Link>
           </Nav>
         </Navbar.Collapse>
+
+        <Button style={{ marginRight: 10 }} color="secondary" onClick={() => navigate("/settings")}>
+      <FaCog className="me-1" />
+    </Button>
 
         <Button style={{marginRight: 10}} color="danger" onClick={handleLogout}>
             {t("Đăng xuất")}

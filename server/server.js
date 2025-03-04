@@ -109,6 +109,136 @@ if(firstPid){
   }
 });
 
+// API kiểm tra kết nối mạng của Ubuntu
+app.get("/check-network", async (req, res) => {
+  try {
+    // Lấy tên mạng Wi-Fi (SSID) - chỉ hoạt động trên Ubuntu với nmcli
+    const wifiName = await execCommand(
+      "nmcli -t -f active,ssid dev wifi | grep '^yes' | cut -d: -f2"
+    ).catch(() => null);
+
+    // Lấy địa chỉ IP từ cổng Ethernet (eth0)
+    const ethInfo = await execCommand(
+      "ip -o -4 addr show eth0 | awk '{print $4}'"
+    ).catch(() => null);
+
+    // Kiểm tra kết nối Internet
+    const hasInternet = await execCommand("ping -c 1 google.com")
+      .then(() => true)
+      .catch(() => false);
+
+    const networkStatus = {
+      wifi: wifiName ? wifiName.trim() : null,
+      ethernet: ethInfo ? ethInfo.trim() : null,
+      internet: hasInternet,
+    };
+
+    if (!networkStatus.wifi && !networkStatus.ethernet) {
+      return res.status(200).json({
+        connected: false,
+        message: "Không có mạng nào được kết nối.",
+        network: networkStatus,
+      });
+    }
+    
+    res.status(200).json({
+      connected: true,
+      message: "Đã kết nối mạng.",
+      network: networkStatus,
+    });
+  } catch (error) {
+    console.error("❌ Lỗi kiểm tra mạng:", error);
+    res.status(500).json({
+      message: "Lỗi khi kiểm tra kết nối mạng.",
+      error: error.message,
+    });
+  }
+});
+
+app.get("/wifi-list", async (req, res) => {
+  try {
+    // Dùng nmcli để lấy đầy đủ thông tin mạng Wi-Fi
+    const wifiList = await execCommand("nmcli -t -f ssid,signal dev wifi list");
+
+    // Xử lý kết quả trả về thành mảng JSON
+    const networks = wifiList
+      .trim()
+      .split("\n")
+      .map((line) => {
+        const [ssid, signal] = line.split(":");
+        return { ssid, signal: parseInt(signal, 10) };
+      })
+      .filter((network) => network.ssid); // Bỏ qua kết quả trống
+
+    if (networks.length === 0) {
+      return res.status(200).json({
+        success: true,
+        message: "Không tìm thấy mạng Wi-Fi nào.",
+        networks: [],
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      networks,
+    });
+  } catch (error) {
+    console.error("❌ Lỗi khi quét Wi-Fi:", error);
+    res.status(500).json({
+      success: false,
+      message: "Không thể quét mạng Wi-Fi.",
+      error: error.toString(),
+    });
+  }
+});
+
+app.post("/connect-wifi", async (req, res) => {
+  try {
+    const { ssid, password } = req.body;
+
+    if (!ssid || !password) {
+      return res.status(400).json({
+        success: false,
+        message: "Thiếu tên mạng hoặc mật khẩu.",
+      });
+    }
+
+    // Thực thi lệnh nmcli để kết nối Wi-Fi
+    const connectCommand = `sudo nmcli device wifi connect "${ssid}" password "${password}"`;
+    await execCommand(connectCommand);
+
+    res.status(200).json({
+      success: true,
+      message: `Đã kết nối tới mạng Wi-Fi: ${ssid}`,
+    });
+  } catch (error) {
+    console.error("❌ Lỗi kết nối Wi-Fi:", error);
+    res.status(500).json({
+      success: false,
+      message: "Kết nối Wi-Fi thất bại.",
+      error: error.toString(),
+    });
+  }
+});
+
+app.post("/disconnect-wifi", async (req, res) => {
+  try {
+    const { ssid } = req.body;
+    await execCommand(`sudo nmcli connection delete ${ssid}`); // Hủy kết nối
+    res.status(200).json({
+      success: true,
+      message: "Đã hủy kết nối Wi-Fi.",
+    });
+  } catch (error) {
+    console.error("❌ Lỗi khi hủy kết nối Wi-Fi:", error);
+    res.status(500).json({
+      success: false,
+      message: "Không thể hủy kết nối Wi-Fi.",
+      error: error.toString(),
+    });
+  }
+});
+
 // Khi server tắt, gửi lệnh 'exit' để đóng SSH
 function handleServerShutdown() {
   console.log("Server is shutting down...");

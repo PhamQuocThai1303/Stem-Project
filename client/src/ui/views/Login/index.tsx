@@ -2,11 +2,24 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { toast } from "react-toastify";
+import Modal from "react-bootstrap/Modal";
+import Button from "react-bootstrap/Button";
+import Spinner from "react-bootstrap/Spinner";
+
+interface WifiNetwork {
+  ssid: string;
+  signal: number;
+}
 
 const Login = () => {
   const [host, setHost] = useState<string>("");
   const [username, setUsername] = useState<string>("");
   const [password, setPassword] = useState<string>("");
+  const [loading, setLoading] = useState<boolean>(false)
+  const [wifiList, setWifiList] = useState<WifiNetwork[]>([])
+  const [selectedWifi, setSelectedWifi] = useState<string>("");
+  const [wifiPassword, setWifiPassword] = useState<string>("");
+  const [showWifiModal, setShowWifiModal] = useState<boolean>(false);
   const navigate = useNavigate();
   const { login } = useAuth();
 
@@ -16,9 +29,78 @@ const Login = () => {
     setPassword("");
   }, []);
 
+  const handleConnectWifi = async () => {
+    if (!selectedWifi || !wifiPassword) {
+      toast.error("❌ Hãy nhập tên mạng và mật khẩu!");
+      return;
+    }
+    setLoading(true);
+
+    try {
+      const response = await fetch("http://localhost:5000/connect-wifi", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ssid: selectedWifi, password: wifiPassword }),
+      });
+
+      if (!response.ok) throw new Error("Kết nối Wi-Fi thất bại!");
+      const data = await response.json();
+      toast.success(data.message);
+      setShowWifiModal(false);
+      // await checkNetwork(); // Kiểm tra lại kết nối
+    } catch (error) {
+      toast.error("❌ Kết nối Wi-Fi thất bại!");
+      console.error("Lỗi kết nối Wi-Fi:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchWifiList = async ()=>{
+    try {
+      const response = await fetch("http://localhost:5000/wifi-list")
+      if(!response.ok) throw new Error("Không thể lấy danh sách wifi")
+      const data = await response.json()
+    if(data.success){
+      setWifiList(data.networks)
+    }
+    else{
+      toast.error("❌ Không tìm thấy mạng wifi nào!")
+    }
+    } catch (error) {
+      toast.error("❌ Lỗi khi quét wifi!")
+      console.error("Lỗi khi quét wifi:", error);
+    }
+  }
+
+  const checkNetwork = async () => {
+    setLoading(true);
+    try {
+      const response = await fetch("http://localhost:5000/check-network");
+      if (!response.ok) throw new Error("Lỗi khi kiểm tra mạng");
+      const data = await response.json();
+
+      if (data.connected) {
+        toast.success("✅ Pi đã kết nối mạng!");
+        setWifiList([])
+        login();
+        navigate("/");
+      } else {
+        toast.error("❌ Pi chưa kết nối mạng!");
+        // setShowModal(true); 
+        fetchWifiList()
+      }
+    } catch (error) {
+      toast.error("❌ Không thể kiểm tra mạng!");
+      console.error("Lỗi kiểm tra mạng:", error);
+    } finally {
+      setLoading(false); 
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
+    setLoading(true);
     try {
         const response = await fetch("http://localhost:5000/connect", {
             method: "POST",
@@ -34,17 +116,24 @@ const Login = () => {
             toast.error(`HTTP error! status: ${response.status}`);
             return;
           }
-          toast.success("🎉 Kết nối thành công!");
-      login()
-      navigate("/");
+      toast.success("🎉 Kết nối thành công!");
+
+      await checkNetwork()
+      // login();
+      //   navigate("/");
     } catch (error) {
       toast.error("❌ Kết nối thất bại!");
       console.error("❌ Lỗi kết nối SSH:", error);
+    } finally {
+      setLoading(false); 
     }
   };
 
   return (
     <div className="container mt-5">
+  <div className="row">
+    {/* 📟 Cột trái: Nhập thông tin Raspberry Pi */}
+    <div className="col-md-6 border-end">
       <h2>Đăng nhập Raspberry Pi</h2>
       <form onSubmit={handleSubmit}>
         <div className="mb-3">
@@ -57,6 +146,7 @@ const Login = () => {
             required
           />
         </div>
+
         <div className="mb-3">
           <label>Username:</label>
           <input
@@ -67,6 +157,7 @@ const Login = () => {
             required
           />
         </div>
+
         <div className="mb-3">
           <label>Password:</label>
           <input
@@ -77,9 +168,73 @@ const Login = () => {
             required
           />
         </div>
-        <button type="submit" className="btn btn-primary">Kết nối</button>
+
+        <button type="submit" className="btn btn-primary" disabled={loading}>
+          {loading ? (
+            <>
+              <Spinner animation="border" size="sm" /> Đang kết nối...
+            </>
+          ) : (
+            "Kết nối"
+          )}
+        </button>
       </form>
     </div>
+
+    {/* 📡 Cột phải: Danh sách mạng Wi-Fi */}
+    <div className="col-md-6">
+      <h4>🔍 Chọn mạng Wi-Fi:</h4>
+      {wifiList.length > 0 ? (
+        wifiList.map((wifi, index) => (
+          <div key={index} className="d-flex justify-content-between my-2">
+            <p>
+              {wifi.ssid} (Tín hiệu: {wifi.signal}%)
+            </p>
+            <Button
+              variant="success"
+              onClick={() => {
+                setSelectedWifi(wifi.ssid);
+                setShowWifiModal(true);
+              }}
+            >
+              Kết nối
+            </Button>
+          </div>
+        ))
+      ) : (
+        <p>Không tìm thấy mạng Wi-Fi nào.</p>
+      )}
+    </div>
+  </div>
+
+  {/* 🔒 Modal: Nhập mật khẩu Wi-Fi */}
+  <Modal show={showWifiModal} onHide={() => setShowWifiModal(false)} centered>
+    <Modal.Header closeButton>
+      <Modal.Title>🔒 Nhập mật khẩu cho {selectedWifi}</Modal.Title>
+    </Modal.Header>
+    <Modal.Body>
+      <input
+        type="password"
+        className="form-control"
+        placeholder="Nhập mật khẩu Wi-Fi"
+        value={wifiPassword}
+        onChange={(e) => setWifiPassword(e.target.value)}
+      />
+    </Modal.Body>
+    <Modal.Footer>
+      <Button variant="primary" onClick={handleConnectWifi} disabled={loading}>
+      {loading ? (
+            <>
+              <Spinner animation="border" size="sm" /> Đang kết nối...
+            </>
+          ) : (
+            "Kết nối"
+          )}
+      </Button>
+    </Modal.Footer>
+  </Modal>
+</div>
+
   );
 };
 

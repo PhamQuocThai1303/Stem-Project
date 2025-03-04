@@ -13,6 +13,7 @@ import Login from './views/Login/index.tsx'
 import { AuthProvider } from './context/AuthContext.tsx'
 import PrivateRoute from './@core/components/privateRoute/PrivateRoute.tsx'
 import GlobalToast from './@core/components/Toast/GlobalToast.tsx'
+import Setting from './views/Setting/index.tsx'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
@@ -24,6 +25,7 @@ createRoot(document.getElementById('root')!).render(
       <Route path="/" element={<PrivateRoute element={<App />} />} />
         <Route path="/ml" element={<PrivateRoute element={<MachineLearning />} />} />
         <Route path="/chat" element={<PrivateRoute element={<ChatBot />} />} />
+        <Route path="/settings" element={<PrivateRoute element={<Setting />} />} />
         {/* <Route path="/settings" element={<Settings />} /> */}
       </Routes>
       <GlobalToast />
