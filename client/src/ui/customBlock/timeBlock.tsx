@@ -7,6 +7,14 @@ export const defineTimeBlocks  = () => {
   // Định nghĩa blocks
   Blockly.common.defineBlocksWithJsonArray([
     {
+      "type": "Time_setup",
+      "message0": "Thiết lập thư viện Time",
+      "nextStatement": null,
+      "previousStatement": null,
+      "colour": 230,
+      "tooltip": "Thiết lập thư viện Time"
+    },
+    {
         "type": "time_delay",
         "message0": "Khối chờ %1 giây",
         "args0": [
@@ -59,6 +67,10 @@ export const defineTimeBlocks  = () => {
   ]);
 
   // Định nghĩa Python generators
+  pythonGenerator.forBlock['Time_setup'] = function() {
+    return "import time\n"
+};
+
   pythonGenerator.forBlock['time_delay'] = function(block: Block) {
     const pin = block.getFieldValue('PIN');
     return `time.sleep(${pin})\n`;
@@ -86,6 +98,10 @@ export const timeToolboxConfig = {
     name: "Time Control",
     colour: "160",
     contents: [
+      {
+        kind: "block",
+        type: "Time_setup"
+      },
       {
         kind: "block",
         type: "time_delay"

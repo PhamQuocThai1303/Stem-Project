@@ -46,7 +46,23 @@ export const defineCommonBlocks  = () => {
         "previousStatement": null,
         "nextStatement": null,
         "helpUrl": ""
-      }
+      },
+      {
+        "type": "print_variable",
+        "message0": "print %1",
+        "args0": [
+          {
+            "type": "field_input",
+            "name": "VAR_NAME",
+            "text": "a"
+          },
+        ],
+        "previousStatement": null,
+        "nextStatement": null,
+        "colour": 230,
+        "tooltip": "In ra",
+        "helpUrl": ""
+      },
   ]);
 
 
@@ -70,6 +86,12 @@ export const defineCommonBlocks  = () => {
     return `try:\n${tryStatements}finally:\n${finallyStatements}`;
   };
 
+  pythonGenerator.forBlock['print_variable'] = function (block) {
+    const varName = block.getFieldValue('VAR_NAME');
+    
+    return `print(${varName})\n`;
+  };
+
 };
 
 const addIndent = (code: string, indent = '  ') => {
@@ -91,7 +113,11 @@ export const CommonToolboxConfig = {
       {
         kind: 'block',
         type: 'custom_function'
-      }
+      },
+      {
+        kind: "block",
+        type: "print_variable"
+      },
       
     ]
   };

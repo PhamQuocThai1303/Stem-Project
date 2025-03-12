@@ -1,11 +1,12 @@
-import LCD
-LCD.begin()
+print("kkkkk")
+import time
+import SERVO
 try:
-    LCD.backlight()
-    LCD.setCursor(3,1)
-    LCD.print("pham quoc thai")
+    SERVO.start()
     while not False:
-      pass
+      SERVO.angle(0)
+      time.sleep(2)
+      SERVO.angle(90)
+      time.sleep(2)
 finally:
-    LCD.noBacklight()
-    LCD.clear()
+    SERVO.stop()

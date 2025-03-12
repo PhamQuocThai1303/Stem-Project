@@ -51,6 +51,7 @@ function execCommand(command) {
       stream
         .on("data", (data) => {
           output += data.toString();
+          // if (onDataCallback) onDataCallback(data.toString())
         })
         .on("close", () => {
           console.log(`Command '${command}' executed`);

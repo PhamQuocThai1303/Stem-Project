@@ -56,11 +56,11 @@ export const defineServoBlocks  = () => {
 };
 
 pythonGenerator.forBlock['Servo_start'] = function () {
-    return "SERVO.on()\n"
+    return "SERVO.start()\n"
   };
  
   pythonGenerator.forBlock['Servo_stop'] = function () {
-    return "SERVO.off()\n"
+    return "SERVO.stop()\n"
   };
 
   pythonGenerator.forBlock['Servo_angle'] = function(block: Block) {

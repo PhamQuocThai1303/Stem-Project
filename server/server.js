@@ -220,7 +220,7 @@ app.post("/connect-wifi", async (req, res) => {
 app.post("/disconnect-wifi", async (req, res) => {
   try {
     const { ssid } = req.body;
-    await execCommand(`sudo nmcli connection delete ${ssid}`);
+    await execCommand(`sudo nmcli connection delete "${ssid}"`);
     res.status(200).json({
       success: true,
       message: "Đã hủy kết nối Wi-Fi.",
@@ -232,6 +232,23 @@ app.post("/disconnect-wifi", async (req, res) => {
       message: "Không thể hủy kết nối Wi-Fi.",
       error: error.toString(),
     });
+  }
+});
+
+app.get("/monitor-data", async (req, res) => {
+  res.setHeader("Content-Type", "text/event-stream");
+  res.setHeader("Cache-Control", "no-cache");
+  res.setHeader("Connection", "keep-alive");
+
+  try {
+    const command = `cd /home/${sshSession.username}/Documents/code && sudo python data.txt`;
+    await execCommand(command, (data) => {
+      console.log("📤 Output từ Pi:", data);
+      res.write(`data: ${data}\n\n`); // Gửi output liên tục tới client
+    });
+  } catch (error) {
+    console.error("❌ Lỗi khi chạy lệnh:", error);
+    res.write(`data: Lỗi: ${error.message}\n\n`);
   }
 });
 
