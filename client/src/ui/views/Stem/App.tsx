@@ -61,78 +61,114 @@ function App() {
     setGeneratedJson(JSON.stringify(newJson));
   }, []);
 
-  const handleRunSSH = async () => {
-    try {
-      const res = await fetch("http://localhost:5000/run-ssh");
-      const data = await res.json();
-      setResponse(data.message + "\n" + data.output);
-      console.log(data);
-      
-    } catch (error) {
-      console.log(error);
-      console.log(response);
-      
-      // setResponse("Error: " + error.message);
-    }
-  };
-
   const startMonitoring = () => {
     try {
-      const eventSource = new EventSource("http://localhost:5000/monitor-data");
+      const connectionId = localStorage.getItem('connection_id');
+      if (!connectionId) {
+        toast.error("Không tìm thấy kết nối!");
+        return;
+      }
+
+      const ws = new WebSocket(`ws://localhost:3000/ws/${connectionId}`);
   
-      // Xử lý dữ liệu nhận được từ SSE
-      eventSource.onmessage = (event) => {
-        console.log("📊 Data từ monitor-data: ", event.data);
-  
-        if (event.data.includes("Stopped monitoring")) {
-          toast.info("⏹️ Đã dừng giám sát do không còn tiến trình nào.");
-          eventSource.close(); // Dừng kết nối SSE
-        } else {
-          toast.success(`📊 Dữ liệu mới: ${event.data}`);
+      ws.onmessage = (event) => {
+        try {
+          console.log("📊 Data từ websocket: ", event.data);
+          // Cập nhật response state với dữ liệu mới
+          setResponse(prev => prev + "\n" + event.data);
+        } catch (error) {
+          console.error("Lỗi khi xử lý dữ liệu:", error);
+          if (error instanceof Error) {
+            toast.error("❌ Lỗi khi xử lý dữ liệu: " + error.message);
+          }
         }
       };
   
-      // Xử lý lỗi SSE
-      eventSource.onerror = (error) => {
-        console.error("❌ Lỗi từ SSE:", error);
+      ws.onerror = (error) => {
+        console.error("❌ Lỗi websocket:", error);
         toast.error("❌ Mất kết nối đến server.");
-        eventSource.close(); // Đảm bảo dừng SSE nếu lỗi
+        ws.close();
+      };
+
+      ws.onclose = () => {
+        console.log("WebSocket đã đóng");
+        toast.info("⏹️ Đã dừng giám sát.");
+      };
+
+      // Cleanup function
+      return () => {
+        ws.close();
       };
     } catch (error) {
-      console.error("❌ Lỗi khi giám sát:", error);
-      toast.error("❌ Lỗi khi bắt đầu giám sát.");
+      console.error("❌ Lỗi khi bắt đầu giám sát:", error);
+      if (error instanceof Error) {
+        toast.error("❌ Lỗi khi bắt đầu giám sát: " + error.message);
+      } else {
+        toast.error("❌ Lỗi không xác định khi bắt đầu giám sát");
+      }
     }
   };
    
   const handleSave = async () => {
     try {
-      // 🟢 Gọi API monitor-data NGAY khi gửi write-and-upload
-      
-  
-      const response = await fetch("http://localhost:5000/write-and-upload", {
+      const connectionId = localStorage.getItem('connection_id');
+      if (!connectionId) {
+        toast.error("Không tìm thấy kết nối!");
+        return;
+      }
+
+      const response = await fetch(`http://localhost:3000/api/upload/${connectionId}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ generatedCode }),
+        body: JSON.stringify({ 
+          code: generatedCode
+        }),
       });
   
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.detail);
+      }
+
       const result = await response.json();
-      toast.info(result.message);
-  
-      if (!response.ok) throw new Error(result.message);
-      // startMonitoring();
+      toast.success("✅ " + result.message);
+      startMonitoring();
     } catch (error) {
-      toast.error("❌ Lỗi khi ghi và upload: " + error.message);
+      if (error instanceof Error) {
+        toast.error("❌ Lỗi khi lưu code: " + error.message);
+      } else {
+        toast.error("❌ Lỗi không xác định khi lưu code");
+      }
     }
   };
 
   const handleStop = async () => {
-    const response = await fetch("http://localhost:5000/stop", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-    });
+    try {
+      const connectionId = localStorage.getItem('connection_id');
+      if (!connectionId) {
+        toast.error("Không tìm thấy kết nối!");
+        return;
+      }
 
-    const result = await response.json();
-    toast.info(result.message);
+      const response = await fetch(`http://localhost:3000/api/execute/${connectionId}/stop`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.detail);
+      }
+
+      const result = await response.json();
+      toast.info(result.message);
+    } catch (error) {
+      if (error instanceof Error) {
+        toast.error("❌ Lỗi khi dừng thực thi: " + error.message);
+      } else {
+        toast.error("❌ Lỗi không xác định khi dừng thực thi");
+      }
+    }
   };
 
   return (
@@ -178,7 +214,6 @@ function App() {
         <button onClick={() =>{
           console.log(generatedCode)
           console.log(generatedJson);
-          handleRunSSH()
           }
           }>
           Print

@@ -30,17 +30,26 @@ const Setting = () => {
     setLoading(true);
 
     try {
-      const response = await fetch("http://localhost:5000/connect-wifi", {
+      const connectionId = localStorage.getItem('connection_id');
+      if (!connectionId) {
+        toast.error("Không tìm thấy kết nối!");
+        return;
+      }
+
+      const response = await fetch(`http://localhost:3000/api/wifi/connect/${connectionId}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ ssid: selectedWifi, password: wifiPassword }),
       });
 
-      if (!response.ok) throw new Error("Kết nối Wi-Fi thất bại!");
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.detail);
+      }
       const data = await response.json();
       toast.success(data.message);
       setShowWifiModal(false);
-      await checkNetwork(); // Kiểm tra lại kết nối
+      await checkNetwork();
     } catch (error) {
       toast.error("❌ Kết nối Wi-Fi thất bại!");
       console.error("Lỗi kết nối Wi-Fi:", error);
@@ -51,20 +60,30 @@ const Setting = () => {
 
   const handleLogout = async () => {
     try {
-      const response = await fetch("http://localhost:5000/disconnect", {
+      // Lấy connection_id từ localStorage
+      const connectionId = localStorage.getItem('connection_id');
+      if (!connectionId) {
+        toast.error("Không tìm thấy kết nối!");
+        return;
+      }
+
+      const response = await fetch(`http://localhost:3000/api/disconnect/${connectionId}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
       });
   
       if (!response.ok) {
-        toast.error(`HTTP error! status: ${response.status}`);
+        const error = await response.json();
+        toast.error(`Lỗi: ${error.detail}`);
         return;
       }
   
       console.log("✅ SSH connection closed successfully.");
+      // Xóa connection_id khỏi localStorage
+      localStorage.removeItem('connection_id');
   
       logout();
-  toast.success("🎉 Đăng xuất thành công!");
+      toast.success("🎉 Đăng xuất thành công!");
       navigate("/login" , { replace: true });
     } catch (error) {
       toast.error("❌ Đăng xuất thất bại!");
@@ -75,51 +94,81 @@ const Setting = () => {
   const checkNetwork = async () => {
     setLoading(true);
     try {
-        const response = await fetch("http://localhost:5000/check-network");
-        if (!response.ok) throw new Error("Không thể kiểm tra mạng đang kết nối");
-        const data = await response.json();
-        if(data.connected){
-            setCurrentWifi(data.network.wifi);
-        }
-        else {
-            handleLogout()
-        }
-      } catch (error) {
-        console.error("Lỗi lấy thông tin mạng đang kết nối:", error);
-      } finally {
-        setLoading(false); 
+      const connectionId = localStorage.getItem('connection_id');
+      if (!connectionId) {
+        toast.error("Không tìm thấy kết nối!");
+        return;
       }
+
+      const response = await fetch(`http://localhost:3000/api/wifi/status/${connectionId}`);
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.detail);
+      }
+      const data = await response.json();
+      
+      if(data.connected) {
+        setCurrentWifi(data.network.wifi);
+      } else {
+        handleLogout();
+      }
+    } catch (error) {
+      console.error("Lỗi lấy thông tin mạng đang kết nối:", error);
+      toast.error("❌ Không thể kiểm tra trạng thái mạng!");
+    } finally {
+      setLoading(false); 
+    }
   };
 
-  const fetchWifiList = async ()=>{
+  const fetchWifiList = async () => {
     try {
-      const response = await fetch("http://localhost:5000/wifi-list")
-      if(!response.ok) throw new Error("Không thể lấy danh sách wifi")
-      const data = await response.json()
-    if(data.success){
-        await checkNetwork()
-      setWifiList(data.networks)
+      const connectionId = localStorage.getItem('connection_id');
+      if (!connectionId) {
+        toast.error("Không tìm thấy kết nối!");
+        return;
+      }
+
+      const response = await fetch(`http://localhost:3000/api/wifi/list/${connectionId}`);
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.detail);
+      }
+      const data = await response.json();
       
-    }
-    else{
-      toast.error("❌ Không tìm thấy mạng wifi nào!")
-    }
+      if (data.success) {
+        await checkNetwork();
+        setWifiList(data.networks);
+      } else {
+        toast.error("❌ Không tìm thấy mạng wifi nào!");
+      }
     } catch (error) {
-      toast.error("❌ Lỗi khi quét wifi!")
+      toast.error("❌ Lỗi khi quét wifi!");
       console.error("Lỗi khi quét wifi:", error);
     }
-  }
+  };
 
   const handleWifiAction = async (ssid: string) => {
     if (ssid === currentWifi) {
       try {
-        await fetch("http://localhost:5000/disconnect-wifi", {
+        const connectionId = localStorage.getItem('connection_id');
+        if (!connectionId) {
+          toast.error("Không tìm thấy kết nối!");
+          return;
+        }
+
+        const response = await fetch(`http://localhost:3000/api/wifi/disconnect/${connectionId}`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-                ssid,
-              }),
+          body: JSON.stringify({
+            ssid,
+          }),
         });
+        
+        if (!response.ok) {
+          const error = await response.json();
+          throw new Error(error.detail);
+        }
+        
         toast.success("✅ Đã hủy kết nối Wi-Fi.");
         await checkNetwork(); 
       } catch (error) {

@@ -26,20 +26,30 @@ const Header = () => {
   
   const handleLogout = async () => {
     try {
-      const response = await fetch("http://localhost:5000/disconnect", {
+      // Lấy connection_id từ localStorage
+      const connectionId = localStorage.getItem('connection_id');
+      if (!connectionId) {
+        toast.error("Không tìm thấy kết nối!");
+        return;
+      }
+
+      const response = await fetch(`http://localhost:3000/api/disconnect/${connectionId}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
       });
   
       if (!response.ok) {
-        toast.error(`HTTP error! status: ${response.status}`);
+        const error = await response.json();
+        toast.error(`Lỗi: ${error.detail}`);
         return;
       }
   
       console.log("✅ SSH connection closed successfully.");
+      // Xóa connection_id khỏi localStorage
+      localStorage.removeItem('connection_id');
   
       logout();
-  toast.success("🎉 Đăng xuất thành công!");
+      toast.success("🎉 Đăng xuất thành công!");
       navigate("/login" , { replace: true });
     } catch (error) {
       toast.error("❌ Đăng xuất thất bại!");

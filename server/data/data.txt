@@ -4,7 +4,8 @@ import time
 # Alias for time
 try:
     LEDs.update(1,1)
-    while not False:
-      pass
+    time.sleep(2)
+    LEDs.update(1,0)
+    time.sleep(2)
 finally:
     LEDs.update(1,0)

@@ -5,7 +5,8 @@
   "type": "module",
   "main": "dist-electron/main.js",
   "scripts": {
-    "dev": "npm-run-all --parallel dev:react dev:electron",
+    "dev": "npm-run-all --parallel dev:react server dev:electron",
+    "server": "cd .. && cd server && python server.py",
     "dev:react": "vite",
     "dev:electron": "npm run transpile:electron && cross-env NODE_ENV=development electron .",
     "build": "tsc -b && vite build",
