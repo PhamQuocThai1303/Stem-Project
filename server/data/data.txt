@@ -1,12 +1,10 @@
-print("kkkkk")
+import LEDs
 import time
-import SERVO
+
+# Alias for time
 try:
-    SERVO.start()
+    LEDs.update(1,1)
     while not False:
-      SERVO.angle(0)
-      time.sleep(2)
-      SERVO.angle(90)
-      time.sleep(2)
+      pass
 finally:
-    SERVO.stop()
+    LEDs.update(1,0)

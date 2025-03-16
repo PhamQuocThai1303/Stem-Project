@@ -1,6 +1,6 @@
 const express = require("express");
 const cors = require("cors");
-const { connectSSH, execCommand, closeSSHConnection, uploadFile } = require("./sshClient");
+const { connectSSH, execCommand, closeSSHConnection, uploadFile, isConnected } = require("./sshClient");
 const bodyParser = require("body-parser");
 const path = require("path");
 const fs = require("fs");
@@ -18,6 +18,8 @@ let sshSession = {
   host: "",
   username: "",
 };
+
+let isRunning = false;
 
 const FILE_PATH = path.join(__dirname, "data", "data.txt");
 // const remoteFilePath = `/home/${sshSession.username}/Documents/example/data.txt`;
@@ -71,15 +73,16 @@ app.post("/write-and-upload", async (req, res) => {
     await fs.promises.writeFile(FILE_PATH, generatedCode);
     console.log(`File written successfully: ${FILE_PATH}`);
 
-    
-    await uploadFile(FILE_PATH, `/home/${sshSession.username}/Documents/code/data.txt`);
-    console.log(`File uploaded to Raspberry Pi: ${`/home/${sshSession.username}/Documents/code/data.txt`}`);
+    isRunning = true;
+    await uploadFile(FILE_PATH, `/home/${sshSession.username}/Documents/example/data.txt`);
+    console.log(`File uploaded to Raspberry Pi: ${`/home/${sshSession.username}/Documents/example/data.txt`}`);
 
-    const command = `cd /home/${sshSession.username}/Documents/code && sudo python data.txt`;
+    const command = `cd /home/${sshSession.username}/Documents/example && sudo python data.txt`;
+    // res.status(200).json({ message: "Ghi file và upload thành công!" });
     const output = await execCommand(command);
     console.log(`Command output: ${output}`);
-
-    res.json({ message: "Ghi file và upload thành công!" });
+    res.status(200).json({ message: "File đã chạy xong!" });
+    isRunning = false;
   } catch (error) {
     console.error("❌ Error during write or upload:", error);
     res.status(500).json({ message: "Lỗi khi ghi và upload file", error: error.message });
@@ -101,6 +104,7 @@ app.post("/stop", async (req, res) => {
 if(firstPid){
   await execCommand(`sudo kill -SIGINT ${firstPid}`);
     console.log("✅ Tiến trình đã dừng an toàn.");
+    res.status(200).json({ message: "Tiến trình đã dừng an toàn" });
 }
     
     
@@ -240,17 +244,56 @@ app.get("/monitor-data", async (req, res) => {
   res.setHeader("Cache-Control", "no-cache");
   res.setHeader("Connection", "keep-alive");
 
+  const remoteFilePath = `/home/${sshSession.username}/Documents/example/test.json`;
+  console.log(`📊 Đang giám sát file: ${remoteFilePath}`);
+
   try {
-    const command = `cd /home/${sshSession.username}/Documents/code && sudo python data.txt`;
-    await execCommand(command, (data) => {
-      console.log("📤 Output từ Pi:", data);
-      res.write(`data: ${data}\n\n`); // Gửi output liên tục tới client
+    // if (!isConnected) {
+    //   res.write(`data: SSH is not connected\n\n`);
+    //   res.end();
+    //   return;
+    // }
+
+    // Hàm đọc file từ Pi
+    const readFile = async () => {
+      try {
+        // 📡 Kiểm tra nếu còn tiến trình đang chạy
+        if (!isRunning ) {
+          console.log("❌ Không còn tiến trình nào đang chạy, dừng giám sát.");
+          clearInterval(intervalId);
+          res.write(`data: Stopped monitoring\n\n`);
+          res.end();
+          return;
+        }
+
+        // 📄 Đọc nội dung file test.json
+        const command = `cat ${remoteFilePath}`;
+        const output = await execCommand(command);
+        
+        // 📤 Gửi dữ liệu tới client
+        res.write(`data: ${output}\n\n`);
+      } catch (error) {
+        console.error("❌ Lỗi khi đọc file:", error);
+        res.write(`data: Lỗi khi đọc file: ${error.message}\n\n`);
+      }
+    };
+
+    // Lặp lại mỗi 3 giây để đọc file
+    const intervalId = setInterval(readFile, 3000);
+
+    // Khi client đóng kết nối, dừng giám sát
+    req.on("close", () => {
+      console.log("🔌 Client đã ngắt kết nối.");
+      clearInterval(intervalId);
     });
   } catch (error) {
-    console.error("❌ Lỗi khi chạy lệnh:", error);
+    console.error("❌ Lỗi khi giám sát dữ liệu:", error);
     res.write(`data: Lỗi: ${error.message}\n\n`);
+    res.end();
   }
 });
+
+
 
 // Khi server tắt, gửi lệnh 'exit' để đóng SSH
 function handleServerShutdown() {

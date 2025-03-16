@@ -76,16 +76,53 @@ function App() {
     }
   };
 
+  const startMonitoring = () => {
+    try {
+      const eventSource = new EventSource("http://localhost:5000/monitor-data");
+  
+      // Xử lý dữ liệu nhận được từ SSE
+      eventSource.onmessage = (event) => {
+        console.log("📊 Data từ monitor-data: ", event.data);
+  
+        if (event.data.includes("Stopped monitoring")) {
+          toast.info("⏹️ Đã dừng giám sát do không còn tiến trình nào.");
+          eventSource.close(); // Dừng kết nối SSE
+        } else {
+          toast.success(`📊 Dữ liệu mới: ${event.data}`);
+        }
+      };
+  
+      // Xử lý lỗi SSE
+      eventSource.onerror = (error) => {
+        console.error("❌ Lỗi từ SSE:", error);
+        toast.error("❌ Mất kết nối đến server.");
+        eventSource.close(); // Đảm bảo dừng SSE nếu lỗi
+      };
+    } catch (error) {
+      console.error("❌ Lỗi khi giám sát:", error);
+      toast.error("❌ Lỗi khi bắt đầu giám sát.");
+    }
+  };
    
   const handleSave = async () => {
-    const response = await fetch("http://localhost:5000/write-and-upload", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({generatedCode}),
-    });
-
-    const result = await response.json();
-    toast.info(result.message);
+    try {
+      // 🟢 Gọi API monitor-data NGAY khi gửi write-and-upload
+      
+  
+      const response = await fetch("http://localhost:5000/write-and-upload", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ generatedCode }),
+      });
+  
+      const result = await response.json();
+      toast.info(result.message);
+  
+      if (!response.ok) throw new Error(result.message);
+      // startMonitoring();
+    } catch (error) {
+      toast.error("❌ Lỗi khi ghi và upload: " + error.message);
+    }
   };
 
   const handleStop = async () => {
