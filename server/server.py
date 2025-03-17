@@ -9,6 +9,10 @@ from datetime import datetime
 from ssh_manager import SSHManager
 import os
 from pathlib import Path
+import base64
+import numpy as np
+import cv2
+from fastapi import WebSocketDisconnect
 
 app = FastAPI()
 
@@ -337,6 +341,53 @@ async def check_network(connection_id: str):
             status_code=500,
             detail=f"Lỗi khi kiểm tra kết nối mạng: {str(e)}"
         )
+    
+@app.websocket("/api/ml/video/{connection_id}")
+async def video_stream(websocket: WebSocket, connection_id: str):
+    try:
+        print(f"New video connection request from {connection_id}")
+        # Decode connection_id
+        connection_id = connection_id.replace("%40", "@")
+        print(f"Decoded connection_id: {connection_id}")
+        
+        await websocket.accept()
+        print(f"Connection accepted for {connection_id}")
+        
+        while True:
+            data = await websocket.receive_json()
+            if data["type"] == "frame":
+                try:
+                    # Xử lý frame
+                    frame_data = data["data"]
+                    # Convert base64 to image
+                    img_data = base64.b64decode(frame_data.split(',')[1])
+                    nparr = np.frombuffer(img_data, np.uint8)
+                    frame = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+                    
+                    # TODO: Thêm xử lý ML ở đây
+                    # Ví dụ: Detect objects, faces, etc.
+                    
+                    # Gửi kết quả về client
+                    await websocket.send_json({
+                        "type": "prediction",
+                        "result": {
+                            "status": "success",
+                            "message": "Frame received"
+                        }
+                    })
+                except Exception as e:
+                    print(f"Error processing frame: {str(e)}")
+                    await websocket.send_json({
+                        "type": "error",
+                        "message": str(e)
+                    })
+                
+    except WebSocketDisconnect:
+        print(f"Client {connection_id} disconnected")
+    except Exception as e:
+        print(f"Error in video stream: {str(e)}")
+        if not websocket.client_state.disconnected:
+            await websocket.close(code=1011)
 
 if __name__ == "__main__":
     import uvicorn
