@@ -13,6 +13,13 @@ import base64
 import numpy as np
 import cv2
 from fastapi import WebSocketDisconnect
+from emotion_detector import detector
+import logging
+import urllib.parse
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 app = FastAPI()
 
@@ -388,6 +395,10 @@ async def video_stream(websocket: WebSocket, connection_id: str):
         print(f"Error in video stream: {str(e)}")
         if not websocket.client_state.disconnected:
             await websocket.close(code=1011)
+
+@app.get("/")
+async def root():
+    return {"message": "Emotion Detection Server is running"}
 
 if __name__ == "__main__":
     import uvicorn
