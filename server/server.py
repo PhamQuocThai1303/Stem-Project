@@ -13,9 +13,13 @@ import base64
 import numpy as np
 import cv2
 from fastapi import WebSocketDisconnect
-from emotion_detector import detector
+from emotion_detector import detector, EmotionDetector
 import logging
 import urllib.parse
+import json
+from websockets.server import serve
+from websockets.exceptions import ConnectionClosedOK
+from concurrent.futures import ThreadPoolExecutor
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -62,8 +66,11 @@ data_dir = Path(__file__).parent / "data"
 data_dir.mkdir(exist_ok=True)
 FILE_PATH = data_dir / "data.txt"
 
-# Initialize face detector
-face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
+# Initialize emotion detection
+emotion_detector = EmotionDetector()
+
+# Create thread pool for processing frames
+thread_pool = ThreadPoolExecutor(max_workers=2)
 
 @app.post("/api/connect")
 async def connect(connection_info: SSHConnectionInfo):
@@ -352,82 +359,68 @@ async def check_network(connection_id: str):
             detail=f"Lỗi khi kiểm tra kết nối mạng: {str(e)}"
         )
     
-@app.websocket("/ws/api/ml/video")
-async def video_stream(websocket: WebSocket):
+def process_frame(frame_data):
     try:
-        await websocket.accept()
-        logger.info("New WebSocket connection established")
+        # Decode base64 image
+        encoded_data = frame_data.split(',')[1]
+        nparr = np.frombuffer(base64.b64decode(encoded_data), np.uint8)
+        frame = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
         
+        if frame is None:
+            raise ValueError("Failed to decode image")
+
+        # Get emotion predictions
+        results = detector.detect_emotion(frame)
+        
+        return {
+            "faces": results
+        }
+        
+    except Exception as e:
+        logger.error(f"Error processing frame: {str(e)}")
+        return {"error": str(e)}
+
+@app.websocket("/ws/api/ml/video")
+async def video_stream_handler(websocket: WebSocket):
+    await websocket.accept()
+    processing = False
+    
+    try:
         while True:
-            try:
-                # Receive JSON data
-                data = await websocket.receive_json()
-                
-                if data["type"] != "frame":
+            # Only receive new frame if not processing
+            if not processing:
+                try:
+                    message = await asyncio.wait_for(websocket.receive_json(), timeout=0.1)
+                except asyncio.TimeoutError:
                     continue
                 
-                # Get frame data from base64
-                frame_data = data["data"]
-                
-                # Skip empty frames
-                if not frame_data or frame_data == "null":
+                if message.get("type") != "frame":
+                    continue
+                    
+                frame_data = message.get("data")
+                if not frame_data:
                     continue
                 
-                # Decode base64 image
-                encoded_data = frame_data.split(',')[1]
-                nparr = np.frombuffer(base64.b64decode(encoded_data), np.uint8)
-                frame = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+                processing = True
                 
-                if frame is None:
-                    logger.warning("Received invalid frame")
-                    continue
-                
-                # Convert to grayscale for face detection
-                gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-                
-                # Detect faces
-                faces = face_cascade.detectMultiScale(
-                    gray,
-                    scaleFactor=1.1,
-                    minNeighbors=5,
-                    minSize=(30, 30)
-                )
-                
-                # Draw rectangles around faces
-                face_data = []
-                for (x, y, w, h) in faces:
-                    cv2.rectangle(frame, (x, y), (x+w, y+h), (0, 255, 0), 2)
-                    face_data.append({
-                        "x": int(x),
-                        "y": int(y),
-                        "width": int(w),
-                        "height": int(h)
-                    })
-                
-                # Encode processed frame
-                _, buffer = cv2.imencode('.jpg', frame)
-                encoded_frame = base64.b64encode(buffer).decode('utf-8')
-                
-                # Send results back to client
-                await websocket.send_json({
-                    "frame": f"data:image/jpeg;base64,{encoded_frame}",
-                    "faces": face_data
-                })
-                
-            except Exception as e:
-                logger.error(f"Error processing frame: {str(e)}")
-                await websocket.send_json({
-                    "error": f"Error processing frame: {str(e)}"
-                })
-                
+                # Process frame in thread pool
+                loop = asyncio.get_event_loop()
+                try:
+                    results = await loop.run_in_executor(thread_pool, process_frame, frame_data)
+                    await websocket.send_json(results)
+                except Exception as e:
+                    logger.error(f"Error processing frame: {str(e)}")
+                    await websocket.send_json({"error": str(e)})
+                finally:
+                    processing = False
+            
+            # Small delay to prevent CPU overload
+            await asyncio.sleep(0.01)
+            
     except Exception as e:
         logger.error(f"WebSocket error: {str(e)}")
     finally:
-        logger.info("WebSocket connection closed")
-
-@app.get("/")
-async def root():
-    return {"message": "Face Detection Server is running"}
+        await websocket.close()
 
 if __name__ == "__main__":
     import uvicorn

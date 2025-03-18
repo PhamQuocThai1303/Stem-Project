@@ -1,142 +1,110 @@
 import cv2
 import numpy as np
-import tensorflow as tf
-import keras
-from keras import layers, models
-from keras.optimizers import Adam
+from tensorflow.keras.models import load_model
 
 class EmotionDetector:
-    def __init__(self):
-        self.emotions = ['Angry', 'Disgust', 'Fear', 'Happy', 'Sad', 'Surprise', 'Neutral']
-        self.face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
-        self.model = self._build_model()
-        
-    def _build_model(self):
-        inputs = layers.Input(shape=(48, 48, 1))
-        
-        # First Convolutional Block
-        x = layers.Conv2D(32, (3, 3), activation='relu', padding='same')(inputs)
-        x = layers.BatchNormalization()(x)
-        x = layers.Conv2D(32, (3, 3), activation='relu', padding='same')(x)
-        x = layers.BatchNormalization()(x)
-        x = layers.MaxPooling2D((2, 2))(x)
-        x = layers.Dropout(0.25)(x)
-        
-        # Second Convolutional Block
-        x = layers.Conv2D(64, (3, 3), activation='relu', padding='same')(x)
-        x = layers.BatchNormalization()(x)
-        x = layers.Conv2D(64, (3, 3), activation='relu', padding='same')(x)
-        x = layers.BatchNormalization()(x)
-        x = layers.MaxPooling2D((2, 2))(x)
-        x = layers.Dropout(0.25)(x)
-        
-        # Third Convolutional Block
-        x = layers.Conv2D(128, (3, 3), activation='relu', padding='same')(x)
-        x = layers.BatchNormalization()(x)
-        x = layers.Conv2D(128, (3, 3), activation='relu', padding='same')(x)
-        x = layers.BatchNormalization()(x)
-        x = layers.MaxPooling2D((2, 2))(x)
-        x = layers.Dropout(0.25)(x)
-        
-        # Dense Layers
-        x = layers.Flatten()(x)
-        x = layers.Dense(1024, activation='relu')(x)
-        x = layers.BatchNormalization()(x)
-        x = layers.Dropout(0.5)(x)
-        x = layers.Dense(512, activation='relu')(x)
-        x = layers.BatchNormalization()(x)
-        x = layers.Dropout(0.5)(x)
-        
-        # Output Layer
-        outputs = layers.Dense(len(self.emotions), activation='softmax')(x)
-        
-        # Create model
-        model = models.Model(inputs=inputs, outputs=outputs)
-        
-        # Compile model with modern optimizer settings
-        optimizer = Adam(learning_rate=0.001)
-        model.compile(
-            optimizer=optimizer,
-            loss='categorical_crossentropy',
-            metrics=['accuracy']
-        )
-        
-        # Load pre-trained weights if available
-        try:
-            model.load_weights('server/emotion_model_weights.h5')
-            print("Loaded model weights successfully")
-        except Exception as e:
-            print(f"No pre-trained weights found. Model will need to be trained. Error: {str(e)}")
-        
-        return model
+    EMOTIONS = ["angry", "disgust", "fear", "happy", "sad", "surprised", "neutral"]
+    EMOTION_COLORS = {
+        "angry": (0, 0, 255),      # Red
+        "disgust": (0, 255, 0),    # Green  
+        "fear": (0, 0, 0),         # Black
+        "happy": (255, 255, 0),    # Yellow
+        "sad": (255, 0, 0),        # Blue
+        "surprised": (0, 255, 255), # Cyan
+        "neutral": (255, 255, 255)  # White
+    }
 
-    def preprocess_face(self, face_img):
-        # Resize to 48x48
-        face_img = cv2.resize(face_img, (48, 48))
-        # Convert to grayscale if not already
-        if len(face_img.shape) == 3:
-            face_img = cv2.cvtColor(face_img, cv2.COLOR_BGR2GRAY)
-        # Normalize
-        face_img = face_img.astype('float32') / 255.0
-        # Reshape for model input
-        face_img = np.expand_dims(face_img, axis=-1)
-        face_img = np.expand_dims(face_img, axis=0)
-        return face_img
+    def __init__(self):
+        # Load face detection model
+        prototxt_path = "models/face_detection/deploy.prototxt.txt"
+        caffemodel_path = "models/face_detection/res10_300x300_ssd_iter_140000.caffemodel"
+        self.face_detector = cv2.dnn.readNetFromCaffe(prototxt_path, caffemodel_path)
+        
+        # Load emotion classification model
+        self.emotion_classifier = load_model("models/trained_model/mini_xception.0.65-119.hdf5")
+
+    def preprocess_face(self, face):
+        """Preprocess face for emotion detection"""
+        # Convert to grayscale
+        gray_face = cv2.cvtColor(face, cv2.COLOR_BGR2GRAY)
+        
+        # Resize to 48x48 which is the input size for the model
+        gray_face = cv2.resize(gray_face, (48, 48))
+        
+        # Normalize pixel values
+        gray_face = gray_face.astype('float32') / 255.0
+        
+        # Add batch and channel dimensions
+        gray_face = np.expand_dims(gray_face, axis=0)
+        gray_face = np.expand_dims(gray_face, axis=-1)
+        
+        return gray_face
 
     def detect_emotion(self, frame):
-        # Convert to grayscale for face detection
-        gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+        """Detect faces and their emotions in the frame"""
+        if frame is None:
+            return []
+            
+        (h, w) = frame.shape[:2]
         
-        # Detect faces using cascade classifier
-        faces = self.face_cascade.detectMultiScale(
-            gray,
-            scaleFactor=1.1,
-            minNeighbors=5,
-            minSize=(30, 30)
-        )
+        # Prepare input blob for face detection
+        blob = cv2.dnn.blobFromImage(cv2.resize(frame, (300, 300)), 1.0,
+                                   (300, 300), (104.0, 177.0, 123.0))
+        self.face_detector.setInput(blob)
+        detections = self.face_detector.forward()
         
         results = []
-        for (x, y, w, h) in faces:
+        
+        # Process each face detection
+        for i in range(0, detections.shape[2]):
+            confidence = detections[0, 0, i, 2]
+            
+            if confidence < 0.5:  # Increased confidence threshold
+                continue
+                
+            # Get face coordinates
+            box = detections[0, 0, i, 3:7] * np.array([w, h, w, h])
+            (startX, startY, endX, endY) = box.astype("int")
+            
+            # Ensure coordinates are within frame bounds
+            startX = max(0, startX)
+            startY = max(0, startY)
+            endX = min(w, endX)
+            endY = min(h, endY)
+            
+            # Extract face ROI
+            face = frame[startY:endY, startX:endX]
+            
+            if face.size == 0:
+                continue
+                
             try:
-                # Extract and preprocess face ROI
-                face_roi = gray[y:y+h, x:x+w]
-                processed_face = self.preprocess_face(face_roi)
+                # Preprocess face for emotion detection
+                processed_face = self.preprocess_face(face)
                 
-                # Get prediction
-                prediction = self.model.predict(processed_face, verbose=0)[0]
-                emotion_idx = np.argmax(prediction)
-                emotion = self.emotions[emotion_idx]
-                confidence = float(prediction[emotion_idx])
+                # Predict emotion
+                emotion_prediction = self.emotion_classifier.predict(processed_face)[0]
+                emotion_idx = np.argmax(emotion_prediction)
+                emotion_label = self.EMOTIONS[emotion_idx]
+                emotion_confidence = float(emotion_prediction[emotion_idx])
                 
-                # Draw rectangle and text
-                cv2.rectangle(frame, (x, y), (x+w, y+h), (0, 255, 0), 2)
-                cv2.putText(
-                    frame, 
-                    f"{emotion}: {confidence:.2f}", 
-                    (x, y-10),
-                    cv2.FONT_HERSHEY_SIMPLEX,
-                    0.9,
-                    (0, 255, 0),
-                    2
-                )
+                # Get color for this emotion
+                emotion_color = self.EMOTION_COLORS[emotion_label]
                 
-                # Add result to list
                 results.append({
-                    "emotion": emotion,
-                    "confidence": confidence,
-                    "position": {
-                        "x": int(x),
-                        "y": int(y),
-                        "width": int(w),
-                        "height": int(h)
+                    "bbox": [int(startX), int(startY), int(endX), int(endY)],
+                    "emotion": {
+                        "label": emotion_label,
+                        "confidence": emotion_confidence,
+                        "color": emotion_color
                     }
                 })
                 
             except Exception as e:
-                print(f"Error processing face ROI: {str(e)}")
+                print(f"Error processing face: {str(e)}")
                 continue
         
-        return frame, results
+        return results
 
 # Create singleton instance
 detector = EmotionDetector() 

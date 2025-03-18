@@ -5,10 +5,12 @@ import { toast } from 'react-toastify';
 import './style.css';
 
 interface FaceData {
-  x: number;
-  y: number;
-  width: number;
-  height: number;
+  bbox: [number, number, number, number];
+  emotion: {
+    label: string;
+    confidence: number;
+    color: [number, number, number];
+  };
 }
 
 const MachineLearning = () => {
@@ -30,26 +32,44 @@ const MachineLearning = () => {
   };
 
   const drawFaceBoxes = useCallback(() => {
-    if (!canvasRef.current) return;
+    if (!canvasRef.current || !webcamRef.current?.video) return;
 
-    const ctx = canvasRef.current.getContext('2d');
+    const canvas = canvasRef.current;
+    const video = webcamRef.current.video;
+    const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
+    // Set canvas size to match video
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+
     // Clear previous frame
-    ctx.clearRect(0, 0, 640, 480);
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    // Draw face boxes
-    ctx.strokeStyle = '#00ff00';
-    ctx.lineWidth = 2;
-    ctx.font = '16px Arial';
-    ctx.fillStyle = '#00ff00';
+    // Draw face boxes and emotions
+    faces.forEach(face => {
+      const [x, y, x2, y2] = face.bbox;
+      const width = x2 - x;
+      const height = y2 - y;
+      const [r, g, b] = face.emotion.color;
 
-    faces.forEach((face, index) => {
-      // Draw rectangle
-      ctx.strokeRect(face.x, face.y, face.width, face.height);
+      // Draw rectangle with emotion color
+      ctx.strokeStyle = `rgb(${r},${g},${b})`;
+      ctx.lineWidth = 2;
+      ctx.strokeRect(x, y, width, height);
       
-      // Draw label
-      ctx.fillText(`Face ${index + 1}`, face.x, face.y - 5);
+      // Draw emotion label with confidence
+      ctx.font = '16px Arial';
+      const text = `${face.emotion.label} (${(face.emotion.confidence * 100).toFixed(1)}%)`;
+      const textWidth = ctx.measureText(text).width;
+      
+      // Draw background for text
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+      ctx.fillRect(x, y - 25, textWidth + 10, 20);
+      
+      // Draw text
+      ctx.fillStyle = `rgb(${r},${g},${b})`;
+      ctx.fillText(text, x + 5, y - 10);
     });
 
     // Request next frame
@@ -107,21 +127,15 @@ const MachineLearning = () => {
   };
 
   const captureFrame = useCallback(() => {
-    if (!isWebcamReady) return;
-    
-    if (webcamRef.current && wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
-      try {
-        const imageSrc = webcamRef.current.getScreenshot();
-        if (imageSrc) {
-          wsRef.current.send(JSON.stringify({
-            type: 'frame',
-            data: imageSrc
-          }));
-        }
-      } catch (error) {
-        console.error('Error capturing frame:', error);
-      }
-    }
+    if (!webcamRef.current || !isWebcamReady || !wsRef.current) return;
+
+    const imageSrc = webcamRef.current.getScreenshot();
+    if (!imageSrc) return;
+
+    wsRef.current.send(JSON.stringify({
+      type: "frame",
+      data: imageSrc
+    }));
   }, [isWebcamReady]);
 
   const handleWSMessage = (event: MessageEvent) => {
@@ -148,6 +162,7 @@ const MachineLearning = () => {
     if (isCameraOn && isWebcamReady) {
       animationFrameId.current = requestAnimationFrame(drawFaceBoxes);
     }
+    
     return () => {
       if (animationFrameId.current) {
         cancelAnimationFrame(animationFrameId.current);
@@ -204,12 +219,12 @@ const MachineLearning = () => {
                     />
                     <canvas
                       ref={canvasRef}
-                      width={640}
-                      height={480}
                       style={{
                         position: 'absolute',
                         top: 0,
                         left: 0,
+                        width: '100%',
+                        height: '100%',
                         pointerEvents: 'none'
                       }}
                     />
@@ -242,6 +257,22 @@ const MachineLearning = () => {
               <h4>Face Detection</h4>
               <div className="chart-content">
                 <p>Đã phát hiện: {faces.length} khuôn mặt</p>
+                {faces.map((face, idx) => {
+                  const [r, g, b] = face.emotion.color;
+                  return (
+                    <div key={idx} className="emotion-result" style={{
+                      borderLeft: `4px solid rgb(${r},${g},${b})`,
+                      padding: '8px',
+                      margin: '8px 0',
+                      backgroundColor: 'rgba(255,255,255,0.1)'
+                    }}>
+                      <span className="emotion-label">Face {idx + 1}:</span>
+                      <span className="emotion-confidence" style={{color: `rgb(${r},${g},${b})`}}>
+                        {face.emotion.label} ({(face.emotion.confidence * 100).toFixed(1)}%)
+                      </span>
+                    </div>
+                  );
+                })}
               </div>
             </div>
           </div>
