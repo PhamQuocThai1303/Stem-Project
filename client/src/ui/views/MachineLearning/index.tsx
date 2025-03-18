@@ -1,55 +1,79 @@
-import React, { useRef, useEffect, useState } from 'react';
+import React, { useRef, useEffect, useState, useCallback } from 'react';
+import Webcam from 'react-webcam';
 import { Button } from 'react-bootstrap';
 import { toast } from 'react-toastify';
 import './style.css';
 
+interface FaceData {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+
 const MachineLearning = () => {
   const [isCameraOn, setIsCameraOn] = useState(false);
   const [isConnecting, setIsConnecting] = useState(false);
-  const [stream, setStream] = useState<MediaStream | null>(null);
-  const videoRef = useRef<HTMLVideoElement>(null);
+  const [faces, setFaces] = useState<FaceData[]>([]);
+  const [isWebcamReady, setIsWebcamReady] = useState(false);
+  
+  const webcamRef = useRef<Webcam>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const wsRef = useRef<WebSocket | null>(null);
+  const animationFrameId = useRef<number>();
+
+  const videoConstraints = {
+    width: 640,
+    height: 480,
+    facingMode: "user",
+    frameRate: { ideal: 30 }
+  };
+
+  const drawFaceBoxes = useCallback(() => {
+    if (!canvasRef.current) return;
+
+    const ctx = canvasRef.current.getContext('2d');
+    if (!ctx) return;
+
+    // Clear previous frame
+    ctx.clearRect(0, 0, 640, 480);
+
+    // Draw face boxes
+    ctx.strokeStyle = '#00ff00';
+    ctx.lineWidth = 2;
+    ctx.font = '16px Arial';
+    ctx.fillStyle = '#00ff00';
+
+    faces.forEach((face, index) => {
+      // Draw rectangle
+      ctx.strokeRect(face.x, face.y, face.width, face.height);
+      
+      // Draw label
+      ctx.fillText(`Face ${index + 1}`, face.x, face.y - 5);
+    });
+
+    // Request next frame
+    animationFrameId.current = requestAnimationFrame(drawFaceBoxes);
+  }, [faces]);
 
   const startCamera = async () => {
     try {
       setIsConnecting(true);
       console.log("Starting camera...");
       
-      const stream = await navigator.mediaDevices.getUserMedia({ 
-        video: { 
-          width: 640,
-          height: 480,
-          frameRate: { ideal: 10 }
-        } 
-      });
-      
-      console.log("Camera access granted");
-      setStream(stream);
-      setIsCameraOn(true);
-      
-      const connectionId = localStorage.getItem('connection_id');
-      if (!connectionId) {
-        throw new Error("Không tìm thấy kết nối!");
-      }
-      
-      const encodedConnectionId = encodeURIComponent(connectionId);
-      wsRef.current = new WebSocket(`ws://localhost:3000/api/ml/video/${encodedConnectionId}`);
+      wsRef.current = new WebSocket('ws://localhost:3000/ws/api/ml/video');
       
       wsRef.current.onopen = () => {
         console.log("WebSocket connected");
         setIsConnecting(false);
+        setIsCameraOn(true);
         toast.success("Kết nối camera thành công!");
       };
       
-      wsRef.current.onclose = (event) => {
-        console.log("WebSocket closed with code:", event.code);
+      wsRef.current.onclose = () => {
+        console.log("WebSocket closed");
         stopCamera();
-        if (event.code === 1006) {
-          toast.error("Không thể kết nối đến server!");
-        } else {
-          toast.error("Mất kết nối với server!");
-        }
+        toast.error("Mất kết nối với server!");
       };
       
       wsRef.current.onerror = (error) => {
@@ -69,92 +93,84 @@ const MachineLearning = () => {
   };
 
   const stopCamera = () => {
-    if (stream) {
-      stream.getTracks().forEach(track => track.stop());
-      setStream(null);
-    }
     if (wsRef.current) {
       wsRef.current.close();
       wsRef.current = null;
     }
+    if (animationFrameId.current) {
+      cancelAnimationFrame(animationFrameId.current);
+    }
     setIsCameraOn(false);
     setIsConnecting(false);
+    setFaces([]);
+    setIsWebcamReady(false);
   };
 
-  const processFrame = () => {
-    if (videoRef.current && canvasRef.current && wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
-      const ctx = canvasRef.current.getContext('2d');
-      if (ctx) {
-        try {
-          // Vẽ frame từ video lên canvas
-          ctx.drawImage(videoRef.current, 0, 0, 640, 480);
-          
-          // Convert canvas thành base64 image với chất lượng 0.8
-          const imageData = canvasRef.current.toDataURL('image/jpeg', 0.8);
-          
-          // Gửi frame qua WebSocket
+  const captureFrame = useCallback(() => {
+    if (!isWebcamReady) return;
+    
+    if (webcamRef.current && wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+      try {
+        const imageSrc = webcamRef.current.getScreenshot();
+        if (imageSrc) {
           wsRef.current.send(JSON.stringify({
             type: 'frame',
-            data: imageData
+            data: imageSrc
           }));
-        } catch (error) {
-          console.error('Error processing frame:', error);
         }
+      } catch (error) {
+        console.error('Error capturing frame:', error);
       }
     }
-  };
+  }, [isWebcamReady]);
 
   const handleWSMessage = (event: MessageEvent) => {
     try {
       const data = JSON.parse(event.data);
-      if (data.type === 'prediction') {
-        console.log('Received prediction:', data.result);
-        // TODO: Xử lý kết quả từ server và cập nhật chart
+      
+      // Check for error
+      if (data.error) {
+        console.error('Server error:', data.error);
+        return;
+      }
+      
+      // Update faces data
+      if (data.faces) {
+        setFaces(data.faces);
       }
     } catch (error) {
       console.error('Error parsing message:', error);
     }
   };
 
-  // Xử lý video stream
+  // Start animation when camera is ready
   useEffect(() => {
-    if (stream && videoRef.current) {
-      videoRef.current.srcObject = stream;
+    if (isCameraOn && isWebcamReady) {
+      animationFrameId.current = requestAnimationFrame(drawFaceBoxes);
     }
-  }, [stream]);
-
-  // Xử lý frame processing
-  useEffect(() => {
-    let frameId: number;
-    
-    if (isCameraOn && videoRef.current && stream) {
-      console.log("Setting up video stream...");
-      
-      const startFrameProcessing = () => {
-        console.log("Video metadata loaded, starting frame processing");
-        const animate = () => {
-          processFrame();
-          frameId = requestAnimationFrame(animate);
-        };
-        frameId = requestAnimationFrame(animate);
-      };
-
-      if (videoRef.current.readyState >= 2) {
-        // Video is already loaded
-        startFrameProcessing();
-      } else {
-        // Wait for video to load
-        videoRef.current.onloadeddata = startFrameProcessing;
+    return () => {
+      if (animationFrameId.current) {
+        cancelAnimationFrame(animationFrameId.current);
       }
+    };
+  }, [isCameraOn, isWebcamReady, drawFaceBoxes]);
+
+  // Handle frame processing
+  useEffect(() => {
+    let intervalId: NodeJS.Timeout | null = null;
+    
+    if (isCameraOn && isWebcamReady) {
+      console.log("Setting up video stream...");
+      intervalId = setInterval(captureFrame, 33); // ~30fps
     }
 
     return () => {
-      if (frameId) {
+      if (intervalId) {
         console.log("Stopping frame processing");
-        cancelAnimationFrame(frameId);
+        clearInterval(intervalId);
       }
     };
-  }, [isCameraOn, stream]);
+  }, [isCameraOn, isWebcamReady, captureFrame]);
 
   // Cleanup effect
   useEffect(() => {
@@ -173,21 +189,31 @@ const MachineLearning = () => {
               <h4>Camera</h4>
               <div className="camera-content">
                 {isCameraOn ? (
-                  <>
-                    <video
-                      ref={videoRef}
-                      autoPlay
-                      playsInline
-                      muted
+                  <div className="camera-container">
+                    <Webcam
+                      ref={webcamRef}
+                      audio={false}
+                      screenshotFormat="image/jpeg"
+                      videoConstraints={videoConstraints}
+                      mirrored={true}
+                      onUserMedia={() => {
+                        console.log("Webcam ready");
+                        setIsWebcamReady(true);
+                      }}
                       className="camera-feed"
                     />
                     <canvas
                       ref={canvasRef}
                       width={640}
                       height={480}
-                      style={{ display: 'none' }}
+                      style={{
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        pointerEvents: 'none'
+                      }}
                     />
-                  </>
+                  </div>
                 ) : (
                   <div className="camera-off">
                     <p>{isConnecting ? "Đang kết nối camera..." : "Camera đang tắt"}</p>
@@ -213,9 +239,9 @@ const MachineLearning = () => {
             </div>
 
             <div className="chart-section">
-              <h4>Chart</h4>
+              <h4>Face Detection</h4>
               <div className="chart-content">
-                {/* Chart sẽ được thêm sau */}
+                <p>Đã phát hiện: {faces.length} khuôn mặt</p>
               </div>
             </div>
           </div>

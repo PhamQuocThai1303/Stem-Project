@@ -62,6 +62,9 @@ data_dir = Path(__file__).parent / "data"
 data_dir.mkdir(exist_ok=True)
 FILE_PATH = data_dir / "data.txt"
 
+# Initialize face detector
+face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
+
 @app.post("/api/connect")
 async def connect(connection_info: SSHConnectionInfo):
     try:
@@ -349,56 +352,82 @@ async def check_network(connection_id: str):
             detail=f"Lỗi khi kiểm tra kết nối mạng: {str(e)}"
         )
     
-@app.websocket("/api/ml/video/{connection_id}")
-async def video_stream(websocket: WebSocket, connection_id: str):
+@app.websocket("/ws/api/ml/video")
+async def video_stream(websocket: WebSocket):
     try:
-        print(f"New video connection request from {connection_id}")
-        # Decode connection_id
-        connection_id = connection_id.replace("%40", "@")
-        print(f"Decoded connection_id: {connection_id}")
-        
         await websocket.accept()
-        print(f"Connection accepted for {connection_id}")
+        logger.info("New WebSocket connection established")
         
         while True:
-            data = await websocket.receive_json()
-            if data["type"] == "frame":
-                try:
-                    # Xử lý frame
-                    frame_data = data["data"]
-                    # Convert base64 to image
-                    img_data = base64.b64decode(frame_data.split(',')[1])
-                    nparr = np.frombuffer(img_data, np.uint8)
-                    frame = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
-                    
-                    # TODO: Thêm xử lý ML ở đây
-                    # Ví dụ: Detect objects, faces, etc.
-                    
-                    # Gửi kết quả về client
-                    await websocket.send_json({
-                        "type": "prediction",
-                        "result": {
-                            "status": "success",
-                            "message": "Frame received"
-                        }
-                    })
-                except Exception as e:
-                    print(f"Error processing frame: {str(e)}")
-                    await websocket.send_json({
-                        "type": "error",
-                        "message": str(e)
+            try:
+                # Receive JSON data
+                data = await websocket.receive_json()
+                
+                if data["type"] != "frame":
+                    continue
+                
+                # Get frame data from base64
+                frame_data = data["data"]
+                
+                # Skip empty frames
+                if not frame_data or frame_data == "null":
+                    continue
+                
+                # Decode base64 image
+                encoded_data = frame_data.split(',')[1]
+                nparr = np.frombuffer(base64.b64decode(encoded_data), np.uint8)
+                frame = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+                
+                if frame is None:
+                    logger.warning("Received invalid frame")
+                    continue
+                
+                # Convert to grayscale for face detection
+                gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+                
+                # Detect faces
+                faces = face_cascade.detectMultiScale(
+                    gray,
+                    scaleFactor=1.1,
+                    minNeighbors=5,
+                    minSize=(30, 30)
+                )
+                
+                # Draw rectangles around faces
+                face_data = []
+                for (x, y, w, h) in faces:
+                    cv2.rectangle(frame, (x, y), (x+w, y+h), (0, 255, 0), 2)
+                    face_data.append({
+                        "x": int(x),
+                        "y": int(y),
+                        "width": int(w),
+                        "height": int(h)
                     })
                 
-    except WebSocketDisconnect:
-        print(f"Client {connection_id} disconnected")
+                # Encode processed frame
+                _, buffer = cv2.imencode('.jpg', frame)
+                encoded_frame = base64.b64encode(buffer).decode('utf-8')
+                
+                # Send results back to client
+                await websocket.send_json({
+                    "frame": f"data:image/jpeg;base64,{encoded_frame}",
+                    "faces": face_data
+                })
+                
+            except Exception as e:
+                logger.error(f"Error processing frame: {str(e)}")
+                await websocket.send_json({
+                    "error": f"Error processing frame: {str(e)}"
+                })
+                
     except Exception as e:
-        print(f"Error in video stream: {str(e)}")
-        if not websocket.client_state.disconnected:
-            await websocket.close(code=1011)
+        logger.error(f"WebSocket error: {str(e)}")
+    finally:
+        logger.info("WebSocket connection closed")
 
 @app.get("/")
 async def root():
-    return {"message": "Emotion Detection Server is running"}
+    return {"message": "Face Detection Server is running"}
 
 if __name__ == "__main__":
     import uvicorn
