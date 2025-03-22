@@ -20,6 +20,7 @@
   "dependencies": {
     "@types/file-saver": "^2.0.7",
     "@types/react-webcam": "^3.0.0",
+    "@types/uuid": "^10.0.0",
     "blockly": "^11.2.0",
     "bootstrap": "^5.3.3",
     "cross-env": "^7.0.3",
@@ -38,8 +39,10 @@
     "react-router-dom": "^7.1.5",
     "react-toastify": "^11.0.5",
     "react-webcam": "^7.2.0",
+    "reactflow": "^11.11.4",
     "reactstrap": "^9.2.3",
-    "ssh2": "^1.16.0"
+    "ssh2": "^1.16.0",
+    "uuid": "^11.1.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.15.0",

@@ -1,0 +1,175 @@
+.export-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.export-modal {
+  background: white;
+  border-radius: 8px;
+  width: 800px;
+  max-width: 90vw;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.export-modal-header {
+  padding: 20px;
+  border-bottom: 1px solid #eee;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.export-modal-header h2 {
+  margin: 0;
+  font-size: 1.5rem;
+  color: #333;
+}
+
+.close-button {
+  background: none;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  color: #666;
+}
+
+.export-modal-tabs {
+  display: flex;
+  padding: 0 20px;
+  border-bottom: 1px solid #eee;
+}
+
+.tab {
+  padding: 15px 20px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  color: #666;
+  font-size: 1rem;
+  position: relative;
+}
+
+.tab.active {
+  color: #2196f3;
+  border-bottom: 2px solid #2196f3;
+}
+
+.info-icon {
+  margin-left: 5px;
+  font-size: 0.8rem;
+  color: #999;
+}
+
+.export-modal-content {
+  padding: 20px;
+}
+
+.model-type-section {
+  margin-bottom: 20px;
+}
+
+.model-type-section h3 {
+  margin: 0 0 10px 0;
+  font-size: 1rem;
+  color: #333;
+}
+
+.radio-group {
+  display: flex;
+  gap: 20px;
+}
+
+.radio-group label {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  cursor: pointer;
+}
+
+.description {
+  margin: 20px 0;
+  color: #666;
+  font-size: 0.9rem;
+}
+
+.code-section {
+  background: #f5f5f5;
+  border-radius: 4px;
+  margin: 20px 0;
+}
+
+.code-tabs {
+  display: flex;
+  padding: 10px;
+  border-bottom: 1px solid #ddd;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.code-tab {
+  padding: 8px 15px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  color: #666;
+}
+
+.code-tab.active {
+  color: #2196f3;
+}
+
+.github-link {
+  color: #2196f3;
+  text-decoration: none;
+  font-size: 0.9rem;
+}
+
+.code-content {
+  padding: 20px;
+  position: relative;
+}
+
+.code-content pre {
+  margin: 0;
+  white-space: pre-wrap;
+  font-family: monospace;
+  font-size: 0.9rem;
+}
+
+.copy-button {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  padding: 5px 10px;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.download-button {
+  display: block;
+  width: 100%;
+  padding: 15px;
+  background: #2196f3;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 1rem;
+  cursor: pointer;
+  margin-top: 20px;
+}
+
+.download-button:hover {
+  background: #1976d2;
+} 

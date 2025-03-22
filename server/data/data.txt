@@ -1,11 +1,15 @@
-import LEDs
 import time
-
-# Alias for time
+import LCD
+LCD.begin()
 try:
-    LEDs.update(1,1)
-    time.sleep(2)
-    LEDs.update(1,0)
-    time.sleep(2)
+    LCD.backlight()
+    LCD.setCursor(0,0)
+    LCD.print("Hello World")
+    time.sleep(3)
+    LCD.clear()
+    LCD.setCursor(0,0)
+    LCD.print("Pham Quoc Thai")
+    time.sleep(3)
 finally:
-    LEDs.update(1,0)
+    LCD.noBacklight()
+    LCD.clear()

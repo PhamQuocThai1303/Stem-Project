@@ -1,283 +1,269 @@
-import React, { useRef, useEffect, useState, useCallback } from 'react';
-import Webcam from 'react-webcam';
-import { Button } from 'react-bootstrap';
-import { toast } from 'react-toastify';
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import React, { useState, useCallback, useEffect } from 'react';
+import ReactFlow, {
+  Controls,
+  Background,
+  Node,
+  Edge,
+  Connection,
+  addEdge,
+  NodeChange,
+  EdgeChange,
+  ConnectionMode,
+  applyNodeChanges,
+  applyEdgeChanges,
+} from 'reactflow';
+import 'reactflow/dist/style.css';
 import './style.css';
+import ClassNode from './components/ClassNode/ClassNode';
+import TrainingNode from './components/TrainingNode/TrainingNode';
+import PreviewNode from './components/PreviewNode/PreviewNode';
+import { initialEdges, initialNodes } from './initialData';
+import { v4 as uuidv4 } from 'uuid';
 
-interface FaceData {
-  bbox: [number, number, number, number];
-  emotion: {
-    label: string;
-    confidence: number;
-    color: [number, number, number];
-  };
-}
+// Định nghĩa AddClassNode bên ngoài và nhận onClick qua props
+const AddClassNode = ({ data }: any) => {
+  return (
+    <div className="add-class-node">
+      <button className="add-class-button" onClick={data.onClick}>
+        <span className="plus-icon">+</span>
+        Add a class
+      </button>
+    </div>
+  );
+};
+
+// Định nghĩa nodeTypes object bên ngoài component chính
+const nodeTypes = {
+  classNode: ClassNode,
+  trainingNode: TrainingNode,
+  previewNode: PreviewNode,
+  addClassNode: AddClassNode,
+};
 
 const MachineLearning = () => {
-  const [isCameraOn, setIsCameraOn] = useState(false);
-  const [isConnecting, setIsConnecting] = useState(false);
-  const [faces, setFaces] = useState<FaceData[]>([]);
-  const [isWebcamReady, setIsWebcamReady] = useState(false);
-  
-  const webcamRef = useRef<Webcam>(null);
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const wsRef = useRef<WebSocket | null>(null);
-  const animationFrameId = useRef<number>();
+  const [classCount, setClassCount] = useState(2);
+  const [nodes, setNodes] = useState<Node[]>([]);
+  const [edges, setEdges] = useState<Edge[]>([]);
 
-  const videoConstraints = {
-    width: 640,
-    height: 480,
-    facingMode: "user",
-    frameRate: { ideal: 30 }
-  };
+  const handleDeleteClass = useCallback((nodeId: string) => {
+    setNodes((nds) => {
+      const deletedNodeIndex = nds.findIndex(node => node.id === nodeId);
+      if (deletedNodeIndex === -1) return nds;
 
-  const drawFaceBoxes = useCallback(() => {
-    if (!canvasRef.current || !webcamRef.current?.video) return;
+      // Lọc ra các class nodes (không bao gồm training, preview, add-class nodes)
+      const classNodes = nds.filter(node => 
+        node.type === 'classNode' && node.id !== nodeId
+      );
 
-    const canvas = canvasRef.current;
-    const video = webcamRef.current.video;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
+      // Lọc ra các nodes khác (training, preview, add-class)
+      const otherNodes = nds.filter(node => 
+        node.type !== 'classNode'
+      );
 
-    // Set canvas size to match video
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
+      // Chỉ cập nhật lại vị trí của các class nodes còn lại
+      const reorderedClassNodes = classNodes.map((node, index) => ({
+        ...node,
+        position: { x: 50, y: index * 200 + 50 }, // Chỉ cập nhật vị trí
+        data: {
+          ...node.data, // Giữ nguyên data cũ
+          onDelete: handleDeleteClass // Đảm bảo vẫn có handler xóa
+        }
+      }));
 
-    // Clear previous frame
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+      // Cập nhật lại vị trí của add-class node
+      const updatedOtherNodes = otherNodes.map(node => 
+        node
+      );
 
-    // Draw face boxes and emotions
-    faces.forEach(face => {
-      const [x, y, x2, y2] = face.bbox;
-      const width = x2 - x;
-      const height = y2 - y;
-      const [r, g, b] = face.emotion.color;
-
-      // Draw rectangle with emotion color
-      ctx.strokeStyle = `rgb(${r},${g},${b})`;
-      ctx.lineWidth = 2;
-      ctx.strokeRect(x, y, width, height);
-      
-      // Draw emotion label with confidence
-      ctx.font = '16px Arial';
-      const text = `${face.emotion.label} (${(face.emotion.confidence * 100).toFixed(1)}%)`;
-      const textWidth = ctx.measureText(text).width;
-      
-      // Draw background for text
-      ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
-      ctx.fillRect(x, y - 25, textWidth + 10, 20);
-      
-      // Draw text
-      ctx.fillStyle = `rgb(${r},${g},${b})`;
-      ctx.fillText(text, x + 5, y - 10);
+      return [...reorderedClassNodes, ...updatedOtherNodes];
     });
 
-    // Request next frame
-    animationFrameId.current = requestAnimationFrame(drawFaceBoxes);
-  }, [faces]);
+    // Chỉ xóa edge của node bị xóa, không cập nhật lại id của các edges khác
+    setEdges((eds) => eds.filter(edge => 
+      edge.source !== nodeId && edge.target !== nodeId
+    ));
 
-  const startCamera = async () => {
-    try {
-      setIsConnecting(true);
-      console.log("Starting camera...");
-      
-      wsRef.current = new WebSocket('ws://localhost:3000/ws/api/ml/video');
-      
-      wsRef.current.onopen = () => {
-        console.log("WebSocket connected");
-        setIsConnecting(false);
-        setIsCameraOn(true);
-        toast.success("Kết nối camera thành công!");
-      };
-      
-      wsRef.current.onclose = () => {
-        console.log("WebSocket closed");
-        stopCamera();
-        toast.error("Mất kết nối với server!");
-      };
-      
-      wsRef.current.onerror = (error) => {
-        console.error("WebSocket error:", error);
-        toast.error("Lỗi kết nối WebSocket!");
-        stopCamera();
-      };
-      
-      wsRef.current.onmessage = handleWSMessage;
-      
-    } catch (error) {
-      console.error('Error starting camera:', error);
-      toast.error(error instanceof Error ? error.message : "Không thể truy cập camera!");
-      setIsConnecting(false);
-      stopCamera();
-    }
-  };
-
-  const stopCamera = () => {
-    if (wsRef.current) {
-      wsRef.current.close();
-      wsRef.current = null;
-    }
-    if (animationFrameId.current) {
-      cancelAnimationFrame(animationFrameId.current);
-    }
-    setIsCameraOn(false);
-    setIsConnecting(false);
-    setFaces([]);
-    setIsWebcamReady(false);
-  };
-
-  const captureFrame = useCallback(() => {
-    if (!webcamRef.current || !isWebcamReady || !wsRef.current) return;
-
-    const imageSrc = webcamRef.current.getScreenshot();
-    if (!imageSrc) return;
-
-    wsRef.current.send(JSON.stringify({
-      type: "frame",
-      data: imageSrc
-    }));
-  }, [isWebcamReady]);
-
-  const handleWSMessage = (event: MessageEvent) => {
-    try {
-      const data = JSON.parse(event.data);
-      
-      // Check for error
-      if (data.error) {
-        console.error('Server error:', data.error);
-        return;
-      }
-      
-      // Update faces data
-      if (data.faces) {
-        setFaces(data.faces);
-      }
-    } catch (error) {
-      console.error('Error parsing message:', error);
-    }
-  };
-
-  // Start animation when camera is ready
-  useEffect(() => {
-    if (isCameraOn && isWebcamReady) {
-      animationFrameId.current = requestAnimationFrame(drawFaceBoxes);
-    }
-    
-    return () => {
-      if (animationFrameId.current) {
-        cancelAnimationFrame(animationFrameId.current);
-      }
-    };
-  }, [isCameraOn, isWebcamReady, drawFaceBoxes]);
-
-  // Handle frame processing
-  useEffect(() => {
-    let intervalId: NodeJS.Timeout | null = null;
-    
-    if (isCameraOn && isWebcamReady) {
-      console.log("Setting up video stream...");
-      intervalId = setInterval(captureFrame, 33); // ~30fps
-    }
-
-    return () => {
-      if (intervalId) {
-        console.log("Stopping frame processing");
-        clearInterval(intervalId);
-      }
-    };
-  }, [isCameraOn, isWebcamReady, captureFrame]);
-
-  // Cleanup effect
-  useEffect(() => {
-    return () => {
-      stopCamera();
-    };
+    setClassCount(prev => prev - 1);
   }, []);
 
+  const handleImageUpload = useCallback((nodeId: string, files: FileList) => {
+    const imageFiles = Array.from(files);
+    const imagePromises = imageFiles.map(file => {
+      return new Promise<string>((resolve) => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          resolve(e.target?.result as string);
+        };
+        reader.readAsDataURL(file);
+      });
+    });
+
+    Promise.all(imagePromises).then(imageUrls => {
+      setNodes(nds => 
+        nds.map(node => {
+          if (node.id === nodeId) {
+            return {
+              ...node,
+              data: {
+                ...node.data,
+                images: [...(node.data.images || []), ...imageUrls]
+              }
+            };
+          }
+          return node;
+        })
+      );
+    });
+  }, []);
+
+  const handleDeleteImage = useCallback((nodeId: string, imageIndex: number) => {
+    setNodes(nds => 
+      nds.map(node => {
+        if (node.id === nodeId && node.data.images) {
+          const newImages = [...node.data.images];
+          newImages.splice(imageIndex, 1);
+          return {
+            ...node,
+            data: {
+              ...node.data,
+              images: newImages
+            }
+          };
+        }
+        return node;
+      })
+    );
+  }, []);
+
+  const handleAddClass = useCallback(() => {
+    const newClassCount = classCount + 1;
+    const newNodeId = uuidv4();
+    const yPosition = classCount * 200 + 50;
+
+    const newNode: Node = {
+      id: newNodeId,
+      height: 187,
+      width: 350,
+      type: 'classNode',
+      position: { x: 50, y: yPosition },
+      data: {
+        id: newClassCount,
+        onDelete: handleDeleteClass,
+        onUpload: handleImageUpload,
+        onDeleteImage: handleDeleteImage,
+        images: []
+      }
+    };
+
+    const newEdge: Edge = {
+      id: `e${newNodeId}-training`,
+      source: newNodeId,
+      target: 'training',
+      type: 'smoothstep',
+    };
+
+    setNodes((nds) => [...nds, newNode]);
+    setEdges((eds) => [...eds, newEdge]);
+    setClassCount(newClassCount);
+  }, [classCount, handleDeleteClass, handleImageUpload, handleDeleteImage]);
+
+  const addClassNode = {
+    id: 'add-class',
+    type: 'addClassNode',
+    position: { x: 450, y: 50 },
+    data: { onClick: handleAddClass },
+  };
+
+  // Khởi tạo nodes ban đầu
+  useEffect(() => {
+    setNodes([
+      ...initialNodes.map(node => 
+        node.type === 'classNode' 
+          ? { 
+              ...node, 
+              data: { 
+                ...node.data, 
+                onDelete: handleDeleteClass,
+                onUpload: handleImageUpload,
+                onDeleteImage: handleDeleteImage,
+                images: [] 
+              } 
+            }
+          : node
+      ),
+      addClassNode
+    ]);
+    setEdges(initialEdges);
+  }, []);
+
+  useEffect(() => {
+    setNodes(nds => 
+      nds.map(node => 
+        node.id === 'add-class' 
+          ? { ...node, data: { onClick: handleAddClass } }
+          : node
+      )
+    );
+  }, [handleAddClass]);
+
+  useEffect(() => {
+    const classNodes = nodes.filter(node => node.type === 'classNode');
+    setNodes(nds => 
+      nds.map(node => 
+        node.type === 'trainingNode'
+          ? { ...node, data: { ...node.data, classNodes } }
+          : node
+      )
+    );
+  }, [nodes]);
+
+  const onNodesChange = useCallback(
+    (changes: NodeChange[]) => setNodes((nds) => applyNodeChanges(changes, nds)),
+    []
+  );
+
+  const onEdgesChange = useCallback(
+    (changes: EdgeChange[]) => {
+      const allowedChanges = changes.filter(change => change.type !== 'remove');
+      setEdges((eds) => applyEdgeChanges(allowedChanges, eds));
+    },
+    []
+  );
+
+  const onConnect = useCallback(
+    (params: Connection) => {
+      const isValidConnection = (
+        (params.source?.startsWith('') && params.target === 'training') ||
+        (params.source === 'training' && params.target === 'preview')
+      );
+
+      if (isValidConnection) {
+        setEdges((eds) => addEdge({ ...params, type: 'smoothstep', animated: true }, eds));
+      }
+    },
+    []
+  );
+
   return (
-    <div className='ml-app'>
-      <div className='ml-container'>
-        <div className="ml-wrapper">
-          {/* Left side */}
-          <div className="ml-left-panel">
-            <div className="camera-section">
-              <h4>Camera</h4>
-              <div className="camera-content">
-                {isCameraOn ? (
-                  <div className="camera-container">
-                    <Webcam
-                      ref={webcamRef}
-                      audio={false}
-                      screenshotFormat="image/jpeg"
-                      videoConstraints={videoConstraints}
-                      mirrored={true}
-                      onUserMedia={() => {
-                        console.log("Webcam ready");
-                        setIsWebcamReady(true);
-                      }}
-                      className="camera-feed"
-                    />
-                    <canvas
-                      ref={canvasRef}
-                      style={{
-                        position: 'absolute',
-                        top: 0,
-                        left: 0,
-                        width: '100%',
-                        height: '100%',
-                        pointerEvents: 'none'
-                      }}
-                    />
-                  </div>
-                ) : (
-                  <div className="camera-off">
-                    <p>{isConnecting ? "Đang kết nối camera..." : "Camera đang tắt"}</p>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-
-          {/* Right side */}
-          <div className="ml-right-panel">
-            <div className="settings-section">
-              <h4>Setting</h4>
-              <div className="settings-content">
-                <Button 
-                  variant={isCameraOn ? "danger" : "success"}
-                  onClick={() => isCameraOn ? stopCamera() : startCamera()}
-                  disabled={isConnecting}
-                >
-                  {isConnecting ? "Đang kết nối..." : isCameraOn ? "Tắt Camera" : "Bật Camera"}
-                </Button>
-              </div>
-            </div>
-
-            <div className="chart-section">
-              <h4>Face Detection</h4>
-              <div className="chart-content">
-                <p>Đã phát hiện: {faces.length} khuôn mặt</p>
-                {faces.map((face, idx) => {
-                  const [r, g, b] = face.emotion.color;
-                  return (
-                    <div key={idx} className="emotion-result" style={{
-                      borderLeft: `4px solid rgb(${r},${g},${b})`,
-                      padding: '8px',
-                      margin: '8px 0',
-                      backgroundColor: 'rgba(255,255,255,0.1)'
-                    }}>
-                      <span className="emotion-label">Face {idx + 1}:</span>
-                      <span className="emotion-confidence" style={{color: `rgb(${r},${g},${b})`}}>
-                        {face.emotion.label} ({(face.emotion.confidence * 100).toFixed(1)}%)
-                      </span>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+    <div className="machine-learning-flow">
+      <ReactFlow
+        nodes={nodes}
+        edges={edges}
+        onNodesChange={onNodesChange}
+        onEdgesChange={onEdgesChange}
+        onConnect={onConnect}
+        nodeTypes={nodeTypes}
+        connectionMode={ConnectionMode.Loose}
+        fitView
+        snapToGrid
+        deleteKeyCode={null}
+        // nodesDraggable={false}
+        // nodesConnectable={false}
+      >
+        <Background />
+        <Controls />
+      </ReactFlow>
     </div>
   );
 };

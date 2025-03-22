@@ -1,7 +1,7 @@
 # server.py
 from fastapi import FastAPI, HTTPException, WebSocket
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, FileResponse
 from pydantic import BaseModel
 from typing import Dict, List, Optional
 import asyncio
@@ -20,6 +20,8 @@ import json
 from websockets.server import serve
 from websockets.exceptions import ConnectionClosedOK
 from concurrent.futures import ThreadPoolExecutor
+from ml_utils import ModelTrainer
+import shutil
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -57,6 +59,14 @@ class WifiCredentials(BaseModel):
     ssid: str
     password: str
 
+class ClassData(BaseModel):
+    name: str
+    images: List[str]
+
+class TrainingRequest(BaseModel):
+    classes: List[ClassData]
+    epochs: int = 10
+
 # Global state
 ssh_managers: Dict[str, SSHManager] = {}
 active_connections: Dict[str, dict] = {}
@@ -69,6 +79,7 @@ FILE_PATH = data_dir / "data.txt"
 # Initialize emotion detection
 emotion_detector = EmotionDetector()
 
+model_trainer = ModelTrainer()
 # Create thread pool for processing frames
 thread_pool = ThreadPoolExecutor(max_workers=2)
 
@@ -422,6 +433,48 @@ async def video_stream_handler(websocket: WebSocket):
     finally:
         await websocket.close()
 
+@app.post("/api/train")
+async def train_model(request: TrainingRequest):
+    try:
+        # Convert Pydantic models to dictionaries
+        class_data = [
+            {"name": cls.name, "images": cls.images}
+            for cls in request.classes
+        ]
+        history = model_trainer.train(class_data, request.epochs)
+        return {"status": "success", "history": history}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    
+@app.websocket("/ws/predict")
+async def predict_stream(websocket: WebSocket):
+    await websocket.accept()
+    
+    try:
+        while True:
+            image_data = await websocket.receive_text()
+            predictions = model_trainer.predict(image_data)
+            await websocket.send_json(predictions)
+    except Exception as e:
+        await websocket.close(code=1000)
+
+@app.get("/api/export-model")
+async def export_model():
+    try:
+        export_path = model_trainer.export_model()
+        
+        # Zip the exported model
+        shutil.make_archive(export_path, 'zip', export_path)
+        
+        # Return the zip file
+        return FileResponse(
+            f"{export_path}.zip",
+            media_type="application/zip",
+            filename="model.zip"
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+                
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=3000)
