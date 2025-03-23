@@ -7,6 +7,7 @@ import Webcam from 'react-webcam';
 import ProgressBar from '../ProgressBar';
 import './index.css';
 import ExportModal from '../ExportModal/ExportModal';
+import { log } from 'console';
 
 interface PreviewNodeProps {
   data: {
@@ -21,6 +22,7 @@ const PreviewNode: React.FC<PreviewNodeProps> = ({ data }) => {
   const [predictions, setPredictions] = useState<Record<string, number>>({});
   const [ws, setWs] = useState<WebSocket | null>(null);
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
+  // console.log(data);
   
   const videoConstraints = {
     width: 640,

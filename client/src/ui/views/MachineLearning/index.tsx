@@ -46,7 +46,21 @@ const MachineLearning = () => {
   const [nodes, setNodes] = useState<Node[]>([]);
   const [edges, setEdges] = useState<Edge[]>([]);
 
+  const setUpDataForTraining = (newNodes: Node[])=> {
+    
+    const classNodes = newNodes.filter(node => node.type === 'classNode');
+
+    setNodes(nds => {
+      return nds.map(node => 
+        (node.type === 'trainingNode')
+          ? { ...node, data: { ...node.data, classNodes } }
+          : node
+      );
+    });
+  }
+
   const handleDeleteClass = useCallback((nodeId: string) => {
+    
     setNodes((nds) => {
       const deletedNodeIndex = nds.findIndex(node => node.id === nodeId);
       if (deletedNodeIndex === -1) return nds;
@@ -64,10 +78,10 @@ const MachineLearning = () => {
       // Chỉ cập nhật lại vị trí của các class nodes còn lại
       const reorderedClassNodes = classNodes.map((node, index) => ({
         ...node,
-        position: { x: 50, y: index * 200 + 50 }, // Chỉ cập nhật vị trí
+        position: { x: 50, y: index * 200 + 50 },
         data: {
-          ...node.data, // Giữ nguyên data cũ
-          onDelete: handleDeleteClass // Đảm bảo vẫn có handler xóa
+          ...node.data,
+          onDelete: handleDeleteClass 
         }
       }));
 
@@ -76,16 +90,17 @@ const MachineLearning = () => {
         node
       );
 
+      setUpDataForTraining([...reorderedClassNodes, ...updatedOtherNodes])
       return [...reorderedClassNodes, ...updatedOtherNodes];
     });
 
-    // Chỉ xóa edge của node bị xóa, không cập nhật lại id của các edges khác
     setEdges((eds) => eds.filter(edge => 
       edge.source !== nodeId && edge.target !== nodeId
     ));
 
     setClassCount(prev => prev - 1);
-  }, []);
+    // setUpDataForTraining()
+  }, [nodes]);
 
   const handleImageUpload = useCallback((nodeId: string, files: FileList) => {
     const imageFiles = Array.from(files);
@@ -98,28 +113,34 @@ const MachineLearning = () => {
         reader.readAsDataURL(file);
       });
     });
-
+    console.log(nodes);
+    
     Promise.all(imagePromises).then(imageUrls => {
-      setNodes(nds => 
-        nds.map(node => {
-          if (node.id === nodeId) {
-            return {
-              ...node,
-              data: {
-                ...node.data,
-                images: [...(node.data.images || []), ...imageUrls]
+      setNodes(prevNodes => {
+          const newNode = prevNodes.map(node => {
+              if (node.id === nodeId) {
+                  return {
+                      ...node,
+                      data: {
+                          ...node.data,
+                          images: [...(node.data.images || []), ...imageUrls]
+                      }
+                  };
               }
-            };
-          }
-          return node;
-        })
-      );
-    });
-  }, []);
+              return node;
+          });
+
+          console.log("Updated Nodes:", newNode); // Log sau khi cập nhật
+          setUpDataForTraining(newNode);
+          return newNode;
+      });
+  });
+    
+  }, [nodes]);
 
   const handleDeleteImage = useCallback((nodeId: string, imageIndex: number) => {
-    setNodes(nds => 
-      nds.map(node => {
+    setNodes(nds => {
+      const newNode = nds.map(node => {
         if (node.id === nodeId && node.data.images) {
           const newImages = [...node.data.images];
           newImages.splice(imageIndex, 1);
@@ -133,7 +154,11 @@ const MachineLearning = () => {
         }
         return node;
       })
+      setUpDataForTraining(newNode)
+      return newNode;
+    } 
     );
+    // setUpDataForTraining()
   }, []);
 
   const handleAddClass = useCallback(() => {
@@ -162,10 +187,14 @@ const MachineLearning = () => {
       target: 'training',
       type: 'smoothstep',
     };
-
-    setNodes((nds) => [...nds, newNode]);
+    
+    setNodes((nds) => {
+      setUpDataForTraining([...nds, newNode])
+      return [...nds, newNode]
+    });
     setEdges((eds) => [...eds, newEdge]);
     setClassCount(newClassCount);
+    // setUpDataForTraining()
   }, [classCount, handleDeleteClass, handleImageUpload, handleDeleteImage]);
 
   const addClassNode = {
@@ -177,6 +206,7 @@ const MachineLearning = () => {
 
   // Khởi tạo nodes ban đầu
   useEffect(() => {
+    
     setNodes([
       ...initialNodes.map(node => 
         node.type === 'classNode' 
@@ -207,16 +237,33 @@ const MachineLearning = () => {
     );
   }, [handleAddClass]);
 
-  useEffect(() => {
-    const classNodes = nodes.filter(node => node.type === 'classNode');
-    setNodes(nds => 
-      nds.map(node => 
-        node.type === 'trainingNode'
-          ? { ...node, data: { ...node.data, classNodes } }
-          : node
-      )
-    );
-  }, [nodes]);
+  // useEffect(() => {
+  //   console.log(99999);
+    
+  //   const classNodes = nodes.filter(node => node.type === 'classNode');
+  //   // const hasClassNodesChanged = (prevNodes: Node[], currentClassNodes: Node[]) => {
+  //   //   if (prevNodes.length !== currentClassNodes.length) return true;
+  //   //   return prevNodes.some((node, index) => 
+  //   //     node.id !== currentClassNodes[index].id || 
+  //   //     node.data.images !== currentClassNodes[index].data.images
+  //   //   );
+  //   // };
+
+  //   setNodes(nds => {
+  //     // const prevClassNodes = nds
+  //     //   .filter(node => node.type === 'classNode');
+      
+  //     // if (!hasClassNodesChanged(prevClassNodes, classNodes)) {
+  //     //   return nds;
+  //     // }
+
+  //     return nds.map(node => 
+  //       (node.type === 'trainingNode')
+  //         ? { ...node, data: { ...node.data, classNodes } }
+  //         : node
+  //     );
+  //   });
+  // }, [classCount]);
 
   const onNodesChange = useCallback(
     (changes: NodeChange[]) => setNodes((nds) => applyNodeChanges(changes, nds)),
