@@ -7,6 +7,8 @@ import io
 from PIL import Image
 import os
 import json
+import shutil
+import zipfile
 
 def preprocess_image(image_data, target_size=(224, 224)):
     """Tiền xử lý ảnh từ base64 string hoặc numpy array"""
@@ -96,30 +98,61 @@ class ModelTrainer:
             name: float(pred) * 100 
             for name, pred in zip(self.class_names, predictions[0])
         }
-    
-    def export_model(self):
-        """Export model sang định dạng SavedModel"""
+
+    def export_model(self, format='tensorflow', type='savedmodel'):
+        """Export model theo format và type được chọn"""
         if self.model is None:
             raise ValueError("Model chưa được train")
-        
-        # Tạo thư mục nếu chưa tồn tại
+
+        # Tạo thư mục export
         export_path = "exported_model"
-        if not os.path.exists(export_path):
-            os.makedirs(export_path)
-        
-        # Lưu model dưới dạng SavedModel
-        model_path = os.path.join(export_path, "saved_model")
-        tf.saved_model.save(self.model, model_path)
-        
-        # Lưu metadata (class names và thông tin khác)
+        if os.path.exists(export_path):
+            shutil.rmtree(export_path)
+        os.makedirs(export_path)
+
+        # Lưu metadata chung
         metadata = {
             "class_names": self.class_names,
             "input_shape": [224, 224, 3],
             "preprocessing": "normalize_0_1"
         }
-        
         metadata_path = os.path.join(export_path, "metadata.json")
         with open(metadata_path, "w") as f:
             json.dump(metadata, f, indent=2)
-        
-        return export_path
+
+        # Export theo format được chọn
+        if format == 'tensorflow':
+            if type == 'keras':
+                # Export Keras H5
+                model_path = os.path.join(export_path, "model.h5")
+                self.model.save(model_path, save_format='h5')
+            else:
+                # Export SavedModel
+                model_path = os.path.join(export_path, "saved_model")
+                tf.saved_model.save(self.model, model_path)
+
+        elif format == 'tensorflow.js':
+            # Export TensorFlow.js
+            model_path = os.path.join(export_path, "tfjs_model")
+            tfjs = __import__('tensorflowjs')
+            tfjs.converters.save_keras_model(self.model, model_path)
+
+        elif format == 'tensorflow-lite':
+            # Export TensorFlow Lite
+            converter = tf.lite.TFLiteConverter.from_keras_model(self.model)
+            tflite_model = converter.convert()
+            model_path = os.path.join(export_path, "model.tflite")
+            with open(model_path, 'wb') as f:
+                f.write(tflite_model)
+
+        # Nén thành file zip
+        zip_path = os.path.join(export_path, "model.zip")
+        with zipfile.ZipFile(zip_path, 'w') as zipf:
+            for root, dirs, files in os.walk(export_path):
+                for file in files:
+                    if file != "model.zip":  # Không nén file zip
+                        file_path = os.path.join(root, file)
+                        arcname = os.path.relpath(file_path, export_path)
+                        zipf.write(file_path, arcname)
+
+        return zip_path

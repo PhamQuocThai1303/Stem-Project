@@ -104,14 +104,6 @@ useEffect(() => {
     }
   }, [isInputOn]);
 
-  const handleExportModel = useCallback(async () => {
-    try {
-      window.location.href = 'http://localhost:3000/api/export-model';
-    } catch (error) {
-      console.error('Export error:', error);
-    }
-  }, []);
-
   return (
     <div className="preview-node">
       <Handle type="target" position={Position.Left} />

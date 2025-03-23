@@ -15,6 +15,14 @@ const ExportModal: React.FC<ExportModalProps> = ({ isOpen, onClose }) => {
 
   const selectedExport = initialExport.find(exp => exp.format === selectedFormat) as ExportFormat;
 
+  const handleExportModel = async (modelType: string, selectedFormat: string) => {
+    try {
+      window.location.href = `http://localhost:3000/api/export-model?format=${selectedFormat}&type=${modelType}`;
+    } catch (error) {
+      console.error('Export error:', error);
+    }
+  };
+
   return (
     <div className="export-modal-overlay">
       <div className="export-modal">
@@ -78,7 +86,7 @@ const ExportModal: React.FC<ExportModalProps> = ({ isOpen, onClose }) => {
             </div>
           )}
 
-          <button className="download-button">
+          <button className="download-button" onClick={()=>handleExportModel(modelType, selectedFormat)}>
             Download my model
           </button>
         </div>

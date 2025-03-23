@@ -21,7 +21,6 @@ from websockets.server import serve
 from websockets.exceptions import ConnectionClosedOK
 from concurrent.futures import ThreadPoolExecutor
 from ml_utils import ModelTrainer
-import shutil
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -459,19 +458,22 @@ async def predict_stream(websocket: WebSocket):
         await websocket.close(code=1000)
 
 @app.get("/api/export-model")
-async def export_model():
+async def export_model(format: str, type: str = 'download'):
+    """Export model theo format và type được chọn"""
     try:
-        export_path = model_trainer.export_model()
-        
-        # Zip the exported model
-        shutil.make_archive(export_path, 'zip', export_path)
-        
-        # Return the zip file
+        if not model_trainer.model:
+            raise HTTPException(status_code=400, detail="Model chưa được train")
+
+        # Export model
+        zip_path = model_trainer.export_model(format=format, type=type)
+
+        # Trả về file zip
         return FileResponse(
-            f"{export_path}.zip",
-            media_type="application/zip",
-            filename="model.zip"
+            zip_path,
+            media_type='application/zip',
+            filename='model.zip'
         )
+
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
                 
