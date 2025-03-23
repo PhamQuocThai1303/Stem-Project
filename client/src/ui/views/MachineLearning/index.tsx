@@ -20,6 +20,7 @@ import TrainingNode from './components/TrainingNode/TrainingNode';
 import PreviewNode from './components/PreviewNode/PreviewNode';
 import { initialEdges, initialNodes } from './initialData';
 import { v4 as uuidv4 } from 'uuid';
+import ExportModal from './components/ExportModal/ExportModal';
 
 // Định nghĩa AddClassNode bên ngoài và nhận onClick qua props
 const AddClassNode = ({ data }: any) => {
@@ -45,6 +46,7 @@ const MachineLearning = () => {
   const [classCount, setClassCount] = useState(2);
   const [nodes, setNodes] = useState<Node[]>([]);
   const [edges, setEdges] = useState<Edge[]>([]);
+  const [isExportModalOpen, setIsExportModalOpen] = useState(false);
 
   const setUpDataForTraining = (newNodes: Node[])=> {
     
@@ -208,22 +210,32 @@ const MachineLearning = () => {
   useEffect(() => {
     
     setNodes([
-      ...initialNodes.map(node => 
-        node.type === 'classNode' 
-          ? { 
-              ...node, 
-              data: { 
-                ...node.data, 
-                onDelete: handleDeleteClass,
-                onUpload: handleImageUpload,
-                onDeleteImage: handleDeleteImage,
-                images: [] 
-              } 
+      ...initialNodes.map(node => {
+        if (node.type === 'classNode') {
+          return {
+            ...node,
+            data: {
+              ...node.data,
+              onDelete: handleDeleteClass,
+              onUpload: handleImageUpload,
+              onDeleteImage: handleDeleteImage,
+              images: []
             }
-          : node
-      ),
+          };
+        } else if (node.type === 'previewNode') {
+          return {
+            ...node,
+            data: {
+              ...node.data,
+              openModal: setIsExportModalOpen
+            }
+          };
+        }
+        return node;
+      }),
       addClassNode
     ]);
+    
     setEdges(initialEdges);
   }, []);
 
@@ -311,6 +323,10 @@ const MachineLearning = () => {
         <Background />
         <Controls />
       </ReactFlow>
+      <ExportModal
+        isOpen={isExportModalOpen}
+        onClose={() => setIsExportModalOpen(false)}
+      />
     </div>
   );
 };

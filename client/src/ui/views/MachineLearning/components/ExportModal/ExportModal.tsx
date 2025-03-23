@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import './index.css';
+import { initialExport, ExportFormat } from './initialExport';
 
 interface ExportModalProps {
   isOpen: boolean;
@@ -7,30 +8,12 @@ interface ExportModalProps {
 }
 
 const ExportModal: React.FC<ExportModalProps> = ({ isOpen, onClose }) => {
-  const [selectedFormat, setSelectedFormat] = useState<'tensorflow.js' | 'tensorflow' | 'tensorflow-lite'>('tensorflow');
-  const [modelType, setModelType] = useState<'keras' | 'savedmodel'>('keras');
+  const [selectedFormat, setSelectedFormat] = useState(initialExport[0].format);
+  const [modelType, setModelType] = useState(initialExport[0].type[0]);
 
   if (!isOpen) return null;
 
-  const handleDownload = async () => {
-    try {
-      const response = await fetch(`http://localhost:3000/api/export-model?format=${selectedFormat}&type=${modelType}`);
-      if (!response.ok) throw new Error('Export failed');
-      
-      // Trigger download
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = 'model.zip';
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      window.URL.revokeObjectURL(url);
-    } catch (error) {
-      console.error('Export error:', error);
-    }
-  };
+  const selectedExport = initialExport.find(exp => exp.format === selectedFormat) as ExportFormat;
 
   return (
     <div className="export-modal-overlay">
@@ -41,91 +24,61 @@ const ExportModal: React.FC<ExportModalProps> = ({ isOpen, onClose }) => {
         </div>
 
         <div className="export-modal-tabs">
-          <button 
-            className={`tab ${selectedFormat === 'tensorflow.js' ? 'active' : ''}`}
-            onClick={() => setSelectedFormat('tensorflow.js')}
-          >
-            Tensorflow.js <span className="info-icon">ⓘ</span>
-          </button>
-          <button 
-            className={`tab ${selectedFormat === 'tensorflow' ? 'active' : ''}`}
-            onClick={() => setSelectedFormat('tensorflow')}
-          >
-            Tensorflow <span className="info-icon">ⓘ</span>
-          </button>
-          <button 
-            className={`tab ${selectedFormat === 'tensorflow-lite' ? 'active' : ''}`}
-            onClick={() => setSelectedFormat('tensorflow-lite')}
-          >
-            Tensorflow Lite <span className="info-icon">ⓘ</span>
-          </button>
+          {initialExport.map(exp => (
+            <button 
+              key={exp.format}
+              className={`tab ${selectedFormat === exp.format ? 'active' : ''}`}
+              onClick={() => {
+                setSelectedFormat(exp.format);
+                setModelType(exp.type[0]);
+              }}
+            >
+              {exp.format} <span className="info-icon">ⓘ</span>
+            </button>
+          ))}
         </div>
 
         <div className="export-modal-content">
-          <div className="model-type-section">
-            <h3>Model conversion type:</h3>
-            <div className="radio-group">
-              <label>
-                <input
-                  type="radio"
-                  name="modelType"
-                  checked={modelType === 'keras'}
-                  onChange={() => setModelType('keras')}
-                />
-                Keras
-              </label>
-              <label>
-                <input
-                  type="radio"
-                  name="modelType"
-                  checked={modelType === 'savedmodel'}
-                  onChange={() => setModelType('savedmodel')}
-                />
-                Savedmodel
-              </label>
+          {selectedExport.type.length > 1 && (
+            <div className="model-type-section">
+              <h3>Model conversion type:</h3>
+              <div className="radio-group">
+                {selectedExport.type.map(type => (
+                  <label key={type}>
+                    <input
+                      type="radio"
+                      name="modelType"
+                      checked={modelType === type}
+                      onChange={() => setModelType(type)}
+                    />
+                    {type}
+                  </label>
+                ))}
+              </div>
             </div>
-          </div>
+          )}
 
           <div className="description">
-            {selectedFormat === 'tensorflow' && modelType === 'keras' && (
-              <p>Converts your model to a keras .h5 model. Note the conversion happens in the cloud, but your training data is not being uploaded, only your trained model.</p>
-            )}
+            <p>{selectedExport.description}</p>
           </div>
 
-          <div className="code-section">
-            <div className="code-tabs">
-              <button className="code-tab active">Keras</button>
-              <button className="code-tab">OpenCV Keras</button>
-              <a href="#" className="github-link">
-                Contribute on Github
-              </a>
+          {selectedExport.code && (
+            <div className="code-section">
+              <div className="code-content">
+                <pre>
+                  <code>{selectedExport.code}</code>
+                </pre>
+                <button 
+                  className="copy-button"
+                  onClick={() => navigator.clipboard.writeText(selectedExport.code)}
+                >
+                  Copy
+                </button>
+              </div>
             </div>
-            <div className="code-content">
-              <pre>
-                <code>
-{`from keras.models import load_model  # TensorFlow is required for Keras to work
-from PIL import Image, ImageOps  # Install pillow instead of PIL
-import numpy as np
+          )}
 
-# Disable scientific notation for clarity
-np.set_printoptions(suppress=True)
-
-# Load the model
-model = load_model("keras_Model.h5", compile=False)
-
-# Load the labels
-class_names = open("labels.txt", "r").readlines()
-
-# Create the array of the right shape to feed into the keras model
-data = np.ndarray(shape=(1, 224, 224, 3), dtype=np.float32)
-`}
-                </code>
-              </pre>
-              <button className="copy-button">Copy</button>
-            </div>
-          </div>
-
-          <button className="download-button" onClick={handleDownload}>
+          <button className="download-button">
             Download my model
           </button>
         </div>

@@ -6,12 +6,11 @@ import {
 import Webcam from 'react-webcam';
 import ProgressBar from '../ProgressBar';
 import './index.css';
-import ExportModal from '../ExportModal/ExportModal';
-import { log } from 'console';
 
 interface PreviewNodeProps {
   data: {
     classNodes: Array<{ id: string; data: { id: number, name: string } }>;
+    openModal: (isOpen: boolean) => void;
   };
 }
 
@@ -21,8 +20,8 @@ const PreviewNode: React.FC<PreviewNodeProps> = ({ data }) => {
   const webcamRef = useRef<Webcam>(null);
   const [predictions, setPredictions] = useState<Record<string, number>>({});
   const [ws, setWs] = useState<WebSocket | null>(null);
-  const [isExportModalOpen, setIsExportModalOpen] = useState(false);
-  // console.log(data);
+  // const [isExportModalOpen, setIsExportModalOpen] = useState(false);
+  console.log(data);
   
   const videoConstraints = {
     width: 640,
@@ -122,7 +121,7 @@ useEffect(() => {
           className="export-button"
           onClick={() =>{
             // handleExportModel();
-            setIsExportModalOpen(true)
+            data?.openModal(true)
           } }
         >
           Export Model
@@ -179,10 +178,7 @@ useEffect(() => {
           </div>
         </div>
       </div>
-      <ExportModal
-        isOpen={isExportModalOpen}
-        onClose={() => setIsExportModalOpen(false)}
-      />
+      
     </div>
   );
 };
