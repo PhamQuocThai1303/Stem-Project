@@ -31,7 +31,7 @@ const TrainingNode: React.FC<TrainingNodeProps> = ({ data }) => {
           name: `Class ${node.data.id}`,
           images: node.data.images
         })),
-        epochs: 10
+        epochs: 50
       };
 
       const response = await fetch('http://localhost:3000/api/train', {
