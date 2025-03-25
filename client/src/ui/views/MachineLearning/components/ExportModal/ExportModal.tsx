@@ -47,7 +47,6 @@ const ExportModal: React.FC<ExportModalProps> = ({ isOpen, onClose }) => {
         </div>
 
         <div className="export-modal-content">
-          {selectedExport.type.length > 1 && (
             <div className="model-type-section">
               <h3>Model conversion type:</h3>
               <div className="radio-group">
@@ -62,9 +61,12 @@ const ExportModal: React.FC<ExportModalProps> = ({ isOpen, onClose }) => {
                     {type}
                   </label>
                 ))}
+                <button className="download-button" onClick={()=>handleExportModel(modelType, selectedFormat)}>
+            Download my model
+          </button>
               </div>
+              
             </div>
-          )}
 
           <div className="description">
             <p>{selectedExport.description}</p>
@@ -86,9 +88,7 @@ const ExportModal: React.FC<ExportModalProps> = ({ isOpen, onClose }) => {
             </div>
           )}
 
-          <button className="download-button" onClick={()=>handleExportModel(modelType, selectedFormat)}>
-            Download my model
-          </button>
+          
         </div>
       </div>
     </div>

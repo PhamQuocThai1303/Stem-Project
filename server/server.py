@@ -198,38 +198,38 @@ async def stop_execution(connection_id: str):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@app.websocket("/ws/{connection_id}")
-async def websocket_endpoint(websocket: WebSocket, connection_id: str):
-    await websocket.accept()
+# @app.websocket("/ws/{connection_id}")
+# async def websocket_endpoint(websocket: WebSocket, connection_id: str):
+#     await websocket.accept()
     
-    if connection_id not in ssh_managers:
-        await websocket.close(code=4000)
-        return
+#     if connection_id not in ssh_managers:
+#         await websocket.close(code=4000)
+#         return
     
-    try:
-        ssh_manager = ssh_managers[connection_id]
-        channel = ssh_manager.create_shell()
+#     try:
+#         ssh_manager = ssh_managers[connection_id]
+#         channel = ssh_manager.create_shell()
         
-        async def send_output():
-            while True:
-                if channel.recv_ready():
-                    output = channel.recv(1024).decode()
-                    await websocket.send_text(output)
-                await asyncio.sleep(0.1)
+#         async def send_output():
+#             while True:
+#                 if channel.recv_ready():
+#                     output = channel.recv(1024).decode()
+#                     await websocket.send_text(output)
+#                 await asyncio.sleep(0.1)
         
-        async def receive_input():
-            while True:
-                data = await websocket.receive_text()
-                if channel.send_ready():
-                    channel.send(data)
-                await asyncio.sleep(0.1)
+#         async def receive_input():
+#             while True:
+#                 data = await websocket.receive_text()
+#                 if channel.send_ready():
+#                     channel.send(data)
+#                 await asyncio.sleep(0.1)
         
-        receive_task = asyncio.create_task(receive_input())
-        send_task = asyncio.create_task(send_output())
+#         receive_task = asyncio.create_task(receive_input())
+#         send_task = asyncio.create_task(send_output())
         
-        await asyncio.gather(receive_task, send_task)
-    except Exception as e:
-        await websocket.close(code=4000)
+#         await asyncio.gather(receive_task, send_task)
+#     except Exception as e:
+#         await websocket.close(code=4000)
 
 @app.get("/api/wifi/list/{connection_id}")
 async def get_wifi_list(connection_id: str):

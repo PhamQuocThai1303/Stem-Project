@@ -19,9 +19,8 @@ const PreviewNode: React.FC<PreviewNodeProps> = ({ data }) => {
   const [inputType, setInputType] = useState<'webcam' | 'file'>('webcam');
   const webcamRef = useRef<Webcam>(null);
   const [predictions, setPredictions] = useState<Record<string, number>>({});
-  const [ws, setWs] = useState<WebSocket | null>(null);
-  // const [isExportModalOpen, setIsExportModalOpen] = useState(false);
-  console.log(data);
+  const wsRef = useRef<WebSocket | null>(null);
+  const intervalRef = useRef<NodeJS.Timeout | null>(null);
   
   const videoConstraints = {
     width: 640,
@@ -29,80 +28,89 @@ const PreviewNode: React.FC<PreviewNodeProps> = ({ data }) => {
     facingMode: "user"
   };
 
-  useEffect(() => {
-    if (isInputOn && inputType === 'webcam') {
-      const newWs = new WebSocket('ws://localhost:3000/ws/predict');
-      setWs(newWs);
-  
-      return () => {
-        newWs.close();
-      };
+  // Cleanup function
+  const cleanup = useCallback(() => {
+    // Clear interval
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+      intervalRef.current = null;
     }
-  }, [isInputOn, inputType]);
+
+    // Close WebSocket
+    if (wsRef.current) {
+      wsRef.current.close();
+      wsRef.current = null;
+    }
+
+    // Stop webcam
+    if (webcamRef.current?.stream) {
+      const track = webcamRef.current.stream.getTracks()[0];
+      track.stop();
+    }
+  }, []);
+
+  // WebSocket setup
+  // useEffect(() => {
+  //   if (isInputOn && inputType === 'webcam') {
+  //     const newWs = new WebSocket('ws://localhost:3000/ws/predict');
+  //     wsRef.current = newWs;
+
+  //     newWs.onmessage = (event) => {
+  //       const predictions = JSON.parse(event.data);
+  //       setPredictions(predictions);
+  //     };
+
+  //     return () => {
+  //       if (wsRef.current) {
+  //         wsRef.current.close();
+  //         wsRef.current = null;
+  //       }
+  //     };
+  //   }
+  // }, [isInputOn, inputType]);
 
   const captureAndPredict = useCallback(() => {
-    if (isInputOn && webcamRef.current && ws?.readyState === WebSocket.OPEN) {
+    if (isInputOn && webcamRef.current && wsRef.current?.readyState === WebSocket.OPEN) {
       const imageSrc = webcamRef.current.getScreenshot();
-      ws.send(imageSrc);
+      if (imageSrc) {
+        wsRef.current.send(imageSrc);
+      }
     }
-  }, [isInputOn, ws]);
+  }, [isInputOn]);
 
-  // Thêm WebSocket message handler
-useEffect(() => {
-  if (ws) {
-    ws.onmessage = (event) => {
-      const predictions = JSON.parse(event.data);
-      setPredictions(predictions);
+  // Setup capture interval
+  useEffect(() => {
+    if (isInputOn && inputType === 'webcam') {
+      intervalRef.current = setInterval(captureAndPredict, 100);
+    }
+    return () => {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+        intervalRef.current = null;
+      }
     };
-  }
-}, [ws]);
+  }, [isInputOn, inputType, captureAndPredict]);
 
-// Capture và gửi ảnh mỗi 100ms
-useEffect(() => {
-  let interval: NodeJS.Timeout;
-  if (isInputOn && inputType === 'webcam') {
-    interval = setInterval(captureAndPredict, 100);
-  }
-  return () => {
-    if (interval) clearInterval(interval);
-  };
-}, [isInputOn, inputType, captureAndPredict]);
+  // Component unmount cleanup
+  useEffect(() => {
+    return cleanup;
+  }, [cleanup]);
 
   const toggleInput = useCallback(() => {
     if (!isInputOn && inputType === 'webcam') {
-      // Webcam sẽ tự động bật khi component được render
       setIsInputOn(true);
-    } else if (isInputOn && inputType === 'webcam') {
-      // Tắt webcam
-      if (webcamRef.current?.stream) {
-        const track = webcamRef.current.stream.getTracks()[0];
-        track.stop();
-      }
+    } else if (isInputOn) {
+      cleanup();
       setIsInputOn(false);
     }
-  }, [isInputOn, inputType]);
+  }, [isInputOn, inputType, cleanup]);
 
   const handleInputTypeChange = useCallback((e: React.ChangeEvent<HTMLSelectElement>) => {
     const newType = e.target.value as 'webcam' | 'file';
+    cleanup();
     setInputType(newType);
-    if (isInputOn && webcamRef.current?.stream) {
-      const track = webcamRef.current.stream.getTracks()[0];
-      track.stop();
-      setIsInputOn(false);
-    }
-  }, [isInputOn]);
-
-  // Giả lập dữ liệu predictions cho demo
-  React.useEffect(() => {
-    if (isInputOn) {
-      setPredictions({
-        '1': 96,
-        '2': 4,
-      });
-    } else {
-      setPredictions({});
-    }
-  }, [isInputOn]);
+    setIsInputOn(false);
+  }, [cleanup]);
 
   return (
     <div className="preview-node">
@@ -111,10 +119,7 @@ useEffect(() => {
         <h3>Preview</h3>
         <button 
           className="export-button"
-          onClick={() =>{
-            // handleExportModel();
-            data?.openModal(true)
-          } }
+          onClick={() => data?.openModal(true)}
         >
           Export Model
         </button>
@@ -158,7 +163,7 @@ useEffect(() => {
 
         <div className="output-section">
           <h4>Output</h4>
-          <div className="predictions">
+          {/* <div className="predictions">
             {data.classNodes.map((node) => (
               <ProgressBar
                 key={node.id}
@@ -167,10 +172,9 @@ useEffect(() => {
                 color={node.data.id === 1 ? '#ff8800' : '#ff4477'}
               />
             ))}
-          </div>
+          </div> */}
         </div>
       </div>
-      
     </div>
   );
 };

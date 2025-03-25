@@ -7,6 +7,7 @@ interface TrainingNodeProps {
       id: string;
       data: {
         id: number;
+        name: string;
         images: string[];
       };
     }>;
@@ -17,8 +18,6 @@ const TrainingNode: React.FC<TrainingNodeProps> = ({ data }) => {
   const [isTraining, setIsTraining] = useState(false);
   const [progress, setProgress] = useState(0);
 
-  // console.log('TrainingNode data:', data);
-
   const handleTrainModel = useCallback(async () => {
     if (isTraining) return;
     
@@ -28,7 +27,7 @@ const TrainingNode: React.FC<TrainingNodeProps> = ({ data }) => {
     try {
       const trainingData = {
         classes: data.classNodes.map(node => ({
-          name: `Class ${node.data.id}`,
+          name: node.data.name,
           images: node.data.images
         })),
         epochs: 50

@@ -34,7 +34,6 @@ const AddClassNode = ({ data }: any) => {
   );
 };
 
-// Định nghĩa nodeTypes object bên ngoài component chính
 const nodeTypes = {
   classNode: ClassNode,
   trainingNode: TrainingNode,
@@ -176,6 +175,7 @@ const MachineLearning = () => {
       position: { x: 50, y: yPosition },
       data: {
         id: newClassCount,
+        name: `Class ${newClassCount}`,
         onDelete: handleDeleteClass,
         onUpload: handleImageUpload,
         onDeleteImage: handleDeleteImage,
@@ -248,34 +248,6 @@ const MachineLearning = () => {
       )
     );
   }, [handleAddClass]);
-
-  // useEffect(() => {
-  //   console.log(99999);
-    
-  //   const classNodes = nodes.filter(node => node.type === 'classNode');
-  //   // const hasClassNodesChanged = (prevNodes: Node[], currentClassNodes: Node[]) => {
-  //   //   if (prevNodes.length !== currentClassNodes.length) return true;
-  //   //   return prevNodes.some((node, index) => 
-  //   //     node.id !== currentClassNodes[index].id || 
-  //   //     node.data.images !== currentClassNodes[index].data.images
-  //   //   );
-  //   // };
-
-  //   setNodes(nds => {
-  //     // const prevClassNodes = nds
-  //     //   .filter(node => node.type === 'classNode');
-      
-  //     // if (!hasClassNodesChanged(prevClassNodes, classNodes)) {
-  //     //   return nds;
-  //     // }
-
-  //     return nds.map(node => 
-  //       (node.type === 'trainingNode')
-  //         ? { ...node, data: { ...node.data, classNodes } }
-  //         : node
-  //     );
-  //   });
-  // }, [classCount]);
 
   const onNodesChange = useCallback(
     (changes: NodeChange[]) => setNodes((nds) => applyNodeChanges(changes, nds)),

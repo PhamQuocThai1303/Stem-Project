@@ -62,6 +62,7 @@ function App() {
   }, []);
 
   const startMonitoring = () => {
+    
     try {
       const connectionId = localStorage.getItem('connection_id');
       if (!connectionId) {
@@ -132,7 +133,7 @@ function App() {
 
       const result = await response.json();
       toast.success("✅ " + result.message);
-      startMonitoring();
+      // startMonitoring();
     } catch (error) {
       if (error instanceof Error) {
         toast.error("❌ Lỗi khi lưu code: " + error.message);

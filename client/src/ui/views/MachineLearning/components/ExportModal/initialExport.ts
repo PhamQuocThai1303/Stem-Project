@@ -25,17 +25,89 @@ const prediction = model.predict(tf.tensor2d([[...your input data...]]));`
         type: ['keras', 'savedmodel'],
         modelName: 'model.h5',
         description: 'Export your model to TensorFlow format. You can choose between Keras (.h5) or SavedModel format.',
-        code: `from tensorflow.keras.models import load_model
+        code: `import tensorflow as tf
 import numpy as np
+import cv2
+import json
+import os
+from PIL import Image
 
-# Load the model
-model = load_model('model.h5')
+def preprocess_image(image_path, target_size=(224, 224)):
+    """Tiền xử lý ảnh từ đường dẫn file"""
+    
+    image = cv2.imread(image_path)
+    if image is None:
+        raise ValueError(f"Không thể đọc ảnh từ đường dẫn: {image_path}")
+    
+    image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+    
+    image = cv2.resize(image, target_size)
+    
+    image = image.astype('float32') / 255.0
+    
+    return image
 
-# Prepare your input data
-input_data = np.array([[...your input data...]])
+def load_model_and_metadata(model_path, metadata_path):
+    """Load model và metadata từ file"""
+    
+    if not os.path.exists(model_path):
+        raise FileNotFoundError(f"Không tìm thấy file model: {model_path}")
+    if not os.path.exists(metadata_path):
+        raise FileNotFoundError(f"Không tìm thấy file metadata: {metadata_path}")
+    
+    # Load model
+    model = tf.keras.models.load_model(model_path)
+    
+    # Load metadata
+    with open(metadata_path, 'r') as f:
+        metadata = json.load(f)
+    
+    return model, metadata
 
-# Make predictions
-predictions = model.predict(input_data)`
+def predict_image(model, metadata, image_path):
+    """Dự đoán class cho một ảnh"""
+    
+    processed_image = preprocess_image(image_path)
+    
+    processed_image = np.expand_dims(processed_image, axis=0)
+    
+    predictions = model.predict(processed_image)
+    
+    class_names = metadata['class_names']
+    
+    results = []
+    for class_name, confidence in zip(class_names, predictions[0]):
+        results.append({
+            'class': class_name,
+            'confidence': float(confidence * 100)
+        })
+    
+    return results
+
+def main():
+    model_path = 'model.h5'
+    metadata_path = 'metadata.json'
+    
+    try:
+        model, metadata = load_model_and_metadata(model_path, metadata_path)
+        print("Đã load model và metadata thành công!")
+        
+        image_path = input("Nhập đường dẫn đến ảnh cần dự đoán: ")
+        
+        results = predict_image(model, metadata, image_path)
+        
+        print("\nKết quả dự đoán:")
+        print("-" * 40)
+        for result in results:
+            print(f"Class: {result['class']}")
+            print(f"Confidence: {result['confidence']:.2f}%")
+            print("-" * 40)
+            
+    except Exception as e:
+        print(f"Có lỗi xảy ra: {str(e)}")
+
+if __name__ == "__main__":
+    main() `
     },
     {
         format: 'tensorflow-lite',

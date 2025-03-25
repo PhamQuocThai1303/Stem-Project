@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState, useCallback, useRef } from 'react';
 import {
     Handle,
@@ -8,6 +9,7 @@ import './index.css';
 interface ClassNodeProps {
   data: {
     id: number;
+    name: string;
     onDelete?: (id: string) => void;
     images?: string[];
     onUpload?: (nodeId: string, files: FileList) => void;
@@ -18,7 +20,7 @@ interface ClassNodeProps {
 
 const ClassNode: React.FC<ClassNodeProps> = ({ data, id }) => {
   const [isEditing, setIsEditing] = useState(false);
-  const [className, setClassName] = useState(`Class ${data.id}`);
+  const [className, setClassName] = useState(data.name);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleEditClick = useCallback(() => {
@@ -29,13 +31,20 @@ const ClassNode: React.FC<ClassNodeProps> = ({ data, id }) => {
     setClassName(e.target.value);
   }, []);
 
-  const handleNameSubmit = useCallback(() => {
+  const handleNameSubmit = useCallback((e:any) => {
     setIsEditing(false);
+    if(e.target.value.length > 0){
+      console.log(88888);
+      
+      data.name = e.target.value;
+    }
+    console.log(data);
+    
   }, []);
 
   const handleKeyPress = useCallback((e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
-      handleNameSubmit();
+      handleNameSubmit(e);
     }
   }, [handleNameSubmit]);
 

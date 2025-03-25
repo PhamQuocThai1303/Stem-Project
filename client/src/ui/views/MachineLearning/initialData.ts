@@ -10,13 +10,13 @@ export const initialNodes: Node[] = [
       id: uuidv4(),
       type: 'classNode',
       position: { x: 50, y: 50 },
-      data: { id: 1, images: [] }
+      data: { id: 1, images: [], name: 'Class 1' }
     },
     {
       id: uuidv4(),
       type: 'classNode',
       position: { x: 50, y: 250 },
-      data: { id: 2, images: [] }
+      data: { id: 2, images: [], name: 'Class 2' }
     },
     {
       id: 'training',
