@@ -162,6 +162,26 @@ const MachineLearning = () => {
     // setUpDataForTraining()
   }, []);
 
+  const handleChangeName = useCallback((nodeId: string, newName: string) => {
+    setNodes(nds => {
+      const newNode = nds.map(node => {
+        if (node.id === nodeId) {
+          return {
+            ...node,
+            data: {
+              ...node.data,
+              name: newName
+            }
+          };
+        }
+        return node;
+      })
+      setUpDataForTraining(newNode)
+      return newNode;
+    } 
+    );
+  }, []);
+
   const handleAddClass = useCallback(() => {
     const newClassCount = classCount + 1;
     const newNodeId = uuidv4();
@@ -179,6 +199,7 @@ const MachineLearning = () => {
         onDelete: handleDeleteClass,
         onUpload: handleImageUpload,
         onDeleteImage: handleDeleteImage,
+        onChangeName: handleChangeName,
         images: []
       }
     };
@@ -219,6 +240,7 @@ const MachineLearning = () => {
               onDelete: handleDeleteClass,
               onUpload: handleImageUpload,
               onDeleteImage: handleDeleteImage,
+              onChangeName: handleChangeName,
               images: []
             }
           };

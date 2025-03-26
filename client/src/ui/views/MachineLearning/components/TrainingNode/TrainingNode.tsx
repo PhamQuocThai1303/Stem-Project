@@ -17,7 +17,8 @@ interface TrainingNodeProps {
 const TrainingNode: React.FC<TrainingNodeProps> = ({ data }) => {
   const [isTraining, setIsTraining] = useState(false);
   const [progress, setProgress] = useState(0);
-
+  console.log(data);
+  
   const handleTrainModel = useCallback(async () => {
     if (isTraining) return;
     

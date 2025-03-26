@@ -14,6 +14,7 @@ interface ClassNodeProps {
     images?: string[];
     onUpload?: (nodeId: string, files: FileList) => void;
     onDeleteImage?: (nodeId: string, imageIndex: number) => void;
+    onChangeName?: (nodeId: string, newName: string) => void;
   };
   id: string;
 }
@@ -33,14 +34,11 @@ const ClassNode: React.FC<ClassNodeProps> = ({ data, id }) => {
 
   const handleNameSubmit = useCallback((e:any) => {
     setIsEditing(false);
-    if(e.target.value.length > 0){
-      console.log(88888);
-      
-      data.name = e.target.value;
+    if(e.target.value.length > 0 && data.onChangeName){
+      data.onChangeName(id, e.target.value);
     }
-    console.log(data);
     
-  }, []);
+  }, [data.onChangeName, id]);
 
   const handleKeyPress = useCallback((e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
