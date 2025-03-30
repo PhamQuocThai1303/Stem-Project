@@ -13,7 +13,6 @@ import base64
 import numpy as np
 import cv2
 from fastapi import WebSocketDisconnect
-from emotion_detector import detector, EmotionDetector
 import logging
 import urllib.parse
 import json
@@ -76,9 +75,6 @@ active_connections: Dict[str, dict] = {}
 data_dir = Path(__file__).parent / "data"
 data_dir.mkdir(exist_ok=True)
 FILE_PATH = data_dir / "data.txt"
-
-# Initialize emotion detection
-emotion_detector = EmotionDetector()
 
 model_trainer = ModelTrainer()
 # Create thread pool for processing frames
@@ -370,69 +366,6 @@ async def check_network(connection_id: str):
             status_code=500,
             detail=f"Lỗi khi kiểm tra kết nối mạng: {str(e)}"
         )
-    
-def process_frame(frame_data):
-    try:
-        # Decode base64 image
-        encoded_data = frame_data.split(',')[1]
-        nparr = np.frombuffer(base64.b64decode(encoded_data), np.uint8)
-        frame = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
-        
-        if frame is None:
-            raise ValueError("Failed to decode image")
-
-        # Get emotion predictions
-        results = detector.detect_emotion(frame)
-        
-        return {
-            "faces": results
-        }
-        
-    except Exception as e:
-        logger.error(f"Error processing frame: {str(e)}")
-        return {"error": str(e)}
-
-@app.websocket("/ws/api/ml/video")
-async def video_stream_handler(websocket: WebSocket):
-    await websocket.accept()
-    processing = False
-    
-    try:
-        while True:
-            # Only receive new frame if not processing
-            if not processing:
-                try:
-                    message = await asyncio.wait_for(websocket.receive_json(), timeout=0.1)
-                except asyncio.TimeoutError:
-                    continue
-                
-                if message.get("type") != "frame":
-                    continue
-                    
-                frame_data = message.get("data")
-                if not frame_data:
-                    continue
-                
-                processing = True
-                
-                # Process frame in thread pool
-                loop = asyncio.get_event_loop()
-                try:
-                    results = await loop.run_in_executor(thread_pool, process_frame, frame_data)
-                    await websocket.send_json(results)
-                except Exception as e:
-                    logger.error(f"Error processing frame: {str(e)}")
-                    await websocket.send_json({"error": str(e)})
-                finally:
-                    processing = False
-            
-            # Small delay to prevent CPU overload
-            await asyncio.sleep(0.01)
-            
-    except Exception as e:
-        logger.error(f"WebSocket error: {str(e)}")
-    finally:
-        await websocket.close()
 
 @app.post("/api/train")
 async def train_model(request: TrainingRequest):

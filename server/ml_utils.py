@@ -35,7 +35,7 @@ def preprocess_image(image_data, target_size=(224, 224)):
     image = preprocess_input(image)
     return image
 
-def create_model(num_classes):
+def create_model(num_classes, learning_rate):
     """Tạo model dựa trên MobileNetV2"""
     # Data augmentation
     data_augmentation = models.Sequential([
@@ -63,7 +63,7 @@ def create_model(num_classes):
     ])
     
     model.compile(
-        optimizer=tf.keras.optimizers.Adam(learning_rate=0.001),
+        optimizer=tf.keras.optimizers.Adam(learning_rate=learning_rate),
         loss='categorical_crossentropy',
         metrics=['accuracy']
     )
