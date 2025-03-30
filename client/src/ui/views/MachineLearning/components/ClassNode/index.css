@@ -2,7 +2,7 @@
     background: white;
     border-radius: 8px;
     padding: 16px;
-    min-width: 400px;
+    width: 500px;
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     min-height: 187px;
     height: auto;
@@ -47,12 +47,14 @@
   
   .button-group {
     display: flex;
-    gap: 8px;
+    flex: 1;
+    width: 100%;
   }
 
   .sample-button {
     display: flex;
     flex-direction: column;
+    justify-content: center;
     align-items: center;
     background: #f0f7ff;
     border: none;
@@ -78,23 +80,30 @@
   
   .samples-container {
     display: flex;
+    flex: 1;
     flex-direction: column;
     gap: 10px;
+    width: 100%;
   }
   
   .image-grid {
     display: flex;
-    flex-wrap: wrap;
     gap: 8px;
-    margin-top: 10px;
+    overflow-x: auto;
+    padding: 4px;
+    width: 100%;
+    flex-wrap: nowrap;
+    align-items: center;
+    min-height: 80px;
   }
   
   .image-preview {
-    width: 60px;
-    height: 60px;
+    width: 80px;
+    height: 80px;
     border-radius: 4px;
     overflow: hidden;
     position: relative;
+    flex: 0 0 auto;
   }
   
   .image-preview img {
