@@ -73,7 +73,9 @@ def create_model(num_classes):
 class ModelTrainer:
     def __init__(self):
         self.model = None
+        self.class_weights = None
         self.class_names = []
+        self.metadata = {}
         self.datagen = ImageDataGenerator(
             rotation_range=30,
             width_shift_range=0.3,
@@ -198,19 +200,28 @@ class ModelTrainer:
         
         return history_dict
     
-    def predict(self, image):
-        """Dự đoán class cho một ảnh"""
+    def predict(self, frame):
+        """
+        Make predictions on a preprocessed frame
+        
+        Args:
+            frame: Preprocessed frame of shape (1, 224, 224, 3)
+            
+        Returns:
+            Dictionary mapping class names to confidence scores
+        """
         if self.model is None:
-            raise ValueError("Model chưa được train")
+            raise ValueError("No model loaded. Please train or load a model first.")
+            
+        # Make prediction
+        predictions = self.model.predict(frame, verbose=0)[0]
         
-        processed_image = preprocess_image(image)
-        processed_image = np.expand_dims(processed_image, axis=0)
-        
-        predictions = self.model.predict(processed_image)
-        return {
-            name: float(pred) * 100 
-            for name, pred in zip(self.class_names, predictions[0])
-        }
+        # Create dictionary mapping class names to confidence scores
+        result = {}
+        for i, (name, confidence) in enumerate(zip(self.class_names, predictions)):
+            result[name] = float(confidence) * 100  # Convert to percentage
+            
+        return result
 
     def export_model(self, format='tensorflow', type='savedmodel'):
         """Export model theo format và type được chọn"""

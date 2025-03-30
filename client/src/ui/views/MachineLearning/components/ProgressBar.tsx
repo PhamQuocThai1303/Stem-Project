@@ -1,23 +1,26 @@
 interface ProgressBarProps {
-    className: string;
-    percentage: number;
-    color: string;
-  }
-  
-  const ProgressBar: React.FC<ProgressBarProps> = ({ className, percentage, color }) => (
-    <div className="progress-bar-container">
-      <span className="class-name">{className}</span>
-      <div className="progress-bar">
-        <div 
+  percentage: number;
+  color: string;
+  label: string;
+}
+
+const ProgressBar: React.FC<ProgressBarProps> = ({ percentage, color, label }) => {
+  return (
+    <div className="progress-container">
+      <div className="progress-label">{label}</div>
+      <div className="progress-bar" style={{ backgroundColor: '#f0f0f0' }}>
+        <div
           className="progress-fill"
-          style={{ 
+          style={{
             width: `${percentage}%`,
-            backgroundColor: color
+            backgroundColor: color,
+            transition: 'width 0.3s ease-in-out'
           }}
         />
-        <span className="percentage">{percentage}%</span>
       </div>
+      <div className="progress-percentage">{Math.round(percentage)}%</div>
     </div>
   );
-  
-  export default ProgressBar;
+};
+
+export default ProgressBar;

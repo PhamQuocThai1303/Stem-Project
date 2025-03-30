@@ -9,7 +9,6 @@ import './index.css';
 
 interface PreviewNodeProps {
   data: {
-    classNodes: Array<{ id: string; data: { id: number, name: string } }>;
     openModal: (isOpen: boolean) => void;
   };
 }
@@ -55,9 +54,17 @@ const PreviewNode: React.FC<PreviewNodeProps> = ({ data }) => {
       const newWs = new WebSocket('ws://localhost:3000/ws/predict');
       wsRef.current = newWs;
 
+      newWs.onopen = () => {
+        console.log('WebSocket connected');
+      };
+
       newWs.onmessage = (event) => {
         const predictions = JSON.parse(event.data);
         setPredictions(predictions);
+      };
+
+      newWs.onerror = (error) => {
+        console.error('WebSocket error:', error);
       };
 
       return () => {
@@ -81,7 +88,7 @@ const PreviewNode: React.FC<PreviewNodeProps> = ({ data }) => {
   // Setup capture interval
   useEffect(() => {
     if (isInputOn && inputType === 'webcam') {
-      intervalRef.current = setInterval(captureAndPredict, 100);
+      intervalRef.current = setInterval(captureAndPredict, 500); // 2 FPS
     }
     return () => {
       if (intervalRef.current) {
@@ -164,12 +171,12 @@ const PreviewNode: React.FC<PreviewNodeProps> = ({ data }) => {
         <div className="output-section">
           <h4>Output</h4>
           <div className="predictions">
-            {data.classNodes.map((node) => (
+            {Object.entries(predictions).map(([className, confidence], index) => (
               <ProgressBar
-                key={node.id}
-                className={`Class ${node.data.id}`}
-                percentage={predictions[node.data.id] || 0}
-                color={node.data.id === 1 ? '#ff8800' : '#ff4477'}
+                key={className}
+                label={className}
+                percentage={confidence}
+                color={index === 0 ? '#ff8800' : '#ff4477'}
               />
             ))}
           </div>

@@ -448,14 +448,36 @@ async def train_model(request: TrainingRequest):
 @app.websocket("/ws/predict")
 async def predict_stream(websocket: WebSocket):
     await websocket.accept()
-    
     try:
         while True:
-            image_data = await websocket.receive_text()
-            predictions = model_trainer.predict(image_data)
+            # Receive frame from client
+            frame_data = await websocket.receive_text()
+            
+            # Convert base64 image to numpy array
+            encoded_data = frame_data.split(',')[1]
+            nparr = np.frombuffer(base64.b64decode(encoded_data), np.uint8)
+            frame = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+            
+            # Preprocess frame
+            frame = cv2.resize(frame, (224, 224))
+            frame = frame / 255.0
+            frame = np.expand_dims(frame, axis=0)
+            
+            # Make prediction
+            predictions = model_trainer.predict(frame)
+            
+            # Send predictions back to client
             await websocket.send_json(predictions)
+            
+            # Sleep for 500ms (2 FPS)
+            await asyncio.sleep(0.5)
+            
+    except WebSocketDisconnect:
+        logger.info("Client disconnected")
     except Exception as e:
-        await websocket.close(code=1000)
+        logger.error(f"Error in prediction stream: {str(e)}")
+        if websocket.client_state.CONNECTED:
+            await websocket.close()
 
 @app.get("/api/export-model")
 async def export_model(format: str, type: str = 'download'):
