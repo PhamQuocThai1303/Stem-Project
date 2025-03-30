@@ -3,7 +3,7 @@ import { Navbar, Nav, Container, Button  } from "react-bootstrap";
 import { FaAtom, FaCog } from "react-icons/fa";
 import { AiOutlineRobot } from "react-icons/ai";
 import { BsChatDots } from "react-icons/bs";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import './index.css'
 import { useTranslation } from "react-i18next";
 import ReactCountryFlag from 'react-country-flag'
@@ -11,8 +11,12 @@ import { UncontrolledDropdown, DropdownMenu, DropdownItem, DropdownToggle } from
 import { useAuth } from "../../../context/AuthContext";
 import { toast } from "react-toastify";
 
-const Header = () => {
-  const location = useLocation();
+interface HeaderProps {
+  currentTab: string;
+  onTabChange: (tab: string) => void;
+}
+
+const Header: React.FC<HeaderProps> = ({ currentTab, onTabChange }) => {
   const { i18n } = useTranslation()
   const {t} = useTranslation()
   const { logout } = useAuth();
@@ -69,24 +73,33 @@ const Header = () => {
         {/* Menu - căn giữa hoàn toàn */}
         <Navbar.Collapse id="basic-navbar-nav" className="justify-content-center">
           <Nav className="nav-container">
-            <Nav.Link as={Link} to="/" className={`nav-item-custom ${location.pathname === "/" ? "active" : ""}`}>
+            <Nav.Link 
+              className={`nav-item-custom ${currentTab === 'stem' ? "active" : ""}`}
+              onClick={() => onTabChange('stem')}
+            >
               <FaAtom className="me-1" />
               STEM
             </Nav.Link>
-            <Nav.Link as={Link} to="/ml" className={`nav-item-custom ${location.pathname === "/ml" ? "active" : ""}`}>
+            <Nav.Link 
+              className={`nav-item-custom ${currentTab === 'ml' ? "active" : ""}`}
+              onClick={() => onTabChange('ml')}
+            >
               <AiOutlineRobot className="me-1" />
               Machine Learning
             </Nav.Link>
-            <Nav.Link as={Link} to="/chat" className={`nav-item-custom ${location.pathname === "/chat" ? "active" : ""}`}>
+            <Nav.Link 
+              className={`nav-item-custom ${currentTab === 'chat' ? "active" : ""}`}
+              onClick={() => onTabChange('chat')}
+            >
               <BsChatDots className="me-1" />
               Chat Bot
             </Nav.Link>
           </Nav>
         </Navbar.Collapse>
 
-        <Button style={{ marginRight: 10 }} color="secondary" onClick={() => navigate("/settings")}>
-      <FaCog className="me-1" />
-    </Button>
+        <Button style={{ marginRight: 10 }} color="secondary" onClick={() => onTabChange('settings')}>
+          <FaCog className="me-1" />
+        </Button>
 
         <Button style={{marginRight: 10}} color="danger" onClick={handleLogout}>
             {t("Đăng xuất")}
