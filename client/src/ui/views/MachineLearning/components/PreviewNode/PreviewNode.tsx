@@ -171,12 +171,12 @@ const PreviewNode: React.FC<PreviewNodeProps> = ({ data }) => {
         <div className="output-section">
           <h6>Output</h6>
           <div className="predictions">
-            {Object.entries(predictions).map(([className, confidence], index) => (
+            {Object.entries(predictions).map(([className, confidence]) => (
               <ProgressBar
                 key={className}
                 label={className}
                 percentage={confidence}
-                color={index === 0 ? '#ff8800' : '#ff4477'}
+                color={'#ff8800' }
               />
             ))}
           </div>
