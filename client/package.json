@@ -41,6 +41,7 @@
     "react-webcam": "^7.2.0",
     "reactflow": "^11.11.4",
     "reactstrap": "^9.2.3",
+    "recharts": "^2.15.1",
     "ssh2": "^1.16.0",
     "uuid": "^11.1.0"
   },

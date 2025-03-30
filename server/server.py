@@ -64,7 +64,9 @@ class ClassData(BaseModel):
 
 class TrainingRequest(BaseModel):
     classes: List[ClassData]
-    epochs: int = 10
+    epochs: int = 50
+    batchSize: int = 16
+    learningRate: float = 0.001
 
 # Global state
 ssh_managers: Dict[str, SSHManager] = {}
@@ -440,11 +442,11 @@ async def train_model(request: TrainingRequest):
             {"name": cls.name, "images": cls.images}
             for cls in request.classes
         ]
-        history = model_trainer.train(class_data, request.epochs)
+        history = model_trainer.train(class_data, request.epochs, request.batchSize, request.learningRate)
         return {"status": "success", "history": history}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-    
+
 @app.websocket("/ws/predict")
 async def predict_stream(websocket: WebSocket):
     await websocket.accept()

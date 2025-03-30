@@ -21,6 +21,7 @@ import PreviewNode from './components/PreviewNode/PreviewNode';
 import { initialEdges, initialNodes } from './initialData';
 import { v4 as uuidv4 } from 'uuid';
 import ExportModal from './components/ExportModal/ExportModal';
+import Sidebar from './components/TrainingNode/components/Sidebar/Sidebar';
 
 // Định nghĩa AddClassNode bên ngoài và nhận onClick qua props
 const AddClassNode = ({ data }: any) => {
@@ -46,6 +47,15 @@ const MachineLearning = () => {
   const [nodes, setNodes] = useState<Node[]>([]);
   const [edges, setEdges] = useState<Edge[]>([]);
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [trainingHistory, setTrainingHistory] = useState({
+    loss: [],
+    accuracy: [],
+    val_loss: [],
+    val_accuracy: [],
+    lr: []
+  });
+
 
   const setUpDataForTraining = (newNodes: Node[])=> {
     
@@ -253,6 +263,16 @@ const MachineLearning = () => {
             }
           };
         }
+        else if (node.type === 'trainingNode') {
+          return {
+            ...node,
+            data: {
+              ...node.data,
+              openSideBar: setIsSidebarOpen,
+              setTrainingHistory: setTrainingHistory
+            }
+          };
+        }
         return node;
       }),
       addClassNode
@@ -320,6 +340,11 @@ const MachineLearning = () => {
       <ExportModal
         isOpen={isExportModalOpen}
         onClose={() => setIsExportModalOpen(false)}
+      />
+      <Sidebar 
+        isOpen={isSidebarOpen}
+        onClose={() => setIsSidebarOpen(false)}
+        trainingHistory={trainingHistory}
       />
     </div>
   );

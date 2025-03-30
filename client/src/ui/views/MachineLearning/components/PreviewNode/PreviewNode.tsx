@@ -169,7 +169,7 @@ const PreviewNode: React.FC<PreviewNodeProps> = ({ data }) => {
         </div>
 
         <div className="output-section">
-          <h4>Output</h4>
+          <h6>Output</h6>
           <div className="predictions">
             {Object.entries(predictions).map(([className, confidence], index) => (
               <ProgressBar

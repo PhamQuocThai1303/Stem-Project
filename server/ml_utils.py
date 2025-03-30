@@ -129,11 +129,11 @@ class ModelTrainer:
         
         return X_train, y_train, X_val, y_val
     
-    def train(self, class_data, epochs=50):
+    def train(self, class_data, epochs, batch_size, learning_rate):
         """Train model với dữ liệu từ các class"""
         X_train, y_train, X_val, y_val = self.prepare_data(class_data)
         
-        self.model = create_model(len(self.class_names))
+        self.model = create_model(len(self.class_names), learning_rate)
         
         # Callbacks
         early_stopping = EarlyStopping(
@@ -164,7 +164,7 @@ class ModelTrainer:
             X_train, y_train,
             validation_data=(X_val, y_val),
             epochs=epochs,
-            batch_size=32,
+            batch_size=batch_size,
             callbacks=[early_stopping, model_checkpoint, reduce_lr],
             class_weight=self.class_weights,
             verbose=1
