@@ -459,6 +459,9 @@ async def export_to_pi(connection_id: str):
         # Upload từng file vào thư mục pi_predict trên Raspberry Pi
         remote_dir = f"/home/{connection_info['username']}/Documents/library/pi_predict"
         
+        # Tạo thư mục nếu chưa tồn tại
+        ssh_manager.execute_command(f"mkdir -p {remote_dir}")
+            
         # Upload model.h5
         remote_model_path = f"{remote_dir}/model.tflite"
         with open(result['model_path'], 'rb') as f:
@@ -474,21 +477,17 @@ async def export_to_pi(connection_id: str):
         with open(result['predict_script_path'], 'rb') as f:
             ssh_manager.upload_file(remote_script_path, f.read())
         
-        # Thực thi script trên Raspberry Pi
-        command = f"cd {remote_dir} && DISPLAY=:0 python raspberry_predict.py"
-        output, error = ssh_manager.execute_command(command)
-        
-        if error:
-            raise Exception(f"Lỗi khi thực thi script: {error}")
+        # Chạy script trong background với nohup
+        command = f"cd {remote_dir} &&  DISPLAY=:0 nohup python raspberry_predict.py > /dev/null 2>&1 &"
+        ssh_manager.execute_command(command)
         
         return {
-            "message": "Export và thực thi model trên Raspberry Pi thành công",
+            "message": "Đã upload files và bắt đầu chạy script trên Raspberry Pi",
             "files": {
                 "model": remote_model_path,
                 "metadata": remote_metadata_path,
                 "script": remote_script_path
-            },
-            "output": output
+            }
         }
         
     except Exception as e:
