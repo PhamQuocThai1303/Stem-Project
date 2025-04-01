@@ -15,6 +15,7 @@ import zipfile
 import tempfile
 import subprocess
 import matplotlib.pyplot as plt
+from datetime import datetime
 
 def preprocess_image(image_data, target_size=(224, 224)):
     """Tiền xử lý ảnh từ base64 string hoặc numpy array"""
@@ -329,3 +330,43 @@ class ModelTrainer:
         temp_zip.close()
 
         return temp_zip.name
+
+    def export_model_to_pi(self, model_path: str = None, metadata_path: str = None):
+        """Export model và các file cần thiết cho Raspberry Pi prediction"""
+        try:
+            if not self.model:
+                raise ValueError("Model chưa được train")
+
+            # Tạo thư mục pi_predict nếu chưa tồn tại
+            pi_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'pi_predict')
+            os.makedirs(pi_dir, exist_ok=True)
+
+            # Đường dẫn cho các file
+            model_path = os.path.join(pi_dir, 'model.h5')
+            metadata_path = os.path.join(pi_dir, 'metadata.json')
+            predict_script_path = os.path.join(pi_dir, 'raspberry_predict.py')
+
+            # Lưu model
+            self.model.save(model_path)
+            
+            # Lưu metadata
+            metadata = {
+                'class_names': self.class_names,
+                'input_shape': self.model.input_shape,
+                'model_type': 'tensorflow',
+                'created_at': datetime.now().isoformat()
+            }
+            with open(metadata_path, 'w') as f:
+                json.dump(metadata, f, indent=2)
+            
+            # Copy raspberry_predict.py
+            shutil.copy('raspberry_predict.py', predict_script_path)
+            
+            return {
+                'model_path': model_path,
+                'metadata_path': metadata_path,
+                'predict_script_path': predict_script_path
+            }
+            
+        except Exception as e:
+            raise Exception(f"Lỗi khi export model cho Raspberry Pi: {str(e)}")

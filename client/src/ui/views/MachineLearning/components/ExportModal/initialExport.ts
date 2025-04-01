@@ -3,7 +3,7 @@ export interface ExportFormat {
     type: string[];
     modelName: string;
     description: string;
-    code: string;
+    code?: string;
 }
 
 export const initialExport: ExportFormat[] = [
@@ -135,5 +135,17 @@ interpreter.invoke()
 
 # Get output tensor
 predictions = interpreter.get_tensor(output_details[0]['index'])`
+    },
+    {
+        format: "Raspberry Pi",
+        type: ["download"],
+        description: "Export your model for Raspberry Pi deployment. This will download a zip file containing model.h5, metadata.json, and raspberry_predict.py for real-time prediction.",
+        modelName: "raspberry_pi_files.zip",
+        code: `# Extract the zip file on your Raspberry Pi
+# Install required packages
+pip install opencv-python tensorflow pillow numpy
+
+# Run the prediction script
+python raspberry_predict.py`
     }
 ]

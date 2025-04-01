@@ -20,6 +20,8 @@ from websockets.server import serve
 from websockets.exceptions import ConnectionClosedOK
 from concurrent.futures import ThreadPoolExecutor
 from ml_utils import ModelTrainer
+import shutil
+import zipfile
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -414,7 +416,7 @@ async def predict_stream(websocket: WebSocket):
         if websocket.client_state.CONNECTED:
             await websocket.close()
 
-@app.get("/api/export-model")
+@app.post("/api/export-model")
 async def export_model(format: str, type: str = 'download'):
     """Export model theo format và type được chọn"""
     try:
@@ -431,6 +433,28 @@ async def export_model(format: str, type: str = 'download'):
             filename='model.zip'
         )
 
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/export-to-pi")
+async def export_to_pi():
+    """Export model và các file cần thiết cho Raspberry Pi"""
+    try:
+        if not model_trainer.model:
+            raise HTTPException(status_code=400, detail="Model chưa được train")
+
+        # Export model và các file cần thiết
+        result = model_trainer.export_model_to_pi()
+        
+        return {
+            "message": "Export model cho Raspberry Pi thành công",
+            "files": {
+                "model": result['model_path'],
+                "metadata": result['metadata_path'],
+                "script": result['predict_script_path']
+            }
+        }
+        
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
                 
