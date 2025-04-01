@@ -3,12 +3,7 @@ import LCD
 LCD.begin()
 try:
     LCD.backlight()
-    LCD.setCursor(0,0)
     LCD.print("Hello World")
-    time.sleep(3)
-    LCD.clear()
-    LCD.setCursor(0,0)
-    LCD.print("Pham Quoc Thai")
     time.sleep(3)
 finally:
     LCD.noBacklight()

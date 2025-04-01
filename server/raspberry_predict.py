@@ -3,8 +3,9 @@ import cv2
 import json
 import os
 from PIL import Image
-import tensorflow as tf
+import tflite_runtime.interpreter as tflite
 import time
+from picamera2 import Picamera2
 
 def preprocess_image(image, target_size=(224, 224)):
     """Tiền xử lý ảnh từ frame camera"""
@@ -15,102 +16,137 @@ def preprocess_image(image, target_size=(224, 224)):
     # Resize ảnh
     image = cv2.resize(image, target_size)
     
-    # Chuẩn hóa giá trị pixel
-    image = image.astype('float32') / 255.0
+    # Chuẩn hóa giá trị pixel và chuyển sang float32
+    image = (image.astype('float32') - 127.5) / 127.5
     
     return image
 
 def load_model_and_metadata():
-    """Load model và metadata từ thư mục pi_predict"""
-    
-    # Đường dẫn mặc định trong thư mục pi_predict
-    current_dir = os.path.dirname(os.path.abspath(__file__))
-    model_path = os.path.join(current_dir, 'model.h5')
-    metadata_path = os.path.join(current_dir, 'metadata.json')
-    
-    if not os.path.exists(model_path):
-        raise FileNotFoundError(f"Không tìm thấy file model tại: {model_path}")
-    if not os.path.exists(metadata_path):
-        raise FileNotFoundError(f"Không tìm thấy file metadata tại: {metadata_path}")
-    
-    # Load model
-    model = tf.keras.models.load_model(model_path)
-    
-    # Load metadata
-    with open(metadata_path, 'r') as f:
-        metadata = json.load(f)
-    
-    return model, metadata
+    """Load model và metadata từ thư mục hiện tại"""
+    try:
+        # Đường dẫn mặc định trong thư mục hiện tại
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+        model_path = os.path.join(current_dir, 'model.tflite')
+        metadata_path = os.path.join(current_dir, 'metadata.json')
+        
+        if not os.path.exists(model_path):
+            raise FileNotFoundError(f"Không tìm thấy file model tại: {model_path}")
+        if not os.path.exists(metadata_path):
+            raise FileNotFoundError(f"Không tìm thấy file metadata tại: {metadata_path}")
+        
+        # Load model
+        interpreter = tflite.Interpreter(model_path=model_path)
+        interpreter.allocate_tensors()
+        
+        # Get input và output details
+        input_details = interpreter.get_input_details()
+        output_details = interpreter.get_output_details()
+        
+        print("Input details:", input_details)
+        print("Output details:", output_details)
+        
+        # Load metadata
+        with open(metadata_path, 'r') as f:
+            metadata = json.load(f)
+            
+        print("Metadata:", metadata)
+        
+        return interpreter, input_details, output_details, metadata
+        
+    except Exception as e:
+        print(f"Lỗi khi load model và metadata: {str(e)}")
+        raise
 
-def predict_frame(model, metadata, frame):
+def predict_frame(interpreter, input_details, output_details, metadata, frame):
     """Dự đoán class cho một frame từ camera"""
-    
-    processed_image = preprocess_image(frame)
-    processed_image = np.expand_dims(processed_image, axis=0)
-    
-    predictions = model.predict(processed_image, verbose=0)
-    
-    class_names = metadata['class_names']
-    
-    results = []
-    for class_name, confidence in zip(class_names, predictions[0]):
-        results.append({
-            'class': class_name,
-            'confidence': float(confidence * 100)
-        })
-    
-    return results
+    try:
+        # Tiền xử lý ảnh
+        processed_image = preprocess_image(frame)
+        
+        # Reshape để phù hợp với input shape của model
+        input_shape = input_details[0]['shape']
+        processed_image = np.expand_dims(processed_image, axis=0)
+        processed_image = processed_image.astype(input_details[0]['dtype'])
+        
+        # Set input tensor
+        interpreter.set_tensor(input_details[0]['index'], processed_image)
+        
+        # Run inference
+        interpreter.invoke()
+        
+        # Get output tensor
+        predictions = interpreter.get_tensor(output_details[0]['index'])
+        
+        class_names = metadata['class_names']
+        
+        results = []
+        for class_name, confidence in zip(class_names, predictions[0]):
+            results.append({
+                'class': class_name,
+                'confidence': float(confidence * 100)
+            })
+        
+        return results
+        
+    except Exception as e:
+        print(f"Lỗi khi dự đoán: {str(e)}")
+        return []
 
 def draw_predictions(frame, results):
     """Vẽ kết quả dự đoán lên frame"""
-    
-    # Vẽ khung cho ảnh
-    height, width = frame.shape[:2]
-    cv2.rectangle(frame, (10, 10), (width-10, height-10), (0, 255, 0), 2)
-    
-    # Vẽ kết quả dự đoán
-    y_offset = 40
-    for result in results:
-        text = f"{result['class']}: {result['confidence']:.1f}%"
-        # Vẽ background cho text
-        (text_width, text_height), _ = cv2.getTextSize(text, cv2.FONT_HERSHEY_SIMPLEX, 0.7, 2)
-        cv2.rectangle(frame, (10, y_offset-text_height-5), (10+text_width+10, y_offset+5), (0, 0, 0), -1)
-        # Vẽ text
-        cv2.putText(frame, text, (15, y_offset), 
-                   cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
-        y_offset += 30
-    
-    return frame
+    try:
+        # Vẽ khung cho ảnh
+        height, width = frame.shape[:2]
+        cv2.rectangle(frame, (10, 10), (width-10, height-10), (0, 255, 0), 2)
+        
+        # Vẽ kết quả dự đoán
+        y_offset = 40
+        for result in results:
+            text = f"{result['class']}: {result['confidence']:.1f}%"
+            # Vẽ background cho text
+            (text_width, text_height), _ = cv2.getTextSize(text, cv2.FONT_HERSHEY_SIMPLEX, 0.7, 2)
+            cv2.rectangle(frame, (10, y_offset-text_height-5), (10+text_width+10, y_offset+5), (0, 0, 0), -1)
+            # Vẽ text
+            cv2.putText(frame, text, (15, y_offset), 
+                       cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
+            y_offset += 30
+        
+        return frame
+        
+    except Exception as e:
+        print(f"Lỗi khi vẽ kết quả: {str(e)}")
+        return frame
 
 def main():
+    picam2 = None  # Khởi tạo biến picam2 ở ngoài try block
     try:
         print("Đang load model và metadata...")
-        model, metadata = load_model_and_metadata()
+        interpreter, input_details, output_details, metadata = load_model_and_metadata()
         print("Đã load model và metadata thành công!")
         print(f"Các class có thể dự đoán: {', '.join(metadata['class_names'])}")
         
         # Khởi tạo camera
-        cap = cv2.VideoCapture(0)  # Sử dụng camera mặc định
-        cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
-        cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
+        picam2 = Picamera2()
+        preview_config = picam2.create_preview_configuration(main={"size": (640, 480)})
+        picam2.configure(preview_config)
+        picam2.start()
         
         print("\nĐang chạy dự đoán realtime...")
         print("Nhấn 'q' để thoát")
         
         last_prediction_time = 0
         prediction_interval = 0.1  # Thời gian giữa các lần dự đoán (giây)
+        results = []  # Khởi tạo results ở ngoài vòng lặp
         
         while True:
-            ret, frame = cap.read()
-            if not ret:
-                print("Không thể đọc frame từ camera")
-                break
+            frame = picam2.capture_array()
+            frame = cv2.rotate(frame, cv2.ROTATE_180)  # Xoay frame 180 độ
             
             current_time = time.time()
             
             # Dự đoán mỗi prediction_interval giây
             if current_time - last_prediction_time >= prediction_interval:
-                results = predict_frame(model, metadata, frame)
+                results = predict_frame(interpreter, input_details, output_details, metadata, frame)
                 last_prediction_time = current_time
             
             # Vẽ kết quả lên frame
@@ -127,7 +163,8 @@ def main():
         print(f"Có lỗi xảy ra: {str(e)}")
     finally:
         # Giải phóng tài nguyên
-        cap.release()
+        if picam2 is not None:
+            picam2.stop()
         cv2.destroyAllWindows()
 
 if __name__ == "__main__":

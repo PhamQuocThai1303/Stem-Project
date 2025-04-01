@@ -19,7 +19,12 @@ const ExportModal: React.FC<ExportModalProps> = ({ isOpen, onClose }) => {
   const handleExportModel = async (modelType: string, selectedFormat: string) => {
     try {
       if (selectedFormat === "Raspberry Pi") {
-        const response = await fetch('http://localhost:3000/api/export-to-pi', {
+        const connectionId = localStorage.getItem('connection_id');
+      if (!connectionId) {
+        toast.error("Không tìm thấy kết nối!");
+        return;
+      }
+        const response = await fetch(`http://localhost:3000/api/export-to-pi/${connectionId}`, {
           method: 'POST',
         });
         if (!response.ok) {

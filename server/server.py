@@ -78,6 +78,10 @@ data_dir = Path(__file__).parent / "data"
 data_dir.mkdir(exist_ok=True)
 FILE_PATH = data_dir / "data.txt"
 
+# Configure upload folder
+folder_dir = Path(__file__).parent / "pi_predict"
+folder_dir.mkdir(exist_ok=True)
+
 model_trainer = ModelTrainer()
 # Create thread pool for processing frames
 thread_pool = ThreadPoolExecutor(max_workers=2)
@@ -155,12 +159,12 @@ async def upload_file(connection_id: str, code_req: CodeUploadRequest):
         connection_info = active_connections[connection_id]
         
         # Upload code to remote file
-        remote_path = f"/home/{connection_info['username']}/Documents/code/data.txt"
+        remote_path = f"/home/{connection_info['username']}/Documents/library/data.txt"
         ssh_manager.upload_file(remote_path, code_req.code)
         print(f"File uploaded to Raspberry Pi: {remote_path}")
         
         # Execute the uploaded code
-        command = f"cd /home/{connection_info['username']}/Documents/code && sudo python data.txt"
+        command = f"cd /home/{connection_info['username']}/Documents/library && sudo python data.txt"
         output, error = ssh_manager.execute_command(command)
         print(f"Command output: {output}")
         
@@ -436,8 +440,8 @@ async def export_model(format: str, type: str = 'download'):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@app.post("/api/export-to-pi")
-async def export_to_pi():
+@app.post("/api/export-to-pi/{connection_id}")
+async def export_to_pi(connection_id: str):
     """Export model và các file cần thiết cho Raspberry Pi"""
     try:
         if not model_trainer.model:
@@ -446,13 +450,45 @@ async def export_to_pi():
         # Export model và các file cần thiết
         result = model_trainer.export_model_to_pi()
         
+        if connection_id not in ssh_managers:
+            raise HTTPException(status_code=404, detail="Connection not found")
+            
+        ssh_manager = ssh_managers[connection_id]
+        connection_info = active_connections[connection_id]
+        
+        # Upload từng file vào thư mục pi_predict trên Raspberry Pi
+        remote_dir = f"/home/{connection_info['username']}/Documents/library/pi_predict"
+        
+        # Upload model.h5
+        remote_model_path = f"{remote_dir}/model.tflite"
+        with open(result['model_path'], 'rb') as f:
+            ssh_manager.upload_file(remote_model_path, f.read())
+            
+        # Upload metadata.json
+        remote_metadata_path = f"{remote_dir}/metadata.json"
+        with open(result['metadata_path'], 'rb') as f:
+            ssh_manager.upload_file(remote_metadata_path, f.read())
+            
+        # Upload raspberry_predict.py
+        remote_script_path = f"{remote_dir}/raspberry_predict.py"
+        with open(result['predict_script_path'], 'rb') as f:
+            ssh_manager.upload_file(remote_script_path, f.read())
+        
+        # Thực thi script trên Raspberry Pi
+        command = f"cd {remote_dir} && DISPLAY=:0 python raspberry_predict.py"
+        output, error = ssh_manager.execute_command(command)
+        
+        if error:
+            raise Exception(f"Lỗi khi thực thi script: {error}")
+        
         return {
-            "message": "Export model cho Raspberry Pi thành công",
+            "message": "Export và thực thi model trên Raspberry Pi thành công",
             "files": {
-                "model": result['model_path'],
-                "metadata": result['metadata_path'],
-                "script": result['predict_script_path']
-            }
+                "model": remote_model_path,
+                "metadata": remote_metadata_path,
+                "script": remote_script_path
+            },
+            "output": output
         }
         
     except Exception as e:

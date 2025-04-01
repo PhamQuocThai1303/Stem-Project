@@ -1,6 +1,7 @@
 import paramiko
 from typing import Optional, Tuple, Dict
 import asyncio
+import os
 
 
 class SSHManager:
@@ -18,6 +19,7 @@ class SSHManager:
             password=password,
             port=port
         )
+        self.sftp = self.client.open_sftp()
     
     def disconnect(self) -> None:
         if self.sftp:
@@ -52,3 +54,31 @@ class SSHManager:
         
         self.channel = self.client.invoke_shell()
         return self.channel
+
+    def upload_directory(self, local_dir: str, remote_dir: str) -> None:
+        """Upload toàn bộ thư mục lên Raspberry Pi"""
+        if not self.sftp:
+            raise Exception("SFTP not initialized")
+            
+        # Tạo thư mục đích nếu chưa tồn tại
+        try:
+            self.sftp.stat(remote_dir)
+        except FileNotFoundError:
+            self.sftp.mkdir(remote_dir)
+        
+        # Upload tất cả file và thư mục con
+        for root, dirs, files in os.walk(local_dir):
+            # Tạo các thư mục con
+            for dir_name in dirs:
+                local_path = os.path.join(root, dir_name)
+                remote_path = os.path.join(remote_dir, os.path.relpath(local_path, local_dir))
+                try:
+                    self.sftp.stat(remote_path)
+                except FileNotFoundError:
+                    self.sftp.mkdir(remote_path)
+            
+            # Upload các file
+            for file_name in files:
+                local_path = os.path.join(root, file_name)
+                remote_path = os.path.join(remote_dir, os.path.relpath(local_path, local_dir))
+                self.sftp.put(local_path, remote_path)
