@@ -22,6 +22,7 @@ import { initialEdges, initialNodes } from './initialData';
 import { v4 as uuidv4 } from 'uuid';
 import ExportModal from './components/ExportModal/ExportModal';
 import Sidebar from './components/TrainingNode/components/Sidebar/Sidebar';
+import JSZip from 'jszip';
 
 // Định nghĩa AddClassNode bên ngoài và nhận onClick qua props
 const AddClassNode = ({ data }: any) => {
@@ -172,6 +173,27 @@ const MachineLearning = () => {
     // setUpDataForTraining()
   }, []);
 
+  const handleRemoveAllSamples = useCallback((nodeId: string) => {
+    setNodes(nds => {
+      const newNode = nds.map(node => {
+        if (node.id === nodeId) {
+          return {
+            ...node,
+            data: {
+              ...node.data,
+              images: []
+            }
+          };
+        }
+        return node;
+      })
+      setUpDataForTraining(newNode)
+      return newNode;
+    } 
+    );
+    // setUpDataForTraining()
+  }, []);
+
   const handleChangeName = useCallback((nodeId: string, newName: string) => {
     setNodes(nds => {
       const newNode = nds.map(node => {
@@ -210,6 +232,8 @@ const MachineLearning = () => {
         onUpload: handleImageUpload,
         onDeleteImage: handleDeleteImage,
         onChangeName: handleChangeName,
+        onRemoveAllSamples: handleRemoveAllSamples,
+        onDownloadSamples: handleDownloadSamples,
         images: []
       }
     };
@@ -237,6 +261,47 @@ const MachineLearning = () => {
     data: { onClick: handleAddClass },
   };
 
+  const handleDownloadSamples = useCallback(async (nodeId: string) => {
+    const node = nodes.find(n => n.id === nodeId);
+    if (!node?.data?.images || node.data.images.length === 0) return;
+
+    const zip = new JSZip();
+    const className = node.data.name.replace(/\s+/g, '_').toLowerCase();
+    const promises = node.data.images.map(async (imageUrl: string, index: number) => {
+      try {
+        // Fetch the image data
+        const response = await fetch(imageUrl);
+        const blob = await response.blob();
+        
+        // Add the image to the zip file
+        const extension = blob.type.split('/')[1] || 'jpg';
+        zip.file(`${className}_${index + 1}.${extension}`, blob);
+      } catch (error) {
+        console.error(`Error processing image ${index + 1}:`, error);
+      }
+    });
+
+    try {
+      // Wait for all images to be processed
+      await Promise.all(promises);
+      
+      // Generate the zip file
+      const content = await zip.generateAsync({ type: "blob" });
+      
+      // Create a download link and trigger the download
+      const downloadUrl = URL.createObjectURL(content);
+      const link = document.createElement('a');
+      link.href = downloadUrl;
+      link.download = `${className}_samples.zip`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(downloadUrl);
+    } catch (error) {
+      console.error('Error creating zip file:', error);
+    }
+  }, [nodes]);
+
   // Khởi tạo nodes ban đầu
   useEffect(() => {
     
@@ -251,6 +316,8 @@ const MachineLearning = () => {
               onUpload: handleImageUpload,
               onDeleteImage: handleDeleteImage,
               onChangeName: handleChangeName,
+              onRemoveAllSamples: handleRemoveAllSamples,
+              onDownloadSamples: handleDownloadSamples,
               images: []
             }
           };
@@ -283,11 +350,26 @@ const MachineLearning = () => {
 
   useEffect(() => {
     setNodes(nds => 
-      nds.map(node => 
-        node.id === 'add-class' 
-          ? { ...node, data: { onClick: handleAddClass } }
-          : node
-      )
+      nds.map(node => {
+        if (node.id === 'add-class') {
+          return { ...node, data: { onClick: handleAddClass } };
+        }
+        if (node.type === 'classNode') {
+          return {
+            ...node,
+            data: {
+              ...node.data,
+              onDelete: handleDeleteClass,
+              onUpload: handleImageUpload,
+              onDeleteImage: handleDeleteImage,
+              onChangeName: handleChangeName,
+              onRemoveAllSamples: handleRemoveAllSamples,
+              onDownloadSamples: handleDownloadSamples
+            }
+          };
+        }
+        return node;
+      })
     );
   }, [handleAddClass]);
 

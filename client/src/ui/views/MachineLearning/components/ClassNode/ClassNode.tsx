@@ -1,9 +1,10 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import React, { useState, useCallback, useRef } from 'react';
+import React, { useState, useCallback, useRef, useEffect } from 'react';
 import {
     Handle,
     Position,
   } from 'reactflow';
+import WebcamModal from './WebcamModal';
 import './index.css';
 
 interface ClassNodeProps {
@@ -15,6 +16,8 @@ interface ClassNodeProps {
     onUpload?: (nodeId: string, files: FileList) => void;
     onDeleteImage?: (nodeId: string, imageIndex: number) => void;
     onChangeName?: (nodeId: string, newName: string) => void;
+    onRemoveAllSamples?: (nodeId: string) => void;
+    onDownloadSamples?: (nodeId: string) => void;
   };
   id: string;
 }
@@ -22,7 +25,24 @@ interface ClassNodeProps {
 const ClassNode: React.FC<ClassNodeProps> = ({ data, id }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [className, setClassName] = useState(data.name);
+  const [isWebcamOpen, setIsWebcamOpen] = useState(false);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  // Close menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setIsMenuOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
 
   const handleEditClick = useCallback(() => {
     setIsEditing(true);
@@ -37,7 +57,6 @@ const ClassNode: React.FC<ClassNodeProps> = ({ data, id }) => {
     if(e.target.value.length > 0 && data.onChangeName){
       data.onChangeName(id, e.target.value);
     }
-    
   }, [data.onChangeName, id]);
 
   const handleKeyPress = useCallback((e: React.KeyboardEvent) => {
@@ -50,7 +69,22 @@ const ClassNode: React.FC<ClassNodeProps> = ({ data, id }) => {
     if (data.onDelete) {
       data.onDelete(id);
     }
+    setIsMenuOpen(false);
   }, [data.onDelete, id]);
+
+  const handleRemoveAllSamples = useCallback(() => {
+    if (data.onRemoveAllSamples) {
+      data.onRemoveAllSamples(id);
+    }
+    setIsMenuOpen(false);
+  }, [data.onRemoveAllSamples, id]);
+
+  const handleDownloadSamples = useCallback(() => {
+    if (data.onDownloadSamples) {
+      data.onDownloadSamples(id);
+    }
+    setIsMenuOpen(false);
+  }, [data.onDownloadSamples, id]);
 
   const handleUploadClick = useCallback(() => {
     fileInputRef.current?.click();
@@ -67,6 +101,29 @@ const ClassNode: React.FC<ClassNodeProps> = ({ data, id }) => {
       data.onDeleteImage(id, imageIndex);
     }
   }, [data.onDeleteImage, id]);
+
+  const handleWebcamClick = useCallback(() => {
+    setIsWebcamOpen(true);
+  }, []);
+
+  const handleWebcamClose = useCallback(() => {
+    setIsWebcamOpen(false);
+  }, []);
+
+  const handleWebcamCapture = useCallback((imageSrc: string) => {
+    if (data.onUpload) {
+      // Convert base64 to File object
+      fetch(imageSrc)
+        .then(res => res.blob())
+        .then(blob => {
+          const file = new File([blob], `webcam-${Date.now()}.jpg`, { type: 'image/jpeg' });
+          // Create a DataTransfer object to create a valid FileList
+          const dataTransfer = new DataTransfer();
+          dataTransfer.items.add(file);
+          data.onUpload(id, dataTransfer.files);
+        });
+    }
+  }, [data.onUpload, id]);
 
   return (
     <div className="class-node">
@@ -88,9 +145,24 @@ const ClassNode: React.FC<ClassNodeProps> = ({ data, id }) => {
         <button className="edit-button" onClick={handleEditClick}>
           ✏️
         </button>
-        <button className="delete-button" onClick={handleDelete}>
-          🗑️
-        </button>
+        <div className="menu-container" ref={menuRef}>
+          <button className="menu-button" onClick={() => setIsMenuOpen(!isMenuOpen)}>
+            ⋮
+          </button>
+          {isMenuOpen && (
+            <div className="menu-dropdown">
+              <button onClick={handleDelete} className="menu-item">
+                Delete Class
+              </button>
+              <button onClick={handleRemoveAllSamples} className="menu-item">
+                Remove All Samples
+              </button>
+              <button onClick={handleDownloadSamples} className="menu-item">
+                Download Samples
+              </button>
+            </div>
+          )}
+        </div>
       </div>
       <div className="class-content">
         {data.images && data.images.length > 0 && (
@@ -102,7 +174,12 @@ const ClassNode: React.FC<ClassNodeProps> = ({ data, id }) => {
               <span className="upload-icon">⬆️</span>
               <span>Upload</span>
             </button>
-            {data.images && data.images.length > 0 && (
+            <button className="webcam-button" onClick={handleWebcamClick}>
+              <span className="webcam-icon">📷</span>
+              <span>Webcam</span>
+            </button>
+          </div>
+          {data.images && data.images.length > 0 && (
             <div className="image-grid">
               {data.images.map((image, index) => (
                 <div key={index} className="image-preview">
@@ -117,7 +194,6 @@ const ClassNode: React.FC<ClassNodeProps> = ({ data, id }) => {
               ))}
             </div>
           )}
-          </div>
           <input
             type="file"
             ref={fileInputRef}
@@ -126,9 +202,13 @@ const ClassNode: React.FC<ClassNodeProps> = ({ data, id }) => {
             multiple
             style={{ display: 'none' }}
           />
-          
         </div>
       </div>
+      <WebcamModal
+        isOpen={isWebcamOpen}
+        onClose={handleWebcamClose}
+        onCapture={handleWebcamCapture}
+      />
     </div>
   );
 };
