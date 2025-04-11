@@ -5,7 +5,7 @@ import App from './views/Stem/App.tsx'
 import '../configs/i18n'
 import "bootstrap/dist/css/bootstrap.min.css";
 import MachineLearning from './views/MachineLearning/index.tsx'
-import ChatBot from './views/ChatBot/index.tsx'
+import ChatBot from './views/ChatBot/ChatBot.tsx'
 import Header from './@core/components/header/index.tsx'
 import Login from './views/Login/index.tsx'
 import { AuthProvider } from './context/AuthContext.tsx'
