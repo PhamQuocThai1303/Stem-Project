@@ -32,6 +32,43 @@ const ChatBotContent = () => {
     dispatch(selectChat(chatId));
   };
 
+  const handleSuggestionClick = async (suggestion: string) => {
+    if (!currentChatId || !currentChat) {
+      dispatch(addChat());
+      // Lấy ID của chat mới vừa tạo
+      const newChatId = store.getState().chat.currentChatId;
+      if (!newChatId) return;
+      
+      setIsLoading(true);
+      try {
+        const botResponse = await generateResponse(suggestion, []);
+        dispatch(addMessage({
+          chatId: newChatId,
+          userMessage: suggestion,
+          botMessage: botResponse
+        }));
+      } catch (error) {
+        console.error('Error in chat:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    } else {
+      setIsLoading(true);
+      try {
+        const botResponse = await generateResponse(suggestion, currentChat.messages);
+        dispatch(addMessage({
+          chatId: currentChatId,
+          userMessage: suggestion,
+          botMessage: botResponse
+        }));
+      } catch (error) {
+        console.error('Error in chat:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+  };
+
   const handleKeyPress = (e: KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter' && !e.shiftKey && !isLoading && inputChat.trim()) {
       handleChat();
@@ -126,17 +163,17 @@ const ChatBotContent = () => {
                 <p className="welcome-subtext">Hôm nay tôi có thể giúp gì cho bạn</p>
               </div>
               <div className="suggestion-grid">
-                <div className="suggestion-card">
-                  <p>Lên kế hoạch bữa ăn</p>
+                <div className="suggestion-card" onClick={() => handleSuggestionClick("STEM là gì?")}>
+                  <p>STEM là gì?</p>
                 </div>
-                <div className="suggestion-card">
-                  <p>Cụm từ ngôn ngữ mới</p>
+                <div className="suggestion-card" onClick={() => handleSuggestionClick("Machine Learning là gì?")}>
+                  <p>Machine Learning là gì?</p>
                 </div>
-                <div className="suggestion-card">
-                  <p>Bí quyết viết thư xin việc</p>
+                <div className="suggestion-card" onClick={() => handleSuggestionClick("Lộ trình học STEM và Machine Learning")}>
+                  <p>Lộ trình học STEM và Machine Learning</p>
                 </div>
-                <div className="suggestion-card">
-                  <p>Tạo hình ảnh với AI</p>
+                <div className="suggestion-card" onClick={() => handleSuggestionClick("Các nguồn học hiệu quả cho STEM và Machine Learning")}>
+                  <p>Các nguồn học hiệu quả cho STEM và Machine Learning</p>
                 </div>
               </div>
             </div>
