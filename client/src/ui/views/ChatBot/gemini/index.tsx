@@ -2,7 +2,6 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 import { ChatHistory, GeminiMessage, GenerationConfig } from './types';
 import { processResponse } from './utils';
 
-// Lấy API key từ biến môi trường
 const apiKey = import.meta.env.VITE_GOOGLE_API_KEY;
 if (!apiKey) {
   throw new Error('VITE_GOOGLE_API_KEY is not defined in environment variables');
@@ -28,7 +27,6 @@ export const generateResponse = async (prompt: string, history: ChatHistory = []
       parts: [{ text: msg.text }]
     }));
 
-    // Add current prompt to history
     formattedHistory.push({
       role: 'user',
       parts: [{ text: prompt }]
