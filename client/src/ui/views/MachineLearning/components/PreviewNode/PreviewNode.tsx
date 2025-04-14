@@ -85,10 +85,11 @@ const PreviewNode: React.FC<PreviewNodeProps> = ({ data }) => {
     }
   }, [isInputOn]);
 
-  // Setup capture interval
+  // Setup capture interval with lower FPS
   useEffect(() => {
     if (isInputOn && inputType === 'webcam') {
-      intervalRef.current = setInterval(captureAndPredict, 500); // 2 FPS
+      // Increase interval to 1000ms (1 FPS) to reduce load
+      intervalRef.current = setInterval(captureAndPredict, 1000);
     }
     return () => {
       if (intervalRef.current) {
@@ -97,6 +98,51 @@ const PreviewNode: React.FC<PreviewNodeProps> = ({ data }) => {
       }
     };
   }, [isInputOn, inputType, captureAndPredict]);
+
+  // Add debounce to prevent rapid WebSocket messages
+  const debouncedCapture = useCallback(() => {
+    if (wsRef.current?.readyState !== WebSocket.OPEN) {
+      return;
+    }
+    
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+    }
+    
+    intervalRef.current = setTimeout(() => {
+      captureAndPredict();
+    }, 500);
+  }, [captureAndPredict]);
+
+  // Update WebSocket message handler to use debounced capture
+  useEffect(() => {
+    if (isInputOn && inputType === 'webcam') {
+      const newWs = new WebSocket('ws://localhost:3000/ws/predict');
+      wsRef.current = newWs;
+
+      newWs.onopen = () => {
+        console.log('WebSocket connected');
+        debouncedCapture();
+      };
+
+      newWs.onmessage = (event) => {
+        const predictions = JSON.parse(event.data);
+        setPredictions(predictions);
+        debouncedCapture(); // Trigger next capture after receiving response
+      };
+
+      newWs.onerror = (error) => {
+        console.error('WebSocket error:', error);
+      };
+
+      return () => {
+        if (wsRef.current) {
+          wsRef.current.close();
+          wsRef.current = null;
+        }
+      };
+    }
+  }, [isInputOn, inputType, debouncedCapture]);
 
   // Component unmount cleanup
   useEffect(() => {
