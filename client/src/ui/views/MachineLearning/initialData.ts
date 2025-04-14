@@ -9,25 +9,25 @@ export const initialNodes: Node[] = [
     {
       id: uuidv4(),
       type: 'classNode',
-      position: { x: 50, y: 50 },
+      position: { x: 0, y: 50 },
       data: { id: 1, images: [], name: 'Class 1' }
     },
     {
       id: uuidv4(),
       type: 'classNode',
-      position: { x: 50, y: 250 },
+      position: { x: 0, y: 300 },
       data: { id: 2, images: [], name: 'Class 2' }
     },
     {
       id: 'training',
       type: 'trainingNode',
-      position: { x: 450, y: 150 },
+      position: { x: 650, y: 150 },
       data: { classNodes: [] }
     },
     {
       id: 'preview',
       type: 'previewNode',
-      position: { x: 850, y: 150 },
+      position: { x: 1000, y: 50 },
       data: { classNodes: [] }
     },
   ];

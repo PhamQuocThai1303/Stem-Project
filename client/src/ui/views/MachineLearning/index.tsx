@@ -90,7 +90,7 @@ const MachineLearning = () => {
       // Chỉ cập nhật lại vị trí của các class nodes còn lại
       const reorderedClassNodes = classNodes.map((node, index) => ({
         ...node,
-        position: { x: 50, y: index * 200 + 50 },
+        position: { x: 0, y: index * 250 + 50 },
         data: {
           ...node.data,
           onDelete: handleDeleteClass 
@@ -217,14 +217,14 @@ const MachineLearning = () => {
   const handleAddClass = useCallback(() => {
     const newClassCount = classCount + 1;
     const newNodeId = uuidv4();
-    const yPosition = classCount * 200 + 50;
+    const yPosition = classCount * 250 + 50;
 
     const newNode: Node = {
       id: newNodeId,
-      height: 187,
-      width: 350,
+      height: 150,
+      width: 600,
       type: 'classNode',
-      position: { x: 50, y: yPosition },
+      position: { x: 0, y: yPosition },
       data: {
         id: newClassCount,
         name: `Class ${newClassCount}`,
@@ -257,7 +257,7 @@ const MachineLearning = () => {
   const addClassNode = {
     id: 'add-class',
     type: 'addClassNode',
-    position: { x: 450, y: 50 },
+    position: { x: 660, y: 50 },
     data: { onClick: handleAddClass },
   };
 
@@ -413,8 +413,8 @@ const MachineLearning = () => {
         fitView
         snapToGrid
         deleteKeyCode={null}
-        // nodesDraggable={false}
-        // nodesConnectable={false}
+        nodesDraggable={false}
+        nodesConnectable={false}
       >
         <Background />
         <Controls />

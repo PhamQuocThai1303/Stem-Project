@@ -174,12 +174,11 @@ const ClassNode: React.FC<ClassNodeProps> = ({ data, id }) => {
               <span className="upload-icon">⬆️</span>
               <span>Upload</span>
             </button>
-            <button className="webcam-button" onClick={handleWebcamClick}>
-              <span className="webcam-icon">📷</span>
+            <button className="sample-button" onClick={handleWebcamClick}>
+              <span className="upload-icon">📷</span>
               <span>Webcam</span>
             </button>
-          </div>
-          {data.images && data.images.length > 0 && (
+            {data.images && data.images.length > 0 && (
             <div className="image-grid">
               {data.images.map((image, index) => (
                 <div key={index} className="image-preview">
@@ -194,6 +193,8 @@ const ClassNode: React.FC<ClassNodeProps> = ({ data, id }) => {
               ))}
             </div>
           )}
+          </div>
+          
           <input
             type="file"
             ref={fileInputRef}
