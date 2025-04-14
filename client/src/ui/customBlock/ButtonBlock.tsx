@@ -25,7 +25,7 @@ export const defineButtonBlocks  = () => {
             "max": 2
           }
         ],
-        "colour": 160,
+        "colour": 330,
         "tooltip": "Khối button số %1",
         "output": "Number",
         "helpUrl": ""

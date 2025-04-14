@@ -16,7 +16,7 @@ export const defineBuzzerBlocks  = () => {
       {
         "type": "Buzzer_on",
         "message0": "Khối bật buzzer",
-        "colour": 160,
+        "colour": 210,
         "tooltip": "Bật buzzer",
         "nextStatement": null,
         "previousStatement": null,
@@ -25,7 +25,7 @@ export const defineBuzzerBlocks  = () => {
       {
         "type": "Buzzer_off",
         "message0": "Khối tắt buzzer",
-        "colour": 160,
+        "colour": 210,
         "tooltip": "Tắt buzzer",
         "helpUrl": "",
         "nextStatement": null,

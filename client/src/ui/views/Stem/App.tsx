@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { useCallback, useEffect, useState } from 'react';
 import './App.css'
 import { BlocklyWorkspace } from 'react-blockly';
@@ -212,13 +213,13 @@ function App() {
         >
           {t("Import")}
         </button>
-        <button onClick={() =>{
+        {/* <button onClick={() =>{
           console.log(generatedCode)
           console.log(generatedJson);
           }
           }>
           Print
-        </button>
+        </button> */}
 
         <button onClick={() =>{
           handleStop()

@@ -18,7 +18,7 @@ export const defineLCDBlocks  = () => {
         "message0": "Khởi tạo LCD",
         "nextStatement": null,
         "previousStatement": null,
-        "colour": 230,
+        "colour": 180,
         "tooltip": "Khởi tạo LCD"
       },
       {
@@ -26,7 +26,7 @@ export const defineLCDBlocks  = () => {
         "message0": "Xóa màn hình LCD",
         "nextStatement": null,
         "previousStatement": null,
-        "colour": 230,
+        "colour": 180,
         "tooltip": "Xóa màn hình LCD"
       },
       {
@@ -34,7 +34,7 @@ export const defineLCDBlocks  = () => {
         "message0": "Bật đèn nền",
         "nextStatement": null,
         "previousStatement": null,
-        "colour": 230,
+        "colour": 180,
         "tooltip": "Bật đèn nền"
       },
       {
@@ -42,7 +42,7 @@ export const defineLCDBlocks  = () => {
         "message0": "Tắt đèn nền",
         "nextStatement": null,
         "previousStatement": null,
-        "colour": 230,
+        "colour": 180,
         "tooltip": "Tắt đèn nền"
       },
       {
@@ -57,7 +57,7 @@ export const defineLCDBlocks  = () => {
         ],
         "previousStatement": null,
         "nextStatement": null,
-        "colour": 160,
+        "colour": 180,
         "tooltip": "Hiển thị chuỗi lên LCD"
       },
       {
@@ -81,7 +81,7 @@ export const defineLCDBlocks  = () => {
         ],
         "previousStatement": null,
         "nextStatement": null,
-        "colour": 160,
+        "colour": 180,
         "tooltip": "Đặt vị trí con trỏ trên màn hình"
       },
   ]);

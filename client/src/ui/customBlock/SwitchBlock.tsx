@@ -25,7 +25,7 @@ export const defineSwitchBlocks  = () => {
             "max": 2
           }
         ],
-        "colour": 160,
+        "colour": 285,
         "tooltip": "Khối switch số %1",
         "output": "Number",
         "helpUrl": ""

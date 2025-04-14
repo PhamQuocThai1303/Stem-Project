@@ -16,7 +16,7 @@ export const defineFanBlocks  = () => {
       {
         "type": "Fan_on",
         "message0": "Khối bật quạt",
-        "colour": 160,
+        "colour": 345,
         "tooltip": "Bật quạt",
         "nextStatement": null,
         "previousStatement": null,
@@ -25,7 +25,7 @@ export const defineFanBlocks  = () => {
       {
         "type": "Fan_off",
         "message0": "Khối tắt quạt",
-        "colour": 160,
+        "colour": 345,
         "tooltip": "Tắt quạt",
         "helpUrl": "",
         "nextStatement": null,

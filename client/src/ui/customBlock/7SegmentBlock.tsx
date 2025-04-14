@@ -33,7 +33,7 @@ export const define7SegmentBlocks  = () => {
       ],
       "previousStatement": null,
       "nextStatement": null,
-      "colour": 160,
+      "colour": 120,
       "tooltip": "Bật chấm"
     },
       {
@@ -41,7 +41,7 @@ export const define7SegmentBlocks  = () => {
         "message0": "Khởi động LED 7 đoạn",
         "previousStatement": null,
         "nextStatement": null,
-        "colour": 160,
+        "colour": 120,
         // "tooltip": "Tắt LED"
       },
       {
@@ -49,7 +49,7 @@ export const define7SegmentBlocks  = () => {
         "message0": "Tắt LED 7 đoạn",
         "previousStatement": null,
         "nextStatement": null,
-        "colour": 160,
+        "colour": 120,
         // "tooltip": "Tắt LED"
       },
       {
@@ -69,7 +69,7 @@ export const define7SegmentBlocks  = () => {
         ],
         "previousStatement": null,
         "nextStatement": null,
-        "colour": 160,
+        "colour": 120,
         "tooltip": "Nhấp nháy LED theo thứ tự tuần tự"
       },
 

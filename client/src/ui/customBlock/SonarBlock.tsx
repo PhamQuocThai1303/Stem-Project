@@ -17,7 +17,7 @@ export const defineSonarBlocks  = () => {
         "type": "Sonar_distance",
         "message0": "Khối khoảng cách",
         "output": "Number",
-        "colour": 160,
+        "colour": 210,
         "tooltip": "Trả về khoảng cách của vật thể",
         "helpUrl": ""
       },

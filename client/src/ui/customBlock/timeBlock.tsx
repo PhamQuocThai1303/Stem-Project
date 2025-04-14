@@ -28,14 +28,14 @@ export const defineTimeBlocks  = () => {
         ],
         "previousStatement": null,
         "nextStatement": null,
-        "colour": 160,
+        "colour": 60,
         // "tooltip": "Tắt LED"
       },
       {
         "type": "time_now",
         "message0": "Thời gian hiện tại",
         "output": "Number",
-        "colour": 160,
+        "colour": 60,
         "tooltip": "Trả về thời gian hiện tại (epoch time)",
         "helpUrl": ""
       },
@@ -43,7 +43,7 @@ export const defineTimeBlocks  = () => {
         "type": "time_process",
         "message0": "Thời gian tiến trình",
         "output": "Number",
-        "colour": 160,
+        "colour": 60,
         "tooltip": "Trả về thời gian tiến trình bắt đầu chạy",
         "helpUrl": ""
       },
@@ -51,7 +51,7 @@ export const defineTimeBlocks  = () => {
         "type": "time_thread",
         "message0": "Thời gian luồng CPU",
         "output": "Number",
-        "colour": 160,
+        "colour": 60,
         "tooltip": "Trả về thời gian tiến trình bắt đầu chạy",
         "helpUrl": ""
       },
@@ -59,7 +59,7 @@ export const defineTimeBlocks  = () => {
         "type": "time_perf",
         "message0": "Thời gian hoạt động",
         "output": "Number",
-        "colour": 160,
+        "colour": 60,
         "tooltip": "Trả về thời gian tiến trình bắt đầu chạy",
         "helpUrl": ""
       },

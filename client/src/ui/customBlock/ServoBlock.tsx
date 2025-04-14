@@ -16,7 +16,7 @@ export const defineServoBlocks  = () => {
       {
         "type": "Servo_start",
         "message0": "Khối bật buzzer",
-        "colour": 160,
+        "colour": 255,
         "tooltip": "Bật buzzer",
         "nextStatement": null,
         "previousStatement": null,
@@ -25,7 +25,7 @@ export const defineServoBlocks  = () => {
       {
         "type": "Servo_stop",
         "message0": "Khối tắt buzzer",
-        "colour": 160,
+        "colour": 255,
         "tooltip": "Tắt buzzer",
         "helpUrl": "",
         "nextStatement": null,
@@ -45,7 +45,7 @@ export const defineServoBlocks  = () => {
         ],
         "previousStatement": null,
         "nextStatement": null,
-        "colour": 160,
+        "colour": 255,
         // "tooltip": "Tắt LED"
       },
   ]);

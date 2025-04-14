@@ -28,7 +28,7 @@ export const defineLEDBlocks  = () => {
         ],
         "previousStatement": null,
         "nextStatement": null,
-        "colour": 160,
+        "colour": 15,
         // "tooltip": "Tắt LED"
       },
       // 5. Khối nhấp nháy LED đơn
@@ -53,7 +53,7 @@ export const defineLEDBlocks  = () => {
         ],
         "previousStatement": null,
         "nextStatement": null,
-        "colour": 160,
+        "colour": 15,
         "tooltip": "Nhấp nháy LED theo thứ tự tuần tự"
       },
   ]);
