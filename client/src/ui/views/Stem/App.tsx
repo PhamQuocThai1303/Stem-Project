@@ -22,16 +22,13 @@ import { defineLCDBlocks } from '../../customBlock/LCDBlock';
 
 function App() {
   const [generatedCode, setGeneratedCode] = useState("");
-  // const [generatedXml, setGeneratedXml] = useState("");
   const [generatedJson, setGeneratedJson] = useState("");
-  // const [toolboxConfiguration, setToolboxConfiguration] = useState<Blockly.utils.toolbox.ToolboxDefinition>(ConfigFiles.INITIAL_TOOLBOX_JSON);
-  // const [serialState, setSerialState] = useState<"XML" | "JSON">("XML");
   const [response, setResponse] = useState("");
+  const [workspace, setWorkspace] = useState<Blockly.Workspace | null>(null);
 
   const {t} = useTranslation()
 
   useEffect(() => {
-    // Định nghĩa custom blocks khi component được mount
     defineCommonBlocks();
     defineLEDBlocks();
     defineTimeBlocks();
@@ -43,22 +40,25 @@ function App() {
     defineSwitchBlocks();
     defineButtonBlocks();
     defineFanBlocks();
-    defineLCDBlocks()
+    defineLCDBlocks();
   }, []);
 
-  const onWorkspaceChange = useCallback((workspace : Blockly.Workspace) => {
-    // workspace.registerButtonCallback("myFirstButtonPressed", () => {
-    //   alert("button is pressed");
-    // });
-    const newJson = JSON.stringify(
-      Blockly.serialization.workspaces.save(workspace)
-    );
-    setGeneratedJson(newJson);
-    const code = pythonGenerator.workspaceToCode(workspace);
-    setGeneratedCode(code);
+  const onWorkspaceChange = useCallback((workspace: Blockly.Workspace) => {
+    setWorkspace(workspace);
+    try {
+      const state = Blockly.serialization.workspaces.save(workspace);
+      if (state && state.blocks && state.blocks.blocks && state.blocks.blocks.length > 0) {
+        localStorage.setItem('blocklyWorkspace', JSON.stringify(state));
+      }
+      
+      const code = pythonGenerator.workspaceToCode(workspace);
+      setGeneratedCode(code);
+    } catch (error) {
+      console.error('Error saving workspace:', error);
+    }
   }, []);
 
-  const onJsonChange = useCallback((newJson : object) => {
+  const onJsonChange = useCallback((newJson: object) => {
     setGeneratedJson(JSON.stringify(newJson));
   }, []);
 
@@ -76,7 +76,6 @@ function App() {
       ws.onmessage = (event) => {
         try {
           console.log("📊 Data từ websocket: ", event.data);
-          // Cập nhật response state với dữ liệu mới
           setResponse(prev => prev + "\n" + event.data);
         } catch (error) {
           console.error("Lỗi khi xử lý dữ liệu:", error);
@@ -97,7 +96,6 @@ function App() {
         toast.info("⏹️ Đã dừng giám sát.");
       };
 
-      // Cleanup function
       return () => {
         ws.close();
       };
@@ -134,7 +132,6 @@ function App() {
 
       const result = await response.json();
       toast.success("✅ " + result.message);
-      // startMonitoring();
     } catch (error) {
       if (error instanceof Error) {
         toast.error("❌ Lỗi khi lưu code: " + error.message);
@@ -175,69 +172,56 @@ function App() {
 
   return (
     <div className='app'>
-      {/* <Header/> */}
       <div className='container-f'>
-      <div className="blockly-wrapper">
-      <div className="blockly-container">
-      <BlocklyWorkspace
-        className="fill-height" 
-        initialJson={
-          ConfigFiles.INITIAL_JSON
-        }
-        workspaceConfiguration={{
-          grid: {
-            spacing: 20,
-            length: 3,
-            colour: "#ccc",
-            snap: true,
-          },
-        }}       
-        toolboxConfiguration={ConfigFiles.INITIAL_TOOLBOX_JSON} 
-        onWorkspaceChange={onWorkspaceChange}
-        onJsonChange={onJsonChange}
-        />
-      </div>
-      </div>
-
-      {/* <div>
-      <p>{generatedJson}</p>
-      </div> */}
-
-      <div className="textarea-wrapper">
-        <div className='d-flex gap-5'>
-        <button
-          onClick={() =>{
-            handleSave()
-          }
-          }
-        >
-          {t("Import")}
-        </button>
-        {/* <button onClick={() =>{
-          console.log(generatedCode)
-          console.log(generatedJson);
-          }
-          }>
-          Print
-        </button> */}
-
-        <button onClick={() =>{
-          handleStop()
-          }
-          }>
-          Stop
-        </button>
+        <div className="blockly-wrapper">
+          <div className="blockly-container">
+            <BlocklyWorkspace
+              className="fill-height"
+              workspaceConfiguration={{
+                grid: {
+                  spacing: 20,
+                  length: 3,
+                  colour: "#ccc",
+                  snap: true,
+                },
+              }}
+              toolboxConfiguration={ConfigFiles.INITIAL_TOOLBOX_JSON}
+              onWorkspaceChange={onWorkspaceChange}
+              onJsonChange={onJsonChange}
+              initialJson={(() => {
+                const saved = localStorage.getItem('blocklyWorkspace');
+                if (saved) {
+                  try {
+                    return JSON.parse(saved);
+                  } catch {
+                    return ConfigFiles.INITIAL_JSON;
+                  }
+                }
+                return ConfigFiles.INITIAL_JSON;
+              })()}
+            />
+          </div>
         </div>
-      
-    <textarea
-      className="code-textarea"
-      value={generatedCode}
-      readOnly
-    />
-  </div>
+
+        <div className="textarea-wrapper">
+          <div className='d-flex gap-5'>
+            <button onClick={handleSave}>
+              {t("Import")}
+            </button>
+            <button onClick={handleStop}>
+              Stop
+            </button>
+          </div>
+          
+          <textarea
+            className="code-textarea"
+            value={generatedCode}
+            readOnly
+          />
+        </div>
       </div>
     </div>
-  )
+  );
 }
 
-export default App
+export default App;
