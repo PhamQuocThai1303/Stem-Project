@@ -143,14 +143,16 @@ const Login = () => {
         toast.error(`Lỗi: ${error.detail}`);
         return;
       }
-
+      
       const data = await response.json();
       // Lưu connection_id vào localStorage
       localStorage.setItem('connection_id', data.connection_id);
-      
-      toast.success("🎉 Kết nối thành công!");
-      login();
-      navigate("/");
+
+      await checkNetwork()
+
+      // toast.success("🎉 Kết nối thành công!");
+      // login();
+      // navigate("/");
     } catch (error) {
       toast.error("❌ Kết nối thất bại!");
       console.error("❌ Lỗi kết nối SSH:", error);
