@@ -160,12 +160,12 @@ async def upload_file(connection_id: str, code_req: CodeUploadRequest):
         
         # Upload code to remote file
         remote_path = f"/home/{connection_info['username']}/Documents/library/data.txt"
-        ssh_manager.upload_file(remote_path, code_req.code)
+        await ssh_manager.upload_file(remote_path, code_req.code)
         print(f"File uploaded to Raspberry Pi: {remote_path}")
         
         # Execute the uploaded code
         command = f"cd /home/{connection_info['username']}/Documents/library && sudo python data.txt"
-        output, error = ssh_manager.execute_command(command)
+        output, error = await ssh_manager.execute_command(command)
         print(f"Command output: {output}")
         
         if error:
@@ -184,7 +184,7 @@ async def stop_execution(connection_id: str):
         ssh_manager = ssh_managers[connection_id]
         
         # Find Python process
-        output, error = ssh_manager.execute_command('pgrep -f "python data.txt"')
+        output, error = await ssh_manager.execute_command('pgrep -f "python data.txt"')
         if error:
             raise Exception(error)
             
@@ -194,7 +194,7 @@ async def stop_execution(connection_id: str):
             
         # Kill the process
         pid = pids[0]
-        _, error = ssh_manager.execute_command(f"sudo kill -SIGINT {pid}")
+        _, error = await ssh_manager.execute_command(f"sudo kill -SIGINT {pid}")
         if error:
             raise Exception(error)
             
@@ -242,7 +242,7 @@ async def get_wifi_list(connection_id: str):
     
     try:
         ssh_manager = ssh_managers[connection_id]
-        output, error = ssh_manager.execute_command("nmcli -t -f ssid,signal dev wifi list")
+        output, error = await ssh_manager.execute_command("nmcli -t -f ssid,signal dev wifi list")
         if error:
             raise Exception(error)
             
@@ -287,7 +287,7 @@ async def connect_wifi(connection_id: str, wifi: WifiCredentials):
     try:
         ssh_manager = ssh_managers[connection_id]
         command = f'sudo nmcli device wifi connect "{wifi.ssid}" password "{wifi.password}"'
-        output, error = ssh_manager.execute_command(command)
+        output, error = await ssh_manager.execute_command(command)
         
         if error:
             raise Exception(error)
@@ -310,7 +310,7 @@ async def disconnect_wifi(connection_id: str, wifi: WifiCredentials):
     try:
         ssh_manager = ssh_managers[connection_id]
         command = f'sudo nmcli connection delete "{wifi.ssid}"'
-        output, error = ssh_manager.execute_command(command)
+        output, error = await ssh_manager.execute_command(command)
         
         if error:
             raise Exception(error)
@@ -334,19 +334,19 @@ async def check_network(connection_id: str):
         ssh_manager = ssh_managers[connection_id]
         
         # Lấy tên mạng Wi-Fi (SSID)
-        wifi_output, wifi_error = ssh_manager.execute_command(
+        wifi_output, wifi_error = await ssh_manager.execute_command(
             "nmcli -t -f active,ssid dev wifi | grep '^yes' | cut -d: -f2"
         )
         wifi_name = wifi_output.strip() if not wifi_error else None
         
         # Lấy địa chỉ IP từ cổng Ethernet (eth0)
-        eth_output, eth_error = ssh_manager.execute_command(
+        eth_output, eth_error = await ssh_manager.execute_command(
             "ip -o -4 addr show eth0 | awk '{print $4}'"
         )
         eth_info = eth_output.strip() if not eth_error else None
         
         # Kiểm tra kết nối internet
-        internet_output, _ = ssh_manager.execute_command("ping -c 1 google.com")
+        internet_output, _ = await ssh_manager.execute_command("ping -c 1 google.com")
         has_internet = bool(internet_output)
         
         network_status = {

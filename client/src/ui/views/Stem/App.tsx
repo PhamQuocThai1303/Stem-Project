@@ -117,21 +117,38 @@ function App() {
         return;
       }
 
-      const response = await fetch(`http://localhost:3000/api/upload/${connectionId}`, {
+      // Tạo promise cho API upload
+      const uploadPromise = fetch(`http://localhost:3000/api/upload/${connectionId}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ 
           code: generatedCode
         }),
       });
-  
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.detail);
-      }
 
-      const result = await response.json();
-      toast.success("✅ " + result.message);
+      // Không đợi API upload hoàn thành
+      toast.info("Đang tải lên và thực thi code...");
+      
+      // Xử lý kết quả trong background
+      uploadPromise
+        .then(response => {
+          if (!response.ok) {
+            return response.json().then(error => {
+              throw new Error(error.detail);
+            });
+          }
+          return response.json();
+        })
+        .then(result => {
+          toast.success("✅ " + result.message);
+        })
+        .catch(error => {
+          if (error instanceof Error) {
+            toast.error("❌ Lỗi khi lưu code: " + error.message);
+          } else {
+            toast.error("❌ Lỗi không xác định khi lưu code");
+          }
+        });
     } catch (error) {
       if (error instanceof Error) {
         toast.error("❌ Lỗi khi lưu code: " + error.message);
@@ -149,18 +166,35 @@ function App() {
         return;
       }
 
-      const response = await fetch(`http://localhost:3000/api/execute/${connectionId}/stop`, {
+      // Tạo promise cho API stop
+      const stopPromise = fetch(`http://localhost:3000/api/execute/${connectionId}/stop`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
       });
 
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.detail);
-      }
-
-      const result = await response.json();
-      toast.info(result.message);
+      // Không đợi API stop hoàn thành
+      toast.info("Đang dừng tiến trình...");
+      
+      // Xử lý kết quả trong background
+      stopPromise
+        .then(response => {
+          if (!response.ok) {
+            return response.json().then(error => {
+              throw new Error(error.detail);
+            });
+          }
+          return response.json();
+        })
+        .then(result => {
+          toast.info(result.message);
+        })
+        .catch(error => {
+          if (error instanceof Error) {
+            toast.error("❌ Lỗi khi dừng thực thi: " + error.message);
+          } else {
+            toast.error("❌ Lỗi không xác định khi dừng thực thi");
+          }
+        });
     } catch (error) {
       if (error instanceof Error) {
         toast.error("❌ Lỗi khi dừng thực thi: " + error.message);

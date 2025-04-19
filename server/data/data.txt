@@ -5,7 +5,8 @@ try:
     LCD.backlight()
     LCD.setCursor(0,0)
     LCD.print("Hello World")
-    time.sleep(3)
+    while not False:
+      pass
 finally:
     LCD.noBacklight()
     LCD.clear()

@@ -2,6 +2,7 @@ import paramiko
 from typing import Optional, Tuple, Dict
 import asyncio
 import os
+from concurrent.futures import ThreadPoolExecutor
 
 
 class SSHManager:
@@ -9,6 +10,7 @@ class SSHManager:
         self.client = None
         self.sftp = None
         self.channel = None
+        self._executor = ThreadPoolExecutor(max_workers=10)
     
     def connect(self, host: str, username: str, password: str, port: int = 22) -> None:
         self.client = paramiko.SSHClient()
@@ -28,23 +30,45 @@ class SSHManager:
             self.channel.close()
         if self.client:
             self.client.close()
+        self._executor.shutdown(wait=False)
     
-    def execute_command(self, command: str) -> Tuple[str, str]:
+    async def execute_command(self, command: str) -> Tuple[str, str]:
+        """Thực thi lệnh SSH bất đồng bộ"""
         if not self.client:
             raise Exception("Not connected")
         
+        loop = asyncio.get_event_loop()
+        return await loop.run_in_executor(
+            self._executor,
+            self._execute_command_sync,
+            command
+        )
+    
+    def _execute_command_sync(self, command: str) -> Tuple[str, str]:
+        """Thực thi lệnh SSH đồng bộ (internal use)"""
         stdin, stdout, stderr = self.client.exec_command(command)
         output = stdout.read().decode()
         error = stderr.read().decode()
         return output, error
     
-    def upload_file(self, remote_path: str, content: str) -> None:
+    async def upload_file(self, remote_path: str, content: str) -> None:
+        """Upload file bất đồng bộ"""
         if not self.client:
             raise Exception("Not connected")
         
         if not self.sftp:
             self.sftp = self.client.open_sftp()
         
+        loop = asyncio.get_event_loop()
+        await loop.run_in_executor(
+            self._executor,
+            self._upload_file_sync,
+            remote_path,
+            content
+        )
+    
+    def _upload_file_sync(self, remote_path: str, content: str) -> None:
+        """Upload file đồng bộ (internal use)"""
         with self.sftp.file(remote_path, 'w') as f:
             f.write(content)
     
@@ -55,20 +79,27 @@ class SSHManager:
         self.channel = self.client.invoke_shell()
         return self.channel
 
-    def upload_directory(self, local_dir: str, remote_dir: str) -> None:
-        """Upload toàn bộ thư mục lên Raspberry Pi"""
+    async def upload_directory(self, local_dir: str, remote_dir: str) -> None:
+        """Upload toàn bộ thư mục lên Raspberry Pi bất đồng bộ"""
         if not self.sftp:
             raise Exception("SFTP not initialized")
             
-        # Tạo thư mục đích nếu chưa tồn tại
+        loop = asyncio.get_event_loop()
+        await loop.run_in_executor(
+            self._executor,
+            self._upload_directory_sync,
+            local_dir,
+            remote_dir
+        )
+    
+    def _upload_directory_sync(self, local_dir: str, remote_dir: str) -> None:
+        """Upload directory đồng bộ (internal use)"""
         try:
             self.sftp.stat(remote_dir)
         except FileNotFoundError:
             self.sftp.mkdir(remote_dir)
         
-        # Upload tất cả file và thư mục con
         for root, dirs, files in os.walk(local_dir):
-            # Tạo các thư mục con
             for dir_name in dirs:
                 local_path = os.path.join(root, dir_name)
                 remote_path = os.path.join(remote_dir, os.path.relpath(local_path, local_dir))
@@ -77,7 +108,6 @@ class SSHManager:
                 except FileNotFoundError:
                     self.sftp.mkdir(remote_path)
             
-            # Upload các file
             for file_name in files:
                 local_path = os.path.join(root, file_name)
                 remote_path = os.path.join(remote_dir, os.path.relpath(local_path, local_dir))
