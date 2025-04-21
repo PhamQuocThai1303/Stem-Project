@@ -102,7 +102,7 @@ const Header: React.FC<HeaderProps> = ({ currentTab, onTabChange }) => {
         </Button>
 
         <Button style={{marginRight: 10, backgroundColor: '#ff6600', border: 'none'}} color="danger" onClick={handleLogout}>
-            {t("Đăng xuất")}
+            {t("Logout")}
           </Button>
           
         <UncontrolledDropdown href='/' className='dropdown-language nav-item'>

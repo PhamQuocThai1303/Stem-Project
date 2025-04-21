@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useChatStore } from '../store/useChatStore';
-
+import { useTranslation } from 'react-i18next';
 interface ChatProps {
   chatId: string;
 }
@@ -9,7 +9,7 @@ export const Chat: React.FC<ChatProps> = ({ chatId }) => {
   const [input, setInput] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { chats, addMessage } = useChatStore();
-
+  const {t} = useTranslation()
   const chat = chats.find((c) => c.id === chatId);
   if (!chat) return null;
 
@@ -83,14 +83,14 @@ export const Chat: React.FC<ChatProps> = ({ chatId }) => {
             type="text"
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            placeholder="Type your message..."
+            placeholder={t("Type your message...")}
             className="flex-1 p-2 border rounded-l focus:outline-none focus:border-blue-500"
           />
           <button
             type="submit"
             className="bg-blue-500 text-white px-4 py-2 rounded-r hover:bg-blue-600"
           >
-            Send
+            {t("Send")}
           </button>
         </div>
       </form>

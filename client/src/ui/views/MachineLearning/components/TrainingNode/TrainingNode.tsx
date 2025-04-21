@@ -5,6 +5,7 @@ import { FaChevronDown, FaChevronUp, FaQuestionCircle } from 'react-icons/fa';
 import { BiReset } from 'react-icons/bi';
 import { BsBarChartLine } from 'react-icons/bs';
 import './TrainingNode.css';
+import { useTranslation } from 'react-i18next';
 
 interface TrainingNodeProps {
   data: {
@@ -91,7 +92,7 @@ const TrainingNode: React.FC<TrainingNodeProps> = ({ data }) => {
   const [epochs, setEpochs] = useState(50);
   const [batchSize, setBatchSize] = useState(16);
   const [learningRate, setLearningRate] = useState(0.001);
-  
+  const {t} = useTranslation()
 
   const batchSizeOptions = [16, 32, 64, 128, 256];
 
@@ -150,7 +151,7 @@ const TrainingNode: React.FC<TrainingNodeProps> = ({ data }) => {
           onClick={handleTrainModel}
           disabled={isTraining}
         >
-          {isTraining ? 'Training...' : 'Train Model'}
+          {isTraining ? t("Training...") : t("Train Model")}
         </button>
 
         <div className="advanced-section">
@@ -158,14 +159,14 @@ const TrainingNode: React.FC<TrainingNodeProps> = ({ data }) => {
             className="advanced-toggle"
             onClick={() => setIsAdvancedOpen(!isAdvancedOpen)}
           >
-            <span className="advanced-text">Advanced</span>
+            <span className="advanced-text">{t("Advanced")}</span>
             {isAdvancedOpen ? <FaChevronUp /> : <FaChevronDown />}
           </button>
 
           {isAdvancedOpen && (
             <div className="advanced-content">
               <div className="parameter-row">
-                <label>Epochs:</label>
+                <label>{t("Epochs")}:</label>
                 <div className="parameter-input">
                   <input
                     type="number"
@@ -177,13 +178,13 @@ const TrainingNode: React.FC<TrainingNodeProps> = ({ data }) => {
                     <button onClick={() => setEpochs(prev => Math.max(1, prev - 1))}>▼</button>
                   </div>
                 </div>
-                <Tooltip content={HELP_TEXTS.epochs}>
+                <Tooltip content={t(HELP_TEXTS.epochs)}>
                   <FaQuestionCircle className="help-icon" />
                 </Tooltip>
               </div>
 
               <div className="parameter-row">
-                <label>Batch Size:</label>
+                <label>{t("Batch Size")}:</label>
                 <div className="parameter-input">
                   <select
                     value={batchSize}
@@ -194,13 +195,13 @@ const TrainingNode: React.FC<TrainingNodeProps> = ({ data }) => {
                     ))}
                   </select>
                 </div>
-                <Tooltip content={HELP_TEXTS.batchSize}>
+                <Tooltip content={t(HELP_TEXTS.batchSize)}>
                   <FaQuestionCircle className="help-icon" />
                 </Tooltip>
               </div>
 
               <div className="parameter-row">
-                <label>Learning Rate:</label>
+                <label>{t("Learning Rate")}:</label>
                 <div className="parameter-input">
                   <input
                     type="number"
@@ -213,20 +214,20 @@ const TrainingNode: React.FC<TrainingNodeProps> = ({ data }) => {
                     <button onClick={() => setLearningRate(prev => Math.max(0.001, prev - 0.001))}>▼</button>
                   </div>
                 </div>
-                <Tooltip content={HELP_TEXTS.learningRate}>
+                <Tooltip content={t(HELP_TEXTS.learningRate)}>
                   <FaQuestionCircle className="help-icon" />
                 </Tooltip>
               </div>
 
               <div className="advanced-footer">
                 <button className="reset-button" onClick={resetDefaults}>
-                  <BiReset /> Đặt lại mặc định
+                  <BiReset /> {t("Reset to default")}
                 </button>
                 <button 
                   className="under-hood-button"
                   onClick={() => data.openSideBar(true)}
                 >
-                  <BsBarChartLine /> Chi tiết kỹ thuật
+                  <BsBarChartLine /> {t("Technical details")}
                 </button>
               </div>
             </div>

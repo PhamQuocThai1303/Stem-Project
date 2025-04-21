@@ -2,6 +2,7 @@ import React from 'react';
 import { FaTimes } from 'react-icons/fa';
 import Charts from './Charts';
 import './Sidebar.css';
+import { useTranslation } from 'react-i18next';
 
 interface SidebarProps {
   isOpen: boolean;
@@ -22,19 +23,20 @@ interface SidebarProps {
 }
 
 const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, trainingHistory }) => {
+  const {t} = useTranslation()
   if (!isOpen) return null;
 
   return (
     <div className="training-sidebar">
       <div className="sidebar-header">
-        <h2>Under the hood</h2>
+        <h2>{t("Result statistics")}</h2>
         <button className="close-button" onClick={onClose}>
           <FaTimes />
         </button>
       </div>
       <div className="sidebar-content">
         <p className="sidebar-description">
-          Dưới đây là một số biểu đồ có thể giúp bạn hiểu mô hình của bạn đang hoạt động như thế nào.
+          {t("Below are some charts that can help you understand how your model is performing.")}
           <br /><br />
         </p>
 

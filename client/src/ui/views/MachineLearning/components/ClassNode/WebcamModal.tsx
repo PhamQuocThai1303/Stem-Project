@@ -1,7 +1,7 @@
 import React, { useRef, useCallback, useState, useEffect } from 'react';
 import Webcam from 'react-webcam';
 import './index.css';
-
+import { useTranslation } from 'react-i18next';
 interface WebcamModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -14,6 +14,7 @@ const WebcamModal: React.FC<WebcamModalProps> = ({ isOpen, onClose, onCapture })
   const [recordingInterval, setRecordingInterval] = useState<NodeJS.Timeout | null>(null);
   const [captureCount, setCaptureCount] = useState(0);
 
+  const {t} = useTranslation()
   // Cleanup interval when component unmounts or modal closes
   useEffect(() => {
     return () => {
@@ -85,7 +86,7 @@ const WebcamModal: React.FC<WebcamModalProps> = ({ isOpen, onClose, onCapture })
           />
           {isRecording && (
             <div className="recording-indicator">
-              Recording... ({captureCount} images)
+              {t("Recording")}... ({captureCount} {t("images")})
             </div>
           )}
         </div>
@@ -94,7 +95,7 @@ const WebcamModal: React.FC<WebcamModalProps> = ({ isOpen, onClose, onCapture })
             className={isRecording ? "stop-button" : "record-button"}
             onClick={toggleRecording}
           >
-            {isRecording ? "Stop Recording" : "Start Recording"}
+            {isRecording ? t("Stop Recording") : t("Start Recording")}
           </button>
         </div>
       </div>

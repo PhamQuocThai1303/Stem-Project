@@ -1,7 +1,7 @@
 import React from 'react';
 import { Chat, removeChat } from '../store/chatSlice';
 import { useDispatch } from 'react-redux';
-
+import { useTranslation } from 'react-i18next';
 interface SidebarProps {
   chats: Chat[];
   currentChatId: string | null;
@@ -16,7 +16,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onSelectChat,
 }) => {
   const dispatch = useDispatch();
-
+  const {t} = useTranslation()
   const handleDeleteChat = (chatId: string, e: React.MouseEvent) => {
     e.stopPropagation();
     dispatch(removeChat(chatId));
@@ -28,12 +28,12 @@ export const Sidebar: React.FC<SidebarProps> = ({
         onClick={onNewChat}
         className="new-chat-button"
       >
-        + Cuộc trò chuyện mới
+        + {t("New chat")}
       </button>
 
       <div className="chat-list">
         <div className="recent-chats">
-          <h3>Gần đây:</h3>
+          <h3>{t("Recent chats")}</h3>
           {chats?.map((chat) => (
             <div
               key={chat.id}

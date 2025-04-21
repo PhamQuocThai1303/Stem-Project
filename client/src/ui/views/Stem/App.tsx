@@ -315,13 +315,13 @@ function App() {
               {t("Upload")}
             </button>
             <button onClick={handleStop}>
-               Stop
+              {t("Stop")}
             </button>
             <button onClick={handleDownloadBlocks}>
-               Tải XML
+              {t("Download XML")}
             </button>
             <button onClick={handleImportBlocks}>
-               Import XML
+              {t("Import XML")}
             </button>
           </div>
           

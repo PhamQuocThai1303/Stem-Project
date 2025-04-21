@@ -3,7 +3,7 @@ import './index.css';
 import { initialExport, ExportFormat } from './initialExport';
 import { FaRaspberryPi, FaStop } from 'react-icons/fa';
 import { toast } from "react-toastify";
-
+import { useTranslation } from 'react-i18next';
 interface ExportModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -14,7 +14,7 @@ const ExportModal: React.FC<ExportModalProps> = ({ isOpen, onClose }) => {
   const [modelType, setModelType] = useState(initialExport[0].type[0]);
   const [selectedCodeTab, setSelectedCodeTab] = useState('Realtime');
   const [isExporting, setIsExporting] = useState(false);
-
+  const {t} = useTranslation()
   if (!isOpen) return null;
 
   const selectedExport = initialExport.find(exp => exp.format === selectedFormat) as ExportFormat;
@@ -103,7 +103,7 @@ const ExportModal: React.FC<ExportModalProps> = ({ isOpen, onClose }) => {
     <div className="export-modal-overlay">
       <div className="export-modal">
         <div className="export-modal-header">
-          <h5>Export your model to use it in projects.</h5>
+          <h5>{t("Export your model to use it in projects.")}</h5>
           <button className="close-button" onClick={onClose}>×</button>
         </div>
 
@@ -132,7 +132,7 @@ const ExportModal: React.FC<ExportModalProps> = ({ isOpen, onClose }) => {
 
         <div className="export-modal-content">
           <div className="model-type-section">
-            <h3>Model conversion type:</h3>
+            <h3>{t("Model conversion type:")}</h3>
             <div className="radio-group">
               {selectedExport.type.map(type => (
                 <label key={type}>
@@ -142,14 +142,14 @@ const ExportModal: React.FC<ExportModalProps> = ({ isOpen, onClose }) => {
                     checked={modelType === type}
                     onChange={() => setModelType(type)}
                   />
-                  {type}
+                  {t(type)}
                 </label>
               ))}
               <button 
                 className="download-button" 
                 onClick={() => handleExportModel(modelType, selectedFormat)}
               >
-                {selectedFormat === "Raspberry Pi" ? "Import to Pi" : "Download my model"}
+                {selectedFormat === "Raspberry Pi" ? t("Import to Pi") : t("Download my model")}
               </button>
               {
                 isExporting && (
@@ -157,7 +157,7 @@ const ExportModal: React.FC<ExportModalProps> = ({ isOpen, onClose }) => {
                     className="stop-button" 
                     onClick={handleStopExport}
                   >
-                    <FaStop /> Dừng xuất pi
+                    <FaStop /> {t("Stop export pi")}
                   </button>
                 )
               }
@@ -165,7 +165,7 @@ const ExportModal: React.FC<ExportModalProps> = ({ isOpen, onClose }) => {
           </div>
 
           <div className="description">
-            <p>{selectedExport.description}</p>
+            <p>{t(selectedExport.description)}</p>
           </div>
 
           {selectedExport.code_image && (
@@ -176,13 +176,13 @@ const ExportModal: React.FC<ExportModalProps> = ({ isOpen, onClose }) => {
                     className={`code-tab ${selectedCodeTab === 'Realtime' ? 'active' : ''}`}
                     onClick={() => setSelectedCodeTab('Realtime')}
                   >
-                    Realtime
+                    {t("Realtime")}
                   </button>
                   <button 
                     className={`code-tab ${selectedCodeTab === 'Image' ? 'active' : ''}`}
                     onClick={() => setSelectedCodeTab('Image')}
                   >
-                    Image
+                    {t("Image")}
                   </button>
                   
                 </div>

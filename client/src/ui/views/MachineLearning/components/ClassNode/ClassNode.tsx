@@ -6,6 +6,7 @@ import {
   } from 'reactflow';
 import WebcamModal from './WebcamModal';
 import './index.css';
+import { useTranslation } from 'react-i18next';
 
 interface ClassNodeProps {
   data: {
@@ -29,6 +30,8 @@ const ClassNode: React.FC<ClassNodeProps> = ({ data, id }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
+
+  const {t} = useTranslation()
 
   // Close menu when clicking outside
   useEffect(() => {
@@ -152,13 +155,13 @@ const ClassNode: React.FC<ClassNodeProps> = ({ data, id }) => {
           {isMenuOpen && (
             <div className="menu-dropdown">
               <button onClick={handleDelete} className="menu-item">
-                Delete Class
+                {t("Delete Class")}
               </button>
               <button onClick={handleRemoveAllSamples} className="menu-item">
-                Remove All Samples
+                {t("Remove All Samples")}
               </button>
               <button onClick={handleDownloadSamples} className="menu-item">
-                Download Samples
+                {t("Download Samples")}
               </button>
             </div>
           )}
@@ -166,17 +169,17 @@ const ClassNode: React.FC<ClassNodeProps> = ({ data, id }) => {
       </div>
       <div className="class-content">
         {data.images && data.images.length > 0 && (
-          <p>{data.images.length} Image Samples</p>
+          <p>{data.images.length} {t("Image Samples")}</p>
         )}
         <div className="samples-container">
           <div className="button-group">
             <button className="sample-button" onClick={handleUploadClick}>
               <span className="upload-icon">⬆️</span>
-              <span>Upload</span>
+              <span>{t("Upload")}</span>
             </button>
             <button className="sample-button" onClick={handleWebcamClick}>
               <span className="upload-icon">📷</span>
-              <span>Webcam</span>
+              <span>{t("Webcam")}</span>
             </button>
             {data.images && data.images.length > 0 && (
             <div className="image-grid">

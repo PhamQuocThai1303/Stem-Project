@@ -6,13 +6,16 @@ import { addMessage, addChat, selectChat } from './store/chatSlice';
 import { store } from './store/store';
 import { Sidebar }  from './components/Sidebar';
 import "./index.css";
+import { useTranslation } from 'react-i18next';
+
+
 
 const ChatBotContent = () => {
   const dispatch = useDispatch();
   const { data: chats, currentChatId } = useSelector((state: RootState) => state.chat);
   const currentChat = chats.find((chat) => chat.id === currentChatId);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  
+  const {t} = useTranslation()
   const [inputChat, setInputChat] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
@@ -159,21 +162,21 @@ const ChatBotContent = () => {
           ) : (
             <div className="welcome-screen">
               <div className="welcome-text">
-                <h2 className="gradient-text">Xin Chào</h2>
-                <p className="welcome-subtext">Hôm nay tôi có thể giúp gì cho bạn</p>
+                <h2 className="gradient-text">{t("Hello")}</h2>
+                <p className="welcome-subtext">{t("What can I help you with today")}</p>
               </div>
               <div className="suggestion-grid">
                 <div className="suggestion-card" onClick={() => handleSuggestionClick("STEM là gì?")}>
-                  <p>STEM là gì?</p>
+                  <p>{t("What is STEM?")}</p>
                 </div>
                 <div className="suggestion-card" onClick={() => handleSuggestionClick("Machine Learning là gì?")}>
-                  <p>Machine Learning là gì?</p>
+                  <p>{t("What is Machine Learning?")}</p>
                 </div>
                 <div className="suggestion-card" onClick={() => handleSuggestionClick("Lộ trình học STEM và Machine Learning")}>
-                  <p>Lộ trình học STEM và Machine Learning</p>
+                  <p>{t("The STEM and Machine Learning learning path")}</p>
                 </div>
                 <div className="suggestion-card" onClick={() => handleSuggestionClick("Các nguồn học hiệu quả cho STEM và Machine Learning")}>
-                  <p>Các nguồn học hiệu quả cho STEM và Machine Learning</p>
+                  <p>{t("Effective learning sources for STEM and Machine Learning")}</p>
                 </div>
               </div>
             </div>
@@ -183,7 +186,7 @@ const ChatBotContent = () => {
             <input
               type="text"
               value={inputChat}
-              placeholder="Nhập câu lệnh tại đây"
+              placeholder={t("Enter your question here")}
               onChange={(e) => setInputChat(e.target.value)}
               onKeyPress={handleKeyPress}
               disabled={isLoading}
@@ -193,7 +196,7 @@ const ChatBotContent = () => {
               disabled={isLoading || !inputChat.trim()}
               className="send-button"
             >
-              Gửi
+              {t("Send")}
             </button>
           </div>
         </div>

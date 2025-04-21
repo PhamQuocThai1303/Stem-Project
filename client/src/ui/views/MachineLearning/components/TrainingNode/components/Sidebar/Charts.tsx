@@ -9,7 +9,7 @@ import {
   Legend,
   ResponsiveContainer
 } from 'recharts';
-
+import { useTranslation } from 'react-i18next';
 interface ChartProps {
   data: {
     loss: number[];
@@ -21,6 +21,7 @@ interface ChartProps {
 }
 
 const Charts: React.FC<ChartProps> = ({ data }) => {
+  const {t} = useTranslation()
   // Chuyển đổi dữ liệu thành format phù hợp với Recharts
   const accuracyData = data?.accuracy?.map((acc, index) => ({
     epoch: index,
@@ -44,21 +45,21 @@ const Charts: React.FC<ChartProps> = ({ data }) => {
   return (
     <div>
       <div style={chartStyle}>
-        <h3 style={{ marginBottom: '20px' }}>Accuracy per epoch</h3>
+        <h3 style={{ marginBottom: '20px' }}>{t("Accuracy per epoch")}</h3>
         <ResponsiveContainer width="100%" height={300}>
           <LineChart data={accuracyData}>
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis 
               dataKey="epoch" 
               label={{ 
-                value: 'Epoch', 
+                value: t("Epoch"), 
                 position: 'insideBottom', 
                 offset: -5 
               }} 
             />
             <YAxis 
               label={{ 
-                value: 'Accuracy', 
+                value: t("Accuracy"), 
                 angle: -90, 
                 position: 'insideLeft'
               }}
@@ -87,21 +88,21 @@ const Charts: React.FC<ChartProps> = ({ data }) => {
       </div>
 
       <div style={chartStyle}>
-        <h3 style={{ marginBottom: '20px' }}>Loss per epoch</h3>
+        <h3 style={{ marginBottom: '20px' }}>{t("Loss per epoch")}</h3>
         <ResponsiveContainer width="100%" height={300}>
           <LineChart data={lossData}>
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis 
               dataKey="epoch" 
               label={{ 
-                value: 'Epoch', 
+                value: t("Epoch"), 
                 position: 'insideBottom', 
                 offset: -5 
               }} 
             />
             <YAxis 
               label={{ 
-                value: 'Loss', 
+                value: t("Loss"), 
                 angle: -90, 
                 position: 'insideLeft'
               }}

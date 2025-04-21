@@ -6,6 +6,7 @@ import {
 import Webcam from 'react-webcam';
 import ProgressBar from '../ProgressBar';
 import './index.css';
+import { useTranslation } from 'react-i18next';
 
 interface PreviewNodeProps {
   data: {
@@ -20,7 +21,8 @@ const PreviewNode: React.FC<PreviewNodeProps> = ({ data }) => {
   const [predictions, setPredictions] = useState<Record<string, number>>({});
   const wsRef = useRef<WebSocket | null>(null);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
-  
+  const {t} = useTranslation()
+
   const videoConstraints = {
     width: 640,
     height: 480,
@@ -169,18 +171,18 @@ const PreviewNode: React.FC<PreviewNodeProps> = ({ data }) => {
     <div className="preview-node">
       <Handle type="target" position={Position.Left} />
       <div className="preview-header">
-        <h3>Preview</h3>
+        <h3>{t("Preview")}</h3>
         <button 
           className="export-button"
           onClick={() => data?.openModal(true)}
         >
-          Export Model
+          {t("Export Model")}
         </button>
       </div>
       <div className="preview-content">
         <div className="input-controls">
           <div className="input-row">
-            <span>Input</span>
+            <span>{t("Input")}</span>
             <label className="switch">
               <input
                 type="checkbox"
@@ -191,14 +193,14 @@ const PreviewNode: React.FC<PreviewNodeProps> = ({ data }) => {
             </label>
             <span className="input-status">{isInputOn ? 'ON' : 'OFF'}</span>
           </div>
-          <select 
+          {/* <select 
             value={inputType}
             onChange={handleInputTypeChange}
             className="input-type-select"
           >
             <option value="webcam">Webcam</option>
             <option value="file">File</option>
-          </select>
+          </select> */}
         </div>
 
         <div className="preview-window">
@@ -215,7 +217,7 @@ const PreviewNode: React.FC<PreviewNodeProps> = ({ data }) => {
         </div>
 
         <div className="output-section">
-          <h6>Output</h6>
+          <h6>{t("Output")}</h6>
           <div className="predictions">
             {Object.entries(predictions).map(([className, confidence]) => (
               <ProgressBar
