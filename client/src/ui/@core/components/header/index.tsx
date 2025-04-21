@@ -97,11 +97,11 @@ const Header: React.FC<HeaderProps> = ({ currentTab, onTabChange }) => {
           </Nav>
         </Navbar.Collapse>
 
-        <Button style={{ marginRight: 10 }} color="secondary" onClick={() => onTabChange('settings')}>
+        <Button style={{ marginRight: 10, backgroundColor: '#ff6600', border: 'none' }} color="secondary" onClick={() => onTabChange('settings')}>
           <FaCog className="me-1" />
         </Button>
 
-        <Button style={{marginRight: 10}} color="danger" onClick={handleLogout}>
+        <Button style={{marginRight: 10, backgroundColor: '#ff6600', border: 'none'}} color="danger" onClick={handleLogout}>
             {t("Đăng xuất")}
           </Button>
           

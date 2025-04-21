@@ -19,6 +19,7 @@ import { defineButtonBlocks } from '../../customBlock/ButtonBlock';
 import { defineFanBlocks } from '../../customBlock/FanBlock';
 import { defineCommonBlocks } from '../../customBlock/CommonBlock';
 import { defineLCDBlocks } from '../../customBlock/LCDBlock';
+import { FaUpload, FaStop, FaDownload } from 'react-icons/fa';
 
 function App() {
   const [generatedCode, setGeneratedCode] = useState("");
@@ -204,6 +205,77 @@ function App() {
     }
   };
 
+  const handleDownloadBlocks = () => {
+    try {
+      // Lấy workspace hiện tại
+      const workspace = Blockly.getMainWorkspace();
+      
+      // Chuyển đổi các khối thành XML
+      const xml = Blockly.Xml.workspaceToDom(workspace);
+      const xmlText = Blockly.Xml.domToText(xml);
+      
+      // Tạo file XML để tải xuống
+      const blob = new Blob([xmlText], { type: 'text/xml' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'blocks.xml';
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+      
+    } catch (error) {
+      console.error('Lỗi khi tải xuống blocks:', error);
+      toast.error('Có lỗi xảy ra khi tải xuống blocks');
+    }
+  };
+
+  const handleImportBlocks = () => {
+    try {
+      // Tạo input file ẩn
+      const input = document.createElement('input');
+      input.type = 'file';
+      input.accept = '.xml';
+      
+      input.onchange = async (e) => {
+        const file = (e.target as HTMLInputElement).files?.[0];
+        if (!file) return;
+        
+        try {
+          const reader = new FileReader();
+          reader.onload = (event) => {
+            try {
+              const xmlText = event.target?.result as string;
+              const workspace = Blockly.getMainWorkspace();
+              
+              // Xóa workspace hiện tại
+              workspace.clear();
+              
+              // Parse XML và load vào workspace
+              const dom = Blockly.utils.xml.textToDom(xmlText);
+              Blockly.Xml.domToWorkspace(dom, workspace);
+              
+              toast.success('Đã tải file XML thành công!');
+            } catch (error) {
+              console.error('Lỗi khi đọc file XML:', error);
+              toast.error('File XML không hợp lệ');
+            }
+          };
+          reader.readAsText(file);
+        } catch (error) {
+          console.error('Lỗi khi đọc file:', error);
+          toast.error('Có lỗi xảy ra khi đọc file');
+        }
+      };
+      
+      input.click();
+    } catch (error) {
+      console.error('Lỗi khi tải file:', error);
+      toast.error('Có lỗi xảy ra khi tải file');
+    }
+  };
+
   return (
     <div className='app'>
       <div className='container-f'>
@@ -238,12 +310,18 @@ function App() {
         </div>
 
         <div className="textarea-wrapper">
-          <div className='d-flex gap-5'>
+          <div className="button-group">
             <button onClick={handleSave}>
-              {t("Import")}
+              {t("Upload")}
             </button>
             <button onClick={handleStop}>
-              Stop
+               Stop
+            </button>
+            <button onClick={handleDownloadBlocks}>
+               Tải XML
+            </button>
+            <button onClick={handleImportBlocks}>
+               Import XML
             </button>
           </div>
           
