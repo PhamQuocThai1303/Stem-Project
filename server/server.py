@@ -460,26 +460,26 @@ async def export_to_pi(connection_id: str):
         remote_dir = f"/home/{connection_info['username']}/Documents/library/pi_predict"
         
         # Tạo thư mục nếu chưa tồn tại
-        ssh_manager.execute_command(f"mkdir -p {remote_dir}")
+        await ssh_manager.execute_command(f"mkdir -p {remote_dir}")
             
         # Upload model.h5
         remote_model_path = f"{remote_dir}/model.tflite"
         with open(result['model_path'], 'rb') as f:
-            ssh_manager.upload_file(remote_model_path, f.read())
+            await ssh_manager.upload_file(remote_model_path, f.read())
             
         # Upload metadata.json
         remote_metadata_path = f"{remote_dir}/metadata.json"
         with open(result['metadata_path'], 'rb') as f:
-            ssh_manager.upload_file(remote_metadata_path, f.read())
+            await ssh_manager.upload_file(remote_metadata_path, f.read())
             
         # Upload raspberry_predict.py
         remote_script_path = f"{remote_dir}/raspberry_predict.py"
         with open(result['predict_script_path'], 'rb') as f:
-            ssh_manager.upload_file(remote_script_path, f.read())
+            await ssh_manager.upload_file(remote_script_path, f.read())
         
         # Chạy script trong background với nohup
         command = f"cd {remote_dir} &&  DISPLAY=:0 nohup python raspberry_predict.py > /dev/null 2>&1 &"
-        ssh_manager.execute_command(command)
+        await ssh_manager.execute_command(command)
         
         return {
             "message": "Đã upload files và bắt đầu chạy script trên Raspberry Pi",
@@ -492,7 +492,34 @@ async def export_to_pi(connection_id: str):
         
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-                
+
+@app.post("/api/stop-pi-predict/{connection_id}")
+async def stop_pi_predict(connection_id: str):
+    if connection_id not in ssh_managers:
+        raise HTTPException(status_code=404, detail="Connection not found")
+    
+    try:
+        ssh_manager = ssh_managers[connection_id]
+        
+        # Find Python process
+        output, error = await ssh_manager.execute_command('pgrep -f "python raspberry_predict.py"')
+        if error:
+            raise Exception(error)
+            
+        pids = output.strip().split("\n")
+        if not pids or not pids[0]:
+            return {"message": "Không tìm thấy tiến trình đang chạy"}
+        print(pids)   
+        # Kill the process
+        pid = pids[1]
+        _, error = await ssh_manager.execute_command(f"sudo kill -SIGINT {pid}")
+        if error:
+            raise Exception(error)
+            
+        return {"message": "Tiến trình đã dừng an toàn"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=3000)

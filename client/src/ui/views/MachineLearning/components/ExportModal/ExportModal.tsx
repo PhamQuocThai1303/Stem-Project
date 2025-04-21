@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import './index.css';
 import { initialExport, ExportFormat } from './initialExport';
-import { FaRaspberryPi } from 'react-icons/fa';
+import { FaRaspberryPi, FaStop } from 'react-icons/fa';
 import { toast } from "react-toastify";
 
 interface ExportModalProps {
@@ -13,6 +13,7 @@ const ExportModal: React.FC<ExportModalProps> = ({ isOpen, onClose }) => {
   const [selectedFormat, setSelectedFormat] = useState(initialExport[0].format);
   const [modelType, setModelType] = useState(initialExport[0].type[0]);
   const [selectedCodeTab, setSelectedCodeTab] = useState('Realtime');
+  const [isExporting, setIsExporting] = useState(false);
 
   if (!isOpen) return null;
 
@@ -37,6 +38,7 @@ const ExportModal: React.FC<ExportModalProps> = ({ isOpen, onClose }) => {
           toast.error("Không tìm thấy kết nối!");
           return;
         }
+        setIsExporting(true);
         const response = await fetch(`http://localhost:3000/api/export-to-pi/${connectionId}`, {
           method: 'POST',
         });
@@ -64,6 +66,36 @@ const ExportModal: React.FC<ExportModalProps> = ({ isOpen, onClose }) => {
       }
     } catch (error) {
       console.error('Export error:', error);
+    }
+  };
+
+  const handleStopExport = async () => {
+    try {
+      const connectionId = localStorage.getItem('connection_id');
+      if (!connectionId) {
+        toast.error("Không tìm thấy kết nối!");
+        return;
+      }
+
+      const response = await fetch(`http://localhost:3000/api/stop-pi-predict/${connectionId}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.detail);
+      }
+
+      const result = await response.json();
+      toast.info(result.message);
+      setIsExporting(false);
+    } catch (error) {
+      if (error instanceof Error) {
+        toast.error("❌ Lỗi khi dừng xuất: " + error.message);
+      } else {
+        toast.error("❌ Lỗi không xác định khi dừng xuất");
+      }
     }
   };
 
@@ -119,6 +151,16 @@ const ExportModal: React.FC<ExportModalProps> = ({ isOpen, onClose }) => {
               >
                 {selectedFormat === "Raspberry Pi" ? "Import to Pi" : "Download my model"}
               </button>
+              {
+                isExporting && (
+                  <button 
+                    className="stop-button" 
+                    onClick={handleStopExport}
+                  >
+                    <FaStop /> Dừng xuất pi
+                  </button>
+                )
+              }
             </div>
           </div>
 
