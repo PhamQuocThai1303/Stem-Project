@@ -54,5 +54,13 @@
     "Type your message...": "Type your message...",
     "New chat": "New chat",
     "Recent chats": "Recent chats",
-    "Logout": "Logout"
+    "Logout": "Logout",
+    "Training Time Information": "Training Time Information",
+    "Start Time": "Start Time",
+    "End Time": "End Time",
+    "Total Training Time": "Total Training Time",
+    "Training Parameters": "Training Parameters",
+    "Number of Classes": "Number of Classes",
+    "Training Samples": "Training Samples",
+    "Validation Samples": "Validation Samples"
 }

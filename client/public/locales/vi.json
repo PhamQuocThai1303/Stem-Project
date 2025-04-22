@@ -54,5 +54,13 @@
     "Type your message...": "Nhập tin nhắn của bạn...",
     "New chat": "Cuộc trò chuyện mới",
     "Recent chats": "Cuộc trò chuyện gần đây",
-    "Logout": "Đăng xuất"
+    "Logout": "Đăng xuất",
+    "Training Time Information": "Thông tin thời gian huấn luyện",
+    "Start Time": "Thời gian bắt đầu",
+    "End Time": "Thời gian kết thúc",
+    "Total Training Time": "Tổng thời gian huấn luyện",
+    "Training Parameters": "Thông số huấn luyện",
+    "Number of Classes": "Số lớp",
+    "Training Samples": "Mẫu huấn luyện",
+    "Validation Samples": "Mẫu kiểm tra"
 }

@@ -124,7 +124,7 @@ const TrainingNode: React.FC<TrainingNodeProps> = ({ data }) => {
       if (!response.ok) throw new Error('Training failed');
 
       const result = await response.json();
-      data.setTrainingHistory(result.history);
+      data.setTrainingHistory({...result.history, ...result.model_params});
       console.log('Training completed:', result);
     } catch (error) {
       console.error('Training error:', error);

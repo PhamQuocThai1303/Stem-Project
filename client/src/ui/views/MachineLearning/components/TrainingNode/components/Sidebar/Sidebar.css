@@ -139,3 +139,94 @@
   border-radius: 4px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
+
+.training-time-section {
+  background: #f8f9fa;
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 24px;
+}
+
+.training-time-section h3 {
+  color: #2c3e50;
+  margin-bottom: 16px;
+  font-size: 1.1rem;
+}
+
+.training-time-grid {
+  display: grid;
+  gap: 12px;
+}
+
+.time-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  background: white;
+  border-radius: 6px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.time-info label {
+  color: #6c757d;
+  font-weight: 500;
+  margin-right: 12px;
+}
+
+.time-info span {
+  color: #2c3e50;
+  font-family: 'Roboto Mono', monospace;
+}
+
+.training-params-section {
+  background: #f8f9fa;
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 24px;
+}
+
+.training-params-section h3 {
+  color: #2c3e50;
+  margin-bottom: 16px;
+  font-size: 1.1rem;
+}
+
+.params-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  background: white;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.params-table td {
+  padding: 12px 16px;
+  border-bottom: 1px solid #edf2f7;
+}
+
+.params-table tr:last-child td {
+  border-bottom: none;
+}
+
+/* Odd numbered cells (parameter names) */
+.params-table td:nth-child(odd) {
+  background: #f8fafc;
+  font-weight: 500;
+  color: #4a5568;
+  width: 25%;
+}
+
+/* Even numbered cells (parameter values) */
+.params-table td:nth-child(even) {
+  color: #2d3748;
+  font-family: 'Roboto Mono', monospace;
+  width: 25%;
+}
+
+/* Hover effect */
+.params-table tr:hover td {
+  background-color: #f1f5f9;
+}
