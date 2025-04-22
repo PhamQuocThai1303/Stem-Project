@@ -381,8 +381,12 @@ async def train_model(request: TrainingRequest):
             {"name": cls.name, "images": cls.images}
             for cls in request.classes
         ]
-        history = model_trainer.train(class_data, request.epochs, request.batchSize, request.learningRate)
-        return {"status": "success", "history": history}
+        result = model_trainer.train(class_data, request.epochs, request.batchSize, request.learningRate)
+        return {
+            "status": "success",
+            "history": result["history"],
+            "model_params": result["model_params"]
+        }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 

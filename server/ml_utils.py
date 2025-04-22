@@ -17,6 +17,7 @@ import subprocess
 import matplotlib.pyplot as plt
 from datetime import datetime
 from pathlib import Path
+from create_training_report import create_training_report
 
 def preprocess_image(image_data, target_size=(224, 224)):
     """Tiền xử lý ảnh từ base64 string hoặc numpy array"""
@@ -161,6 +162,9 @@ class ModelTrainer:
             verbose=1
         )
         
+        # Record start time
+        start_time = datetime.now()
+        
         # Training
         history = self.model.fit(
             X_train, y_train,
@@ -171,6 +175,10 @@ class ModelTrainer:
             class_weight=self.class_weights,
             verbose=1
         )
+        
+        # Record end time and calculate duration
+        end_time = datetime.now()
+        training_time = (end_time - start_time).total_seconds() / 60  # Convert to minutes
         
         # Plot training history
         plt.figure(figsize=(12, 4))
@@ -200,7 +208,42 @@ class ModelTrainer:
         for key, values in history.history.items():
             history_dict[key] = [float(val) for val in values]
         
-        return history_dict
+        # Thêm thời gian training vào history
+        history_dict['training_time_minutes'] = float(training_time)
+        history_dict['training_start_time'] = start_time.isoformat()
+        history_dict['training_end_time'] = end_time.isoformat()
+        
+        # Thu thập thông số mô hình
+        model_params = {
+            'training_samples': len(X_train),
+            'validation_samples': len(X_val),
+            'num_classes': len(self.class_names),
+            'class_names': self.class_names,
+            'class_weights': {str(k): float(v) for k, v in self.class_weights.items()},
+            'model_architecture': 'MobileNetV2',
+            'input_shape': [224, 224, 3],
+            'num_layers': len(self.model.layers),
+            'learning_rate': float(learning_rate),
+            'batch_size': int(batch_size),
+            'epochs': int(epochs),
+            'early_stopping_patience': 15,
+            'reduce_lr_patience': 2,
+            'data_augmentation': {
+                'rotation_range': 30,
+                'width_shift_range': 0.3,
+                'height_shift_range': 0.3,
+                'horizontal_flip': True,
+                'vertical_flip': True,
+                'brightness_range': [0.8, 1.2],
+                'zoom_range': 0.2
+            }
+        }
+
+        create_training_report(history_dict, model_params)
+        return {
+            'history': history_dict,
+            'model_params': model_params
+        }
     
     def predict(self, frame):
         """
