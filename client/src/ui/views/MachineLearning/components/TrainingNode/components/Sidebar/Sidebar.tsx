@@ -22,6 +22,11 @@ interface SidebarProps {
     training_samples: number;
     validation_samples: number;
     epochs: number;
+    // Performance metrics
+    average_latency_ms: number;
+    max_latency_ms: number;
+    average_memory_mb: number;
+    max_memory_mb: number;
   };
 }
 
@@ -50,6 +55,16 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, trainingHistory }) =
     const mins = Math.floor(totalSeconds / 60);
     const secs = totalSeconds % 60;
     return `${mins} phút ${secs} giây`;
+  };
+
+  // Format memory to MB with 2 decimal places
+  const formatMemory = (mb: number) => {
+    return `${mb.toFixed(2)} MB`;
+  };
+
+  // Format latency to ms with 2 decimal places
+  const formatLatency = (ms: number) => {
+    return `${ms.toFixed(2)} ms`;
   };
 
   return (
@@ -107,6 +122,27 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, trainingHistory }) =
                 <td>{trainingHistory.training_samples?.toLocaleString() || '-'}</td>
                 <td>{t("Validation Samples")}</td>
                 <td>{trainingHistory.validation_samples?.toLocaleString() || '-'}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        {/* Performance Metrics */}
+        <div className="performance-section">
+          <h3>{t("Performance Metrics")}</h3>
+          <table className="params-table">
+            <tbody>
+              <tr>
+                <td>{t("Average Latency")}</td>
+                <td>{trainingHistory.average_latency_ms ? formatLatency(trainingHistory.average_latency_ms) : '-'}</td>
+                <td>{t("Max Latency")}</td>
+                <td>{trainingHistory.max_latency_ms ? formatLatency(trainingHistory.max_latency_ms) : '-'}</td>
+              </tr>
+              <tr>
+                <td>{t("Average Memory")}</td>
+                <td>{trainingHistory.average_memory_mb ? formatMemory(trainingHistory.average_memory_mb) : '-'}</td>
+                <td>{t("Max Memory")}</td>
+                <td>{trainingHistory.max_memory_mb ? formatMemory(trainingHistory.max_memory_mb) : '-'}</td>
               </tr>
             </tbody>
           </table>

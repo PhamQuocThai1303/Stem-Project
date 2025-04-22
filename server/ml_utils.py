@@ -17,6 +17,8 @@ import subprocess
 import matplotlib.pyplot as plt
 from datetime import datetime
 from pathlib import Path
+import psutil
+import time
 from create_training_report import create_training_report
 
 def preprocess_image(image_data, target_size=(224, 224)):
@@ -72,6 +74,39 @@ def create_model(num_classes, learning_rate):
     )
     
     return model
+
+class PerformanceCallback(tf.keras.callbacks.Callback):
+    def __init__(self):
+        super(PerformanceCallback, self).__init__()
+        self.batch_times = []
+        self.memory_usage = []
+        self.process = psutil.Process(os.getpid())
+    
+    def on_batch_begin(self, batch, logs=None):
+        self.batch_start_time = time.time()
+    
+    def on_batch_end(self, batch, logs=None):
+        # Measure batch time (latency)
+        batch_time = time.time() - self.batch_start_time
+        self.batch_times.append(batch_time)
+        
+        # Measure memory usage
+        memory_info = self.process.memory_info()
+        memory_mb = memory_info.rss / 1024 / 1024  # Convert to MB
+        self.memory_usage.append(memory_mb)
+    
+    def get_performance_stats(self):
+        avg_latency = np.mean(self.batch_times) * 1000  # Convert to milliseconds
+        max_latency = np.max(self.batch_times) * 1000
+        avg_memory = np.mean(self.memory_usage)
+        max_memory = np.max(self.memory_usage)
+        
+        return {
+            'average_latency_ms': float(avg_latency),
+            'max_latency_ms': float(max_latency),
+            'average_memory_mb': float(avg_memory),
+            'max_memory_mb': float(max_memory)
+        }
 
 class ModelTrainer:
     def __init__(self):
@@ -162,6 +197,9 @@ class ModelTrainer:
             verbose=1
         )
         
+        # Add performance monitoring callback
+        performance_callback = PerformanceCallback()
+        
         # Record start time
         start_time = datetime.now()
         
@@ -171,7 +209,7 @@ class ModelTrainer:
             validation_data=(X_val, y_val),
             epochs=epochs,
             batch_size=batch_size,
-            callbacks=[early_stopping, model_checkpoint, reduce_lr],
+            callbacks=[early_stopping, model_checkpoint, reduce_lr, performance_callback],
             class_weight=self.class_weights,
             verbose=1
         )
@@ -179,6 +217,9 @@ class ModelTrainer:
         # Record end time and calculate duration
         end_time = datetime.now()
         training_time = (end_time - start_time).total_seconds() / 60  # Convert to minutes
+        
+        # Get performance stats
+        performance_stats = performance_callback.get_performance_stats()
         
         # Plot training history
         plt.figure(figsize=(12, 4))
@@ -208,10 +249,11 @@ class ModelTrainer:
         for key, values in history.history.items():
             history_dict[key] = [float(val) for val in values]
         
-        # Thêm thời gian training vào history
+        # Thêm thời gian training và performance metrics vào history
         history_dict['training_time_minutes'] = float(training_time)
         history_dict['training_start_time'] = start_time.isoformat()
         history_dict['training_end_time'] = end_time.isoformat()
+        history_dict.update(performance_stats)
         
         # Thu thập thông số mô hình
         model_params = {

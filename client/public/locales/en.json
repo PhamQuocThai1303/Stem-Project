@@ -62,5 +62,10 @@
     "Training Parameters": "Training Parameters",
     "Number of Classes": "Number of Classes",
     "Training Samples": "Training Samples",
-    "Validation Samples": "Validation Samples"
+    "Validation Samples": "Validation Samples",
+    "Performance Metrics": "Performance Metrics",
+    "Average Latency": "Average Latency",
+    "Max Latency": "Max Latency",
+    "Average Memory Usage": "Average Memory Usage",
+    "Max Memory Usage": "Max Memory Usage"
 }

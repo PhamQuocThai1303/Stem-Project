@@ -62,5 +62,10 @@
     "Training Parameters": "Thông số huấn luyện",
     "Number of Classes": "Số lớp",
     "Training Samples": "Mẫu huấn luyện",
-    "Validation Samples": "Mẫu kiểm tra"
+    "Validation Samples": "Mẫu kiểm tra",
+    "Performance Metrics": "Thông số hiệu suất",
+    "Average Latency": "Trung bình thời gian",
+    "Max Latency": "Thời gian tối đa",
+    "Average Memory Usage": "Trung bình bộ nhớ",
+    "Max Memory Usage": "Bộ nhớ tối đa"
 }
