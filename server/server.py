@@ -140,10 +140,6 @@ async def execute_command(connection_id: str, command_req: CommandRequest):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@app.get("/api/connections")
-async def get_connections():
-    return list(active_connections.values())
-
 @app.post("/api/upload/{connection_id}")
 async def upload_file(connection_id: str, code_req: CodeUploadRequest):
     if connection_id not in ssh_managers:
@@ -201,39 +197,6 @@ async def stop_execution(connection_id: str):
         return {"message": "Tiến trình đã dừng an toàn"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-
-# @app.websocket("/ws/{connection_id}")
-# async def websocket_endpoint(websocket: WebSocket, connection_id: str):
-#     await websocket.accept()
-    
-#     if connection_id not in ssh_managers:
-#         await websocket.close(code=4000)
-#         return
-    
-#     try:
-#         ssh_manager = ssh_managers[connection_id]
-#         channel = ssh_manager.create_shell()
-        
-#         async def send_output():
-#             while True:
-#                 if channel.recv_ready():
-#                     output = channel.recv(1024).decode()
-#                     await websocket.send_text(output)
-#                 await asyncio.sleep(0.1)
-        
-#         async def receive_input():
-#             while True:
-#                 data = await websocket.receive_text()
-#                 if channel.send_ready():
-#                     channel.send(data)
-#                 await asyncio.sleep(0.1)
-        
-#         receive_task = asyncio.create_task(receive_input())
-#         send_task = asyncio.create_task(send_output())
-        
-#         await asyncio.gather(receive_task, send_task)
-#     except Exception as e:
-#         await websocket.close(code=4000)
 
 @app.get("/api/wifi/list/{connection_id}")
 async def get_wifi_list(connection_id: str):
