@@ -72,13 +72,6 @@ class SSHManager:
         with self.sftp.file(remote_path, 'w') as f:
             f.write(content)
     
-    def create_shell(self) -> None:
-        if not self.client:
-            raise Exception("Not connected")
-        
-        self.channel = self.client.invoke_shell()
-        return self.channel
-
     async def upload_directory(self, local_dir: str, remote_dir: str) -> None:
         """Upload toàn bộ thư mục lên Raspberry Pi bất đồng bộ"""
         if not self.sftp:
