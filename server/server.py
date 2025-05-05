@@ -69,6 +69,9 @@ class TrainingRequest(BaseModel):
     batchSize: int = 16
     learningRate: float = 0.001
 
+class ImagePredictRequest(BaseModel):
+    image: str  # Base64 encoded image
+
 # Global state
 ssh_managers: Dict[str, SSHManager] = {}
 active_connections: Dict[str, dict] = {}
@@ -351,6 +354,31 @@ async def train_model(request: TrainingRequest):
             "model_params": result["model_params"]
         }
     except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/predict-image")
+async def predict_image(request: ImagePredictRequest):
+    """Endpoint để dự đoán từ một ảnh (không phải stream)"""
+    try:
+        if not model_trainer.model:
+            raise HTTPException(status_code=400, detail="Model chưa được train")
+            
+        # Tiền xử lý ảnh
+        from ml_utils import preprocess_image
+        processed_image = preprocess_image(request.image)
+        
+        # Mở rộng thêm một chiều cho batch
+        processed_image = np.expand_dims(processed_image, axis=0)
+        
+        # Dự đoán
+        predictions = model_trainer.predict(processed_image)
+        
+        return {
+            "status": "success",
+            "predictions": predictions
+        }
+    except Exception as e:
+        logger.error(f"Error predicting image: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.websocket("/ws/predict")

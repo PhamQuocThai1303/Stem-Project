@@ -7,6 +7,7 @@ import Webcam from 'react-webcam';
 import ProgressBar from '../ProgressBar';
 import './index.css';
 import { useTranslation } from 'react-i18next';
+import { BsUpload } from 'react-icons/bs';
 
 interface PreviewNodeProps {
   data: {
@@ -21,6 +22,9 @@ const PreviewNode: React.FC<PreviewNodeProps> = ({ data }) => {
   const [predictions, setPredictions] = useState<Record<string, number>>({});
   const wsRef = useRef<WebSocket | null>(null);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const [uploadedImage, setUploadedImage] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const {t} = useTranslation()
 
   const videoConstraints = {
@@ -152,20 +156,67 @@ const PreviewNode: React.FC<PreviewNodeProps> = ({ data }) => {
   }, [cleanup]);
 
   const toggleInput = useCallback(() => {
-    if (!isInputOn && inputType === 'webcam') {
+    if (!isInputOn) {
       setIsInputOn(true);
     } else if (isInputOn) {
       cleanup();
       setIsInputOn(false);
+      setPredictions({});
+      setUploadedImage(null);
     }
-  }, [isInputOn, inputType, cleanup]);
+  }, [isInputOn, cleanup]);
 
   const handleInputTypeChange = useCallback((e: React.ChangeEvent<HTMLSelectElement>) => {
     const newType = e.target.value as 'webcam' | 'file';
     cleanup();
     setInputType(newType);
     setIsInputOn(false);
+    setPredictions({});
+    setUploadedImage(null);
   }, [cleanup]);
+
+  const handleFileUpload = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const imageSrc = event.target?.result as string;
+        setUploadedImage(imageSrc);
+      };
+      reader.readAsDataURL(file);
+    }
+  }, []);
+
+  const predictImage = useCallback(async () => {
+    if (uploadedImage) {
+      setIsLoading(true);
+      try {
+        const response = await fetch('http://localhost:3000/api/predict-image', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ image: uploadedImage })
+        });
+
+        if (!response.ok) {
+          throw new Error('Prediction failed');
+        }
+
+        const result = await response.json();
+        setPredictions(result.predictions);
+      } catch (error) {
+        console.error('Prediction error:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+  }, [uploadedImage]);
+
+  // Trigger file input click
+  const triggerFileInput = () => {
+    fileInputRef.current?.click();
+  };
 
   return (
     <div className="preview-node">
@@ -193,14 +244,14 @@ const PreviewNode: React.FC<PreviewNodeProps> = ({ data }) => {
             </label>
             <span className="input-status">{isInputOn ? 'ON' : 'OFF'}</span>
           </div>
-          {/* <select 
+          <select 
             value={inputType}
             onChange={handleInputTypeChange}
             className="input-type-select"
           >
             <option value="webcam">Webcam</option>
             <option value="file">File</option>
-          </select> */}
+          </select>
         </div>
 
         <div className="preview-window">
@@ -213,6 +264,47 @@ const PreviewNode: React.FC<PreviewNodeProps> = ({ data }) => {
               className="webcam-preview"
               mirrored={true}
             />
+          )}
+          {isInputOn && inputType === 'file' && (
+            <div className="file-upload-container">
+              {uploadedImage ? (
+                <>
+                  <img 
+                    src={uploadedImage} 
+                    alt="Uploaded" 
+                    className="uploaded-image" 
+                  />
+                  <div className="file-action-buttons">
+                    <button 
+                      onClick={triggerFileInput} 
+                      className="upload-button"
+                    >
+                      {t("Change Image")}
+                    </button>
+                    <button 
+                      onClick={predictImage} 
+                      className="predict-button"
+                      disabled={isLoading}
+                    >
+                      {isLoading ? t("Processing...") : t("Predict")}
+                    </button>
+                  </div>
+                </>
+              ) : (
+                <div className="file-upload-placeholder" onClick={triggerFileInput}>
+                  <BsUpload size={32} />
+                  <p>{t("Click to upload an image")}</p>
+                  <p className="file-format-hint">{t("(JPEG, PNG, WebP)")}</p>
+                </div>
+              )}
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                onChange={handleFileUpload}
+                style={{ display: 'none' }}
+              />
+            </div>
           )}
         </div>
 
