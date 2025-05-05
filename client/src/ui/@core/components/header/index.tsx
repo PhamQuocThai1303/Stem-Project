@@ -66,8 +66,8 @@ const Header: React.FC<HeaderProps> = ({ currentTab, onTabChange }) => {
       <Container fluid>
         {/* Logo */}
         <Navbar.Brand href="#" className="d-flex align-items-center position-absolute start-0 ms-3">
-          <img src="/logo.png" alt="App Logo" height="30" className="me-2" />
-          <span className="text-danger fw-bold fs-5">{t('PHAM QUOC THAI')}</span>
+          {/* <img src="/logo.png" alt="App Logo" height="30" className="me-2" /> */}
+          <span className="text-danger fw-bold fs-5">{t('Teach Craft')}</span>
         </Navbar.Brand>
 
         {/* Menu - căn giữa hoàn toàn */}

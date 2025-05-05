@@ -51,32 +51,32 @@ const PreviewNode: React.FC<PreviewNodeProps> = ({ data }) => {
   }, []);
 
   // WebSocket setup
-  useEffect(() => {
-    if (isInputOn && inputType === 'webcam') {
-      const newWs = new WebSocket('ws://localhost:3000/ws/predict');
-      wsRef.current = newWs;
+  // useEffect(() => {
+  //   if (isInputOn && inputType === 'webcam') {
+  //     const newWs = new WebSocket('ws://localhost:3000/ws/predict');
+  //     wsRef.current = newWs;
 
-      newWs.onopen = () => {
-        console.log('WebSocket connected');
-      };
+  //     newWs.onopen = () => {
+  //       console.log('WebSocket connected');
+  //     };
 
-      newWs.onmessage = (event) => {
-        const predictions = JSON.parse(event.data);
-        setPredictions(predictions);
-      };
+  //     newWs.onmessage = (event) => {
+  //       const predictions = JSON.parse(event.data);
+  //       setPredictions(predictions);
+  //     };
 
-      newWs.onerror = (error) => {
-        console.error('WebSocket error:', error);
-      };
+  //     newWs.onerror = (error) => {
+  //       console.error('WebSocket error:', error);
+  //     };
 
-      return () => {
-        if (wsRef.current) {
-          wsRef.current.close();
-          wsRef.current = null;
-        }
-      };
-    }
-  }, [isInputOn, inputType]);
+  //     return () => {
+  //       if (wsRef.current) {
+  //         wsRef.current.close();
+  //         wsRef.current = null;
+  //       }
+  //     };
+  //   }
+  // }, [isInputOn, inputType]);
 
   const captureAndPredict = useCallback(() => {
     if (isInputOn && webcamRef.current && wsRef.current?.readyState === WebSocket.OPEN) {
