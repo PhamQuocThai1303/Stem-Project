@@ -1,6 +1,6 @@
-import { useState, useEffect, useRef, KeyboardEvent } from "react";
+import { useState, useEffect, useRef, KeyboardEvent, ChangeEvent } from "react";
 import { Provider, useDispatch, useSelector } from 'react-redux';
-import { generateResponse } from "./gemini";
+import { generateResponse, generateResponseWithImage } from "./gemini";
 import { RootState } from './store/store';
 import { addMessage, addChat, selectChat } from './store/chatSlice';
 import { store } from './store/store';
@@ -15,9 +15,12 @@ const ChatBotContent = () => {
   const { data: chats, currentChatId } = useSelector((state: RootState) => state.chat);
   const currentChat = chats.find((chat) => chat.id === currentChatId);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const {t} = useTranslation()
   const [inputChat, setInputChat] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [uploadedImage, setUploadedImage] = useState<string | null>(null);
+  const [imageFile, setImageFile] = useState<File | null>(null);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -78,8 +81,32 @@ const ChatBotContent = () => {
     }
   };
 
+  const handleImageUpload = (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setUploadedImage(reader.result as string);
+        setImageFile(file);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleAttachClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleRemoveImage = () => {
+    setUploadedImage(null);
+    setImageFile(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
   const handleChat = async () => {
-    if (!inputChat.trim() || isLoading) return;
+    if ((!inputChat.trim() && !uploadedImage) || isLoading) return;
 
     // Nếu chưa có chat nào hoặc chưa chọn chat nào, tạo chat mới
     if (!currentChatId || !currentChat) {
@@ -93,12 +120,26 @@ const ChatBotContent = () => {
         const userInput = inputChat.trim();
         setInputChat(""); // Clear input ngay khi bắt đầu xử lý
         
-        const botResponse = await generateResponse(userInput, []);
+        let botResponse;
+        let displayUserMessage = userInput;
+        
+        if (uploadedImage && imageFile) {
+          botResponse = await generateResponseWithImage(userInput, imageFile, []);
+          // Tạo HTML để hiển thị tin nhắn của người dùng kèm hình ảnh
+          displayUserMessage = `<div>${userInput}<div class="uploaded-image-container"><img src="${uploadedImage}" alt="Uploaded" class="message-image" /></div></div>`;
+        } else {
+          botResponse = await generateResponse(userInput, []);
+        }
+        
         dispatch(addMessage({
           chatId: newChatId,
-          userMessage: userInput,
+          userMessage: displayUserMessage,
           botMessage: botResponse
         }));
+        
+        // Reset uploaded image after sending
+        setUploadedImage(null);
+        setImageFile(null);
       } catch (error) {
         console.error('Error in chat:', error);
       } finally {
@@ -110,12 +151,26 @@ const ChatBotContent = () => {
         const userInput = inputChat.trim();
         setInputChat(""); // Clear input ngay khi bắt đầu xử lý
         
-        const botResponse = await generateResponse(userInput, currentChat.messages);
+        let botResponse;
+        let displayUserMessage = userInput;
+        
+        if (uploadedImage && imageFile) {
+          botResponse = await generateResponseWithImage(userInput, imageFile, currentChat.messages);
+          // Tạo HTML để hiển thị tin nhắn của người dùng kèm hình ảnh
+          displayUserMessage = `<div>${userInput}<div class="uploaded-image-container"><img src="${uploadedImage}" alt="Uploaded" class="message-image" /></div></div>`;
+        } else {
+          botResponse = await generateResponse(userInput, currentChat.messages);
+        }
+        
         dispatch(addMessage({
           chatId: currentChatId,
-          userMessage: userInput,
+          userMessage: displayUserMessage,
           botMessage: botResponse
         }));
+        
+        // Reset uploaded image after sending
+        setUploadedImage(null);
+        setImageFile(null);
       } catch (error) {
         console.error('Error in chat:', error);
       } finally {
@@ -183,21 +238,45 @@ const ChatBotContent = () => {
           )}
 
           <div className="chatbot-input">
-            <input
-              type="text"
-              value={inputChat}
-              placeholder={t("Enter your question here")}
-              onChange={(e) => setInputChat(e.target.value)}
-              onKeyPress={handleKeyPress}
-              disabled={isLoading}
-            />
-            <button 
-              onClick={handleChat}
-              disabled={isLoading || !inputChat.trim()}
-              className="send-button"
-            >
-              {t("Send")}
-            </button>
+            {uploadedImage && (
+              <div className="image-preview">
+                <img src={uploadedImage} alt="Preview" />
+                <button className="remove-image-btn" onClick={handleRemoveImage}>×</button>
+              </div>
+            )}
+            <div className="input-container">
+              <button
+                className="attach-button"
+                onClick={handleAttachClick}
+                title={t("Attach an image")}
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path>
+                </svg>
+              </button>
+              <input
+                type="file"
+                ref={fileInputRef}
+                accept="image/*"
+                onChange={handleImageUpload}
+                style={{ display: 'none' }}
+              />
+              <input
+                type="text"
+                value={inputChat}
+                placeholder={t("Enter your question here")}
+                onChange={(e) => setInputChat(e.target.value)}
+                onKeyPress={handleKeyPress}
+                disabled={isLoading}
+              />
+              <button 
+                onClick={handleChat}
+                disabled={isLoading || (!inputChat.trim() && !uploadedImage)}
+                className="send-button"
+              >
+                {t("Send")}
+              </button>
+            </div>
           </div>
         </div>
       </div>
