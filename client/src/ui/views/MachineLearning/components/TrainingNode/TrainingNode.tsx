@@ -68,21 +68,25 @@ const Tooltip: React.FC<TooltipProps> = ({ content, children }) => {
 };
 
 const HELP_TEXTS = {
-  epochs: `Một epoch nghĩa là mỗi mẫu trong tập dữ liệu huấn luyện đã được đưa qua mô hình ít nhất một lần. 
+  epochs: `Epoch là số lần toàn bộ tập dữ liệu huấn luyện được đưa qua mô hình một lần. 
   
-Ví dụ, nếu bạn đặt epochs là 50, điều này có nghĩa là mô hình sẽ xử lý toàn bộ tập dữ liệu 50 lần. Thông thường, số epoch càng lớn, mô hình càng học tốt hơn.
+Nếu bạn có 1,000 ảnh huấn luyện, thì 1 epoch nghĩa là mô hình sẽ xem xét toàn bộ 1,000 ảnh đó một lần. Nếu bạn huấn luyện 50 epochs thì mô hình sẽ "học" từ tập huấn luyện đó 50 lần.
 
 Bạn có thể điều chỉnh (thường là tăng) con số này cho đến khi đạt được kết quả dự đoán tốt với mô hình của bạn.`,
 
-  batchSize: `Batch là một tập hợp các mẫu được sử dụng trong một lần huấn luyện. 
+  batchSize: `Batch size là số lượng mẫu dữ liệu được đưa vào mô hình cùng lúc trong một lần lan truyền tiến (forward) và lan truyền ngược (backward). 
 
 Ví dụ, nếu bạn có 80 hình ảnh và chọn batch size là 16, dữ liệu sẽ được chia thành 80 / 16 = 5 batch. Khi cả 5 batch đã được đưa qua mô hình, một epoch sẽ hoàn thành.
 
 Bạn có thể giữ nguyên giá trị này để có kết quả huấn luyện tốt.`,
 
-  learningRate: `Hãy cẩn thận khi điều chỉnh con số này! 
+  learningRate: `Learning rate là mức độ thay đổi của trọng số mô hình sau mỗi lần cập nhật, dựa trên độ dốc của hàm mất mát.
 
-Ngay cả những thay đổi nhỏ cũng có thể ảnh hưởng lớn đến khả năng học của mô hình.`
+  Hãy cẩn thận khi điều chỉnh con số này! 
+
+Learning rate quá nhỏ → học rất chậm, mất nhiều thời gian để hội tụ.
+Learning rate quá lớn → có thể làm mô hình dao động và không hội tụ được.
+`
 };
 
 const TrainingNode: React.FC<TrainingNodeProps> = ({ data }) => {
