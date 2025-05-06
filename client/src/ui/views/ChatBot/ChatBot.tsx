@@ -257,7 +257,6 @@ const ChatBotContent = () => {
               <input
                 type="file"
                 ref={fileInputRef}
-                accept="image/*"
                 onChange={handleImageUpload}
                 style={{ display: 'none' }}
               />
