@@ -47,6 +47,21 @@ const ExportModal: React.FC<ExportModalProps> = ({ isOpen, onClose }) => {
           throw new Error('Export failed');
         }
         toast.success("Export model cho Raspberry Pi thành công");
+      } else if (selectedFormat === "Jetson") {
+        const connectionId = localStorage.getItem('connection_id');
+        if (!connectionId) {
+          toast.error("Không tìm thấy kết nối!");
+          return;
+        }
+        setIsExporting(true);
+        const response = await fetch(`http://localhost:3000/api/export-to-jetson/${connectionId}`, {
+          method: 'POST',
+        });
+        if (!response.ok) {
+          toast.error("Export model cho Jetson thất bại");
+          throw new Error('Export failed');
+        }
+        toast.success("Export model cho Jetson thành công");
       } else {
         const response = await fetch(`http://localhost:3000/api/export-model?format=${selectedFormat}&type=${modelType}`, {
           method: 'POST',

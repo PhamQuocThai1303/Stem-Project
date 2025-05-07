@@ -455,3 +455,57 @@ class ModelTrainer:
             'metadata_path': str(metadata_path),
             'predict_script_path': str(predict_script_path)
         }
+
+    def export_model_to_jetson(self):
+        """Export model và các file cần thiết cho Jetson"""
+        if not self.model:
+            raise Exception("Model chưa được train")
+
+        # Tạo thư mục jetson_predict nếu chưa tồn tại
+        folder_dir = Path(__file__).parent / "jetson_predict"
+        folder_dir.mkdir(exist_ok=True)
+
+        # Convert model sang TFLite format với các tối ưu cho Jetson
+        converter = tf.lite.TFLiteConverter.from_keras_model(self.model)
+        
+        # Tối ưu cho Jetson
+        converter.optimizations = [tf.lite.Optimize.DEFAULT]
+        converter.target_spec.supported_ops = [
+            tf.lite.OpsSet.TFLITE_BUILTINS,
+            tf.lite.OpsSet.SELECT_TF_OPS
+        ]
+        converter.target_spec.supported_types = [tf.float16]
+        converter.target_spec.supported_ops = [
+            tf.lite.OpsSet.TFLITE_BUILTINS,
+            tf.lite.OpsSet.SELECT_TF_OPS
+        ]
+        
+        tflite_model = converter.convert()
+
+        # Lưu model TFLite
+        model_path = folder_dir / "model.tflite"
+        with open(model_path, 'wb') as f:
+            f.write(tflite_model)
+
+        # Lưu metadata
+        metadata_path = folder_dir / "metadata.json"
+        metadata = {
+            'class_names': self.class_names,
+            'input_shape': self.model.input_shape,
+            'model_type': 'tensorflow-lite',
+            'device': 'jetson',
+            'optimizations': ['DEFAULT', 'FP16'],
+            'created_at': datetime.now().isoformat()
+        }
+        with open(metadata_path, 'w') as f:
+            json.dump(metadata, f, indent=2)
+
+        # Copy jetson_predict.py
+        predict_script_path = folder_dir / "jetson_predict.py"
+        shutil.copy('jetson_predict.py', predict_script_path)
+
+        return {
+            'model_path': str(model_path),
+            'metadata_path': str(metadata_path),
+            'predict_script_path': str(predict_script_path)
+        }

@@ -514,6 +514,59 @@ async def stop_pi_predict(connection_id: str):
         return {"message": "Tiến trình đã dừng an toàn"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/export-to-jetson/{connection_id}")
+async def export_to_jetson(connection_id: str):
+    """Export model và các file cần thiết cho Jetson"""
+    try:
+        if not model_trainer.model:
+            raise HTTPException(status_code=400, detail="Model chưa được train")
+
+        # Export model và các file cần thiết
+        result = model_trainer.export_model_to_jetson()
+        
+        if connection_id not in ssh_managers:
+            raise HTTPException(status_code=404, detail="Connection not found")
+            
+        ssh_manager = ssh_managers[connection_id]
+        connection_info = active_connections[connection_id]
+        
+        # Upload từng file vào thư mục jetson_predict trên Jetson
+        remote_dir = f"/home/{connection_info['username']}/Documents/library/jetson_predict"
+        
+        # Tạo thư mục nếu chưa tồn tại
+        await ssh_manager.execute_command(f"mkdir -p {remote_dir}")
+            
+        # Upload model.tflite
+        remote_model_path = f"{remote_dir}/model.tflite"
+        with open(result['model_path'], 'rb') as f:
+            await ssh_manager.upload_file(remote_model_path, f.read())
+            
+        # Upload metadata.json
+        remote_metadata_path = f"{remote_dir}/metadata.json"
+        with open(result['metadata_path'], 'rb') as f:
+            await ssh_manager.upload_file(remote_metadata_path, f.read())
+            
+        # Upload jetson_predict.py
+        remote_script_path = f"{remote_dir}/jetson_predict.py"
+        with open(result['predict_script_path'], 'rb') as f:
+            await ssh_manager.upload_file(remote_script_path, f.read())
+        
+        # Chạy script trong background với nohup
+        command = f"cd {remote_dir} && DISPLAY=:0 nohup python jetson_predict.py > /dev/null 2>&1 &"
+        await ssh_manager.execute_command(command)
+        
+        return {
+            "message": "Đã upload files và bắt đầu chạy script trên Jetson",
+            "files": {
+                "model": remote_model_path,
+                "metadata": remote_metadata_path,
+                "script": remote_script_path
+            }
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
     
 if __name__ == "__main__":
     import uvicorn

@@ -39,5 +39,17 @@ pip install opencv-python tensorflow pillow numpy
 
 # Run the prediction script
 python raspberry_predict.py`
+    },
+    {
+        format: "Jetson",
+        type: ["download"],
+        description: "Export your model for Jetson deployment. This will download a zip file containing model.tflite, metadata.json, and jetson_predict.py for real-time prediction with optimizations for Jetson.",
+        modelName: "jetson_files.zip",
+        code_rt: `# Extract the zip file on your Jetson
+# Install required packages
+pip install opencv-python tensorflow pillow numpy
+
+# Run the prediction script
+python jetson_predict.py`
     }
 ]
