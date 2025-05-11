@@ -19,6 +19,7 @@ import { defineButtonBlocks } from '../../customBlock/ButtonBlock';
 import { defineFanBlocks } from '../../customBlock/FanBlock';
 import { defineCommonBlocks } from '../../customBlock/CommonBlock';
 import { defineLCDBlocks } from '../../customBlock/LCDBlock';
+import { defineRGBBlocks } from '../../customBlock/RGBBlock';
 import { FaUpload, FaStop, FaDownload } from 'react-icons/fa';
 
 function App() {
@@ -42,6 +43,7 @@ function App() {
     defineButtonBlocks();
     defineFanBlocks();
     defineLCDBlocks();
+    defineRGBBlocks();
   }, []);
 
   const onWorkspaceChange = useCallback((workspace: Blockly.Workspace) => {

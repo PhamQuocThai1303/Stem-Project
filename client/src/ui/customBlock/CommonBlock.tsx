@@ -2,6 +2,13 @@ import * as Blockly from 'blockly';
 import { Block } from 'blockly/core';
 import { pythonGenerator } from 'blockly/python';
 
+// Mở rộng kiểu PythonGenerator để thêm ORDER_ATOMIC
+declare module 'blockly/python' {
+  interface PythonGenerator {
+    ORDER_ATOMIC: number;
+  }
+}
+
 export const defineCommonBlocks  = () => {
   // Định nghĩa blocks
   Blockly.common.defineBlocksWithJsonArray([
@@ -63,6 +70,22 @@ export const defineCommonBlocks  = () => {
         "tooltip": "In ra",
         "helpUrl": ""
       },
+      {
+        "type": "get_variable",
+        "message0": "%1",
+        "args0": [
+          {
+            "type": "field_number",
+            "name": "VAR",
+            "value": 1,
+            "min": 1,
+            "max": 999
+          }
+        ],
+        "colour": 230,
+        "output": "Number",
+        "helpUrl": ""
+      },
   ]);
 
 
@@ -92,6 +115,11 @@ export const defineCommonBlocks  = () => {
     return `print(${varName})\n`;
   };
 
+  pythonGenerator.forBlock['get_variable'] = function (block: Block) {
+    const pin = block.getFieldValue('VAR');
+    return [`${pin}`, pythonGenerator.ORDER_ATOMIC];
+  };
+
 };
 
 const addIndent = (code: string, indent = '  ') => {
@@ -118,6 +146,9 @@ export const CommonToolboxConfig = {
         kind: "block",
         type: "print_variable"
       },
-      
+      {
+        kind: "block",
+        type: "get_variable"
+      }
     ]
   };

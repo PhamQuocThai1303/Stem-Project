@@ -13,6 +13,7 @@ import { listToolboxConfig } from "../customBlock/listBlock";
 import { logicToolboxConfig } from "../customBlock/logicBlock";
 import { loopToolboxConfig } from "../customBlock/loopBlock";
 import { mathToolboxConfig } from "../customBlock/mathBlock";
+import { RGBToolboxConfig } from "../customBlock/RGBBlock";
 import { ServoToolboxConfig } from "../customBlock/ServoBlock";
 import { SonarToolboxConfig } from "../customBlock/SonarBlock";
 import { SwitchToolboxConfig } from "../customBlock/SwitchBlock";
@@ -28,8 +29,7 @@ const INITIAL_TOOLBOX_JSON = {
   kind: "categoryToolbox",
   contents: [
     CommonToolboxConfig,
-      ledToolboxConfig
-    ,
+    ledToolboxConfig,
     timeToolboxConfig,
     sevenSegmentToolboxConfig,
     DHTToolboxConfig,
@@ -40,37 +40,19 @@ const INITIAL_TOOLBOX_JSON = {
     ButtonToolboxConfig,
     FanToolboxConfig,
     LCDToolboxConfig,
-    logicToolboxConfig
-    ,
-    loopToolboxConfig
-    ,
-    mathToolboxConfig
-    ,
-    textToolboxConfig
-    ,
-    listToolboxConfig
-    ,
-    // colorToolboxConfig
-    // ,
+    RGBToolboxConfig,
+    logicToolboxConfig,
+    loopToolboxConfig,
+    mathToolboxConfig,
+    textToolboxConfig,
+    listToolboxConfig,
     { kind: "sep" },
-    // {
-    //   kind: "category",
-    //   name: "Custom Button",
-    //   colour: 19,
-    //   contents: [
-    //     {
-    //       kind: "button",
-    //       text: "A button",
-    //       callbackKey: "myFirstButtonPressed",
-    //     },
-    //   ],
-    // },
-    // {
-    //   kind: "category",
-    //   name: "Variables",
-    //   custom: "VARIABLE",
-    //   colour: 330,
-    // },
+    {
+      kind: "category",
+      name: "Variables",
+      custom: "VARIABLE",
+      colour: 330,
+    },
     functionToolboxConfig
   ],
 };

@@ -1,12 +1,9 @@
+import RGB
 import time
 import LCD
-LCD.begin()
 try:
-    LCD.backlight()
-    LCD.setCursor(0,0)
-    LCD.print("Hello World")
-    while not False:
-      pass
+    RGB.start()
+    RGB.color(44, 88, 11)
+    time.sleep(3)
 finally:
-    LCD.noBacklight()
-    LCD.clear()
+    RGB.stop()

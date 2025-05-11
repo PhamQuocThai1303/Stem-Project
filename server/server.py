@@ -158,12 +158,12 @@ async def upload_file(connection_id: str, code_req: CodeUploadRequest):
         connection_info = active_connections[connection_id]
         
         # Upload code to remote file
-        remote_path = f"/home/{connection_info['username']}/Documents/library/data.txt"
+        remote_path = f"/home/{connection_info['username']}/Documents/library/data.py"
         await ssh_manager.upload_file(remote_path, code_req.code)
         print(f"File uploaded to Raspberry Pi: {remote_path}")
         
         # Execute the uploaded code
-        command = f"cd /home/{connection_info['username']}/Documents/library && sudo python data.txt"
+        command = f"cd /home/{connection_info['username']}/Documents/library && sudo python data.py"
         output, error = await ssh_manager.execute_command(command)
         print(f"Command output: {output}")
         
@@ -183,7 +183,7 @@ async def stop_execution(connection_id: str):
         ssh_manager = ssh_managers[connection_id]
         
         # Find Python process
-        output, error = await ssh_manager.execute_command('pgrep -f "python data.txt"')
+        output, error = await ssh_manager.execute_command('pgrep -f "python data.py"')
         if error:
             raise Exception(error)
             
