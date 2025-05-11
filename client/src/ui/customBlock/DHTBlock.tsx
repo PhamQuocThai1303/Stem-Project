@@ -37,11 +37,11 @@ export const defineDHTBlocks  = () => {
 };
 
 pythonGenerator.forBlock['DHT_T'] = function () {
-    return ['DHT.Temperature()', pythonGenerator.ORDER_ATOMIC];
+    return ['DHT.temperature()', pythonGenerator.ORDER_ATOMIC];
   };
  
   pythonGenerator.forBlock['DHT_H'] = function () {
-    return ['DHT.Humidity()', pythonGenerator.ORDER_ATOMIC];
+    return ['DHT.humidity()', pythonGenerator.ORDER_ATOMIC];
   };
 
 };
