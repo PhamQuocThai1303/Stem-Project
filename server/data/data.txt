@@ -1,11 +1,30 @@
+i = None
+
+def upRange(start, stop, step):
+  while start <= stop:
+    yield start
+    start += abs(step)
+
+def downRange(start, stop, step):
+  while start >= stop:
+    yield start
+    start -= abs(step)
+
+
 import time
 import LCD
 LCD.begin()
 try:
     LCD.backlight()
+    a = 'Pham Quoc Thai'
+    row = 0
+    b = (16 - len(a))
     while not False:
-      LCD.setCursor(0,0)
-      LCD.print("Hello World")
+      for i in (b <= 0) and upRange(b, 0, 1) or downRange(b, 0, 1):
+        LCD.clear()
+        LCD.setCursor(i,row)
+        LCD.print(a)
+        time.sleep(0.3)
 finally:
     LCD.noBacklight()
     LCD.clear()

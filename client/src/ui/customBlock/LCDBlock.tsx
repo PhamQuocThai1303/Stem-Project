@@ -50,7 +50,7 @@ export const defineLCDBlocks  = () => {
         "message0": "Hiển thị chuỗi %1",
         "args0": [
           {
-            "type": "field_input",
+            "type": "input_value",
             "name": "TEXT",
             "text": "Hello World" // Giá trị mặc định
           }
@@ -108,8 +108,10 @@ pythonGenerator.forBlock['LCD_nobacklight'] = function() {
 };
 
 pythonGenerator.forBlock['LCD_print'] = function (block) {
-    const text = block.getFieldValue('TEXT');
-    return `LCD.print(${JSON.stringify(text)})\n`;
+  const text = pythonGenerator.valueToCode(block, 'TEXT', pythonGenerator.ORDER_ATOMIC) || '0';
+    // const text = block.getFieldValue('TEXT');
+    // return `LCD.print(${JSON.stringify(text)})\n`;
+    return `LCD.print(${text})\n`;
   };
 
   pythonGenerator.forBlock['LCD_cursor'] = function(block: Block) {
