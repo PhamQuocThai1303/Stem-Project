@@ -1,28 +1,11 @@
-i = None
-
-
 import time
-import SEG7
-SEG7.start()
+import LCD
+LCD.begin()
 try:
-    SEG7.dot_update(1,0)
-    SEG7.dot_update(2,0)
-    for i in range(1, 14):
-      if i < 10:
-        a = 0
-        b = i
-      elif i < 14:
-        a = 1
-        if i == 10:
-          b = 0
-        elif i == 11:
-          b = 1
-        elif i == 12:
-          b = 2
-        elif i == 13:
-          b = 3
-      SEG7.update(a,1)
-      SEG7.update(b,2)
-      time.sleep(1)
+    LCD.backlight()
+    while not False:
+      LCD.setCursor(0,0)
+      LCD.print("Hello World")
 finally:
-    SEG7.stop()
+    LCD.noBacklight()
+    LCD.clear()

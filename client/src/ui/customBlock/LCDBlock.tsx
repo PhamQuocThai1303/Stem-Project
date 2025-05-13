@@ -65,14 +65,14 @@ export const defineLCDBlocks  = () => {
         "message0": "Đặt vị trí con trỏ ở hàng %1 và cột %2",
         "args0": [
           {
-            "type": "field_number",
+            "type": "input_value",
             "name": "PINS",
             "value": 0,
             "min": 0,
             "max": 1
           },
           {
-            "type": "field_number",
+            "type": "input_value",
             "name": "PINS2",
             "value": 0,
             "min": 0,
@@ -82,6 +82,7 @@ export const defineLCDBlocks  = () => {
         "previousStatement": null,
         "nextStatement": null,
         "colour": 180,
+        "inputsInline": true,
         "tooltip": "Đặt vị trí con trỏ trên màn hình"
       },
   ]);
@@ -112,8 +113,10 @@ pythonGenerator.forBlock['LCD_print'] = function (block) {
   };
 
   pythonGenerator.forBlock['LCD_cursor'] = function(block: Block) {
-    const pins = block.getFieldValue('PINS');
-    const pins2 = block.getFieldValue('PINS2');
+    const pins = pythonGenerator.valueToCode(block, 'PINS', pythonGenerator.ORDER_ATOMIC) || '0';
+    const pins2 = pythonGenerator.valueToCode(block, 'PINS2', pythonGenerator.ORDER_ATOMIC) || '0';
+    // const pins = block.getFieldValue('PINS');
+    // const pins2 = block.getFieldValue('PINS2');
     return `LCD.setCursor(${pins2},${pins})\n`
   };
 };
