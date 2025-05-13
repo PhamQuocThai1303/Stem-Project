@@ -21,6 +21,7 @@ const ChatBotContent = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [uploadedImage, setUploadedImage] = useState<string | null>(null);
   const [imageFile, setImageFile] = useState<File | null>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -75,9 +76,16 @@ const ChatBotContent = () => {
     }
   };
 
-  const handleKeyPress = (e: KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter' && !e.shiftKey && !isLoading && inputChat.trim()) {
-      handleChat();
+  const handleKeyPress = (e: KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === 'Enter') {
+      if (e.shiftKey) {
+        return; // Allow new line when Shift + Enter is pressed
+      } else {
+        e.preventDefault(); // Prevent default enter behavior
+        if (!isLoading && inputChat.trim()) {
+          handleChat();
+        }
+      }
     }
   };
 
@@ -103,6 +111,24 @@ const ChatBotContent = () => {
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
+  };
+
+  const adjustTextareaHeight = () => {
+    const textarea = textareaRef.current;
+    if (textarea) {
+      textarea.style.height = 'auto'; // Reset height
+      const scrollHeight = textarea.scrollHeight;
+      textarea.style.height = `${scrollHeight}px`;
+    }
+  };
+
+  // Adjust height whenever input changes
+  useEffect(() => {
+    adjustTextareaHeight();
+  }, [inputChat]);
+
+  const handleInputChange = (e: ChangeEvent<HTMLTextAreaElement>) => {
+    setInputChat(e.target.value);
   };
 
   const handleChat = async () => {
@@ -260,13 +286,15 @@ const ChatBotContent = () => {
                 onChange={handleImageUpload}
                 style={{ display: 'none' }}
               />
-              <input
-                type="text"
+              <textarea
+                ref={textareaRef}
                 value={inputChat}
                 placeholder={t("Enter your question here")}
-                onChange={(e) => setInputChat(e.target.value)}
-                onKeyPress={handleKeyPress}
+                onChange={handleInputChange}
+                onKeyDown={handleKeyPress}
                 disabled={isLoading}
+                rows={1}
+                className="chat-input"
               />
               <button 
                 onClick={handleChat}

@@ -29,12 +29,14 @@
   background: white;
   border-top: 1px solid #e5e7eb;
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   width: 100%;
   border-radius: 24px;
   background-color: #f0f0f0;
   padding: 0 8px;
   position: relative;
+  gap: 8px;
+  margin-top: 8px;
 }
 
 .chat-layout {
@@ -270,6 +272,7 @@
   font-weight: 500;
   font-size: 14px;
   transition: background-color 0.3s;
+  margin-top: 4px;
 }
 
 .chatbot-input button.send-button:hover {
@@ -443,6 +446,7 @@
   justify-content: center;
   border-radius: 50%;
   transition: background-color 0.3s;
+  margin-top: 4px;
 }
 
 .attach-button:hover {
@@ -505,4 +509,50 @@
 .message-content img {
   max-height: 300px;
   object-fit: contain;
+}
+
+.chat-input {
+  flex: 1;
+  padding: 8px 12px;
+  border: none;
+  border-radius: 4px;
+  font-size: 14px;
+  background: transparent;
+  resize: none;
+  outline: none;
+  max-height: 200px;
+  min-height: 20px;
+  line-height: 1.5;
+  overflow-y: auto;
+  font-family: inherit;
+  transition: height 0.1s ease-out;
+  box-sizing: border-box;
+  width: 100%;
+}
+
+.chat-input:focus {
+  outline: none;
+}
+
+.chat-input:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+/* Tùy chỉnh thanh cuộn */
+.chat-input::-webkit-scrollbar {
+  width: 6px;
+}
+
+.chat-input::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.chat-input::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 3px;
+}
+
+.chat-input::-webkit-scrollbar-thumb:hover {
+  background: #555;
 } 
