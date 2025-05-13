@@ -23,7 +23,7 @@ import { v4 as uuidv4 } from 'uuid';
 import ExportModal from './components/ExportModal/ExportModal';
 import Sidebar from './components/TrainingNode/components/Sidebar/Sidebar';
 import JSZip from 'jszip';
-import { useTranslation } from 'react-i18next';
+// import { useTranslation } from 'react-i18next';
 
 // Định nghĩa AddClassNode bên ngoài và nhận onClick qua props
 const AddClassNode = ({ data }: any) => {

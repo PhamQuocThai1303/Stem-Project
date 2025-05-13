@@ -33,7 +33,6 @@ class SSHManager:
         self._executor.shutdown(wait=False)
     
     async def execute_command(self, command: str) -> Tuple[str, str]:
-        """Thực thi lệnh SSH bất đồng bộ"""
         if not self.client:
             raise Exception("Not connected")
         
@@ -45,14 +44,12 @@ class SSHManager:
         )
     
     def _execute_command_sync(self, command: str) -> Tuple[str, str]:
-        """Thực thi lệnh SSH đồng bộ (internal use)"""
         stdin, stdout, stderr = self.client.exec_command(command)
         output = stdout.read().decode()
         error = stderr.read().decode()
         return output, error
     
     async def upload_file(self, remote_path: str, content: str) -> None:
-        """Upload file bất đồng bộ"""
         if not self.client:
             raise Exception("Not connected")
         
@@ -68,12 +65,10 @@ class SSHManager:
         )
     
     def _upload_file_sync(self, remote_path: str, content: str) -> None:
-        """Upload file đồng bộ (internal use)"""
         with self.sftp.file(remote_path, 'w') as f:
             f.write(content)
     
     async def upload_directory(self, local_dir: str, remote_dir: str) -> None:
-        """Upload toàn bộ thư mục lên Raspberry Pi bất đồng bộ"""
         if not self.sftp:
             raise Exception("SFTP not initialized")
             
@@ -86,7 +81,6 @@ class SSHManager:
         )
     
     def _upload_directory_sync(self, local_dir: str, remote_dir: str) -> None:
-        """Upload directory đồng bộ (internal use)"""
         try:
             self.sftp.stat(remote_dir)
         except FileNotFoundError:

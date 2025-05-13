@@ -21,9 +21,9 @@ import psutil
 import time
 from create_training_report import create_training_report
 
-def preprocess_image(image_data, target_size=(224, 224)):
-    """Tiền xử lý ảnh từ base64 string hoặc numpy array"""
+def preprocess_image(image_data, target_size=(224, 224)): # Tiền xử lý ảnh
     if isinstance(image_data, str) and image_data.startswith('data:image'):
+
         # Xử lý base64 string
         image_data = image_data.split(',')[1]
         image_bytes = base64.b64decode(image_data)
@@ -32,16 +32,15 @@ def preprocess_image(image_data, target_size=(224, 224)):
         image = image.resize(target_size)
         image = np.array(image)
     else:
-        # Xử lý numpy array
+        # Xử lý ảnh từ camera
         image = cv2.resize(image_data, target_size)
         image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
     
-    # Sử dụng preprocess_input của MobileNetV2
+    # preprocess_input của MobileNetV2
     image = preprocess_input(image)
     return image
 
 def create_model(num_classes, learning_rate):
-    """Tạo model dựa trên MobileNetV2"""
     # Data augmentation
     data_augmentation = models.Sequential([
         layers.RandomFlip("horizontal"),
@@ -55,7 +54,7 @@ def create_model(num_classes, learning_rate):
         include_top=False,
         weights='imagenet'
     )
-    base_model.trainable = False  # Freeze base model
+    base_model.trainable = False 
     
     # Build model
     model = models.Sequential([
@@ -96,7 +95,7 @@ class PerformanceCallback(tf.keras.callbacks.Callback):
         self.memory_usage.append(memory_mb)
     
     def get_performance_stats(self):
-        avg_latency = np.mean(self.batch_times) * 1000  # Convert to milliseconds
+        avg_latency = np.mean(self.batch_times) * 1000  
         max_latency = np.max(self.batch_times) * 1000
         avg_memory = np.mean(self.memory_usage)
         max_memory = np.max(self.memory_usage)
@@ -126,16 +125,16 @@ class ModelTrainer:
         )
     
     def prepare_data(self, class_data):
-        """Chuẩn bị dữ liệu training từ class_data"""
+       
         X = []
         y = []
         self.class_names = [cls['name'] for cls in class_data]
         
-        # Tính toán số lượng mẫu cho mỗi class
+        # Số lượng mẫu cho mỗi class
         class_counts = [len(cls['images']) for cls in class_data]
         max_samples = max(class_counts)
         
-        # Tính class weights nếu dữ liệu không cân bằng
+        # Class weights nếu dữ liệu không cân bằng
         total_samples = sum(class_counts)
         self.class_weights = {
             i: float(total_samples / (len(class_counts) * count))
@@ -168,7 +167,6 @@ class ModelTrainer:
         return X_train, y_train, X_val, y_val
     
     def train(self, class_data, epochs, batch_size, learning_rate):
-        """Train model với dữ liệu từ các class"""
         X_train, y_train, X_val, y_val = self.prepare_data(class_data)
         
         self.model = create_model(len(self.class_names), learning_rate)
@@ -197,10 +195,8 @@ class ModelTrainer:
             verbose=1
         )
         
-        # Add performance monitoring callback
         performance_callback = PerformanceCallback()
         
-        # Record start time
         start_time = datetime.now()
         
         # Training
@@ -214,14 +210,11 @@ class ModelTrainer:
             verbose=1
         )
         
-        # Record end time and calculate duration
         end_time = datetime.now()
-        training_time = (end_time - start_time).total_seconds() / 60  # Convert to minutes
+        training_time = (end_time - start_time).total_seconds() / 60 
         
-        # Get performance stats
         performance_stats = performance_callback.get_performance_stats()
         
-        # Plot training history
         plt.figure(figsize=(12, 4))
         
         plt.subplot(1, 2, 1)
@@ -249,13 +242,11 @@ class ModelTrainer:
         for key, values in history.history.items():
             history_dict[key] = [float(val) for val in values]
         
-        # Thêm thời gian training và performance metrics vào history
         history_dict['training_time_minutes'] = float(training_time)
         history_dict['training_start_time'] = start_time.isoformat()
         history_dict['training_end_time'] = end_time.isoformat()
         history_dict.update(performance_stats)
         
-        # Thu thập thông số mô hình
         model_params = {
             'training_samples': len(X_train),
             'validation_samples': len(X_val),
@@ -288,36 +279,24 @@ class ModelTrainer:
         }
     
     def predict(self, frame):
-        """
-        Make predictions on a preprocessed frame
         
-        Args:
-            frame: Preprocessed frame of shape (1, 224, 224, 3)
-            
-        Returns:
-            Dictionary mapping class names to confidence scores
-        """
         if self.model is None:
             raise ValueError("No model loaded. Please train or load a model first.")
             
-        # Make prediction
         predictions = self.model.predict(frame, verbose=0)[0]
         
-        # Create dictionary mapping class names to confidence scores
         result = {}
         for i, (name, confidence) in enumerate(zip(self.class_names, predictions)):
-            result[name] = float(confidence) * 100  # Convert to percentage
+            result[name] = float(confidence) * 100 
             
         return result
 
     def export_model(self, format='tensorflow', type='savedmodel'):
-        """Export model theo format và type được chọn"""
         if self.model is None:
             raise ValueError("Model chưa được train")
 
         # Tạo thư mục tạm thời
         with tempfile.TemporaryDirectory() as temp_dir:
-            # Lưu metadata chung
             metadata = {
                 "class_names": self.class_names,
                 "input_shape": [224, 224, 3],
@@ -325,32 +304,26 @@ class ModelTrainer:
                 "class_weights": self.class_weights
             }
 
-            # Export theo format được chọn
             if format == 'tensorflow':
                 metadata_path = os.path.join(temp_dir, "metadata.json")
                 with open(metadata_path, "w") as f:
                     json.dump(metadata, f, indent=2)
 
                 if type == 'keras':
-                    # Export Keras H5
                     model_path = os.path.join(temp_dir, "model.h5")
                     self.model.save(model_path, save_format='h5')
                 else:
-                    # Export SavedModel
                     model_path = os.path.join(temp_dir, "saved_model")
                     tf.saved_model.save(self.model, model_path)
 
             elif format == 'tensorflow.js':
                 try:
-                    # Bước 1: Lưu model dưới dạng SavedModel
                     saved_model_path = os.path.join(temp_dir, "saved_model")
                     tf.saved_model.save(self.model, saved_model_path)
                     
-                    # Bước 2: Sử dụng tensorflowjs_converter để chuyển đổi
                     output_dir = os.path.join(temp_dir, "web_model")
                     os.makedirs(output_dir, exist_ok=True)
                     
-                    # Chạy lệnh tensorflowjs_converter
                     converter_cmd = [
                         "tensorflowjs_converter",
                         "--input_format=tf_saved_model",
@@ -369,7 +342,6 @@ class ModelTrainer:
                     if result.returncode != 0:
                         raise Exception(f"Conversion failed: {result.stderr}")
                     
-                    # Bước 3: Thêm metadata vào model.json
                     model_json_path = os.path.join(output_dir, "model.json")
                     if os.path.exists(model_json_path):
                         with open(model_json_path, 'r') as f:
@@ -389,7 +361,6 @@ class ModelTrainer:
                 with open(metadata_path, "w") as f:
                     json.dump(metadata, f, indent=2)
 
-                # Export TensorFlow Lite
                 converter = tf.lite.TFLiteConverter.from_keras_model(self.model)
                 tflite_model = converter.convert()
                 model_path = os.path.join(temp_dir, "model.tflite")
@@ -401,7 +372,7 @@ class ModelTrainer:
             with zipfile.ZipFile(zip_path, 'w') as zipf:
                 for root, dirs, files in os.walk(temp_dir):
                     for file in files:
-                        if file != "model.zip":  # Không nén file zip
+                        if file != "model.zip": 
                             file_path = os.path.join(root, file)
                             arcname = os.path.relpath(file_path, temp_dir)
                             zipf.write(file_path, arcname)
@@ -410,7 +381,6 @@ class ModelTrainer:
             with open(zip_path, 'rb') as f:
                 zip_data = f.read()
 
-        # Tạo file zip mới trong thư mục tạm thời của hệ thống
         temp_zip = tempfile.NamedTemporaryFile(delete=False, suffix='.zip')
         temp_zip.write(zip_data)
         temp_zip.close()
@@ -418,7 +388,6 @@ class ModelTrainer:
         return temp_zip.name
 
     def export_model_to_pi(self):
-        """Export model và các file cần thiết cho Raspberry Pi"""
         if not self.model:
             raise Exception("Model chưa được train")
 
@@ -426,16 +395,13 @@ class ModelTrainer:
         folder_dir = Path(__file__).parent / "pi_predict"
         folder_dir.mkdir(exist_ok=True)
 
-        # Convert model sang TFLite format
         converter = tf.lite.TFLiteConverter.from_keras_model(self.model)
         tflite_model = converter.convert()
 
-        # Lưu model TFLite
         model_path = folder_dir / "model.tflite"
         with open(model_path, 'wb') as f:
             f.write(tflite_model)
 
-        # Lưu metadata
         metadata_path = folder_dir / "metadata.json"
         metadata = {
             'class_names': self.class_names,
@@ -446,7 +412,6 @@ class ModelTrainer:
         with open(metadata_path, 'w') as f:
             json.dump(metadata, f, indent=2)
 
-        # Copy raspberry_predict.py
         predict_script_path = folder_dir / "raspberry_predict.py"
         shutil.copy('raspberry_predict.py', predict_script_path)
 
@@ -457,7 +422,6 @@ class ModelTrainer:
         }
 
     def export_model_to_jetson(self):
-        """Export model và các file cần thiết cho Jetson"""
         if not self.model:
             raise Exception("Model chưa được train")
 
@@ -465,7 +429,6 @@ class ModelTrainer:
         folder_dir = Path(__file__).parent / "jetson_predict"
         folder_dir.mkdir(exist_ok=True)
 
-        # Convert model sang TFLite format với các tối ưu cho Jetson
         converter = tf.lite.TFLiteConverter.from_keras_model(self.model)
         
         # Tối ưu cho Jetson
@@ -475,19 +438,13 @@ class ModelTrainer:
             tf.lite.OpsSet.SELECT_TF_OPS
         ]
         converter.target_spec.supported_types = [tf.float16]
-        converter.target_spec.supported_ops = [
-            tf.lite.OpsSet.TFLITE_BUILTINS,
-            tf.lite.OpsSet.SELECT_TF_OPS
-        ]
         
         tflite_model = converter.convert()
 
-        # Lưu model TFLite
         model_path = folder_dir / "model.tflite"
         with open(model_path, 'wb') as f:
             f.write(tflite_model)
 
-        # Lưu metadata
         metadata_path = folder_dir / "metadata.json"
         metadata = {
             'class_names': self.class_names,
@@ -500,7 +457,6 @@ class ModelTrainer:
         with open(metadata_path, 'w') as f:
             json.dump(metadata, f, indent=2)
 
-        # Copy jetson_predict.py
         predict_script_path = folder_dir / "jetson_predict.py"
         shutil.copy('jetson_predict.py', predict_script_path)
 

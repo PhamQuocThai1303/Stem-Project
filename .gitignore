@@ -27,6 +27,7 @@ dist-electron
 client/.env
 # Raspberry Pi export files
 server/pi_predict/
+server/jetson_predict/
 
 # Model files
 server/best_model.h5

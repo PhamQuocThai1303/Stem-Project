@@ -30,7 +30,7 @@ const Login = () => {
   }, []);
 
   const handleConnectWifi = async () => {
-    if (!selectedWifi || !wifiPassword) {
+    if (!selectedWifi) {
       toast.error("❌ Hãy nhập tên mạng và mật khẩu!");
       return;
     }

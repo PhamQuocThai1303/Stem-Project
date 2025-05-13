@@ -42,7 +42,6 @@ const ChatBotContent = () => {
   const handleSuggestionClick = async (suggestion: string) => {
     if (!currentChatId || !currentChat) {
       dispatch(addChat());
-      // Lấy ID của chat mới vừa tạo
       const newChatId = store.getState().chat.currentChatId;
       if (!newChatId) return;
       
@@ -79,9 +78,9 @@ const ChatBotContent = () => {
   const handleKeyPress = (e: KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter') {
       if (e.shiftKey) {
-        return; // Allow new line when Shift + Enter is pressed
+        return; 
       } else {
-        e.preventDefault(); // Prevent default enter behavior
+        e.preventDefault();
         if (!isLoading && inputChat.trim()) {
           handleChat();
         }
@@ -116,7 +115,7 @@ const ChatBotContent = () => {
   const adjustTextareaHeight = () => {
     const textarea = textareaRef.current;
     if (textarea) {
-      textarea.style.height = 'auto'; // Reset height
+      textarea.style.height = 'auto'; 
       const scrollHeight = textarea.scrollHeight;
       textarea.style.height = `${scrollHeight}px`;
     }
@@ -134,17 +133,17 @@ const ChatBotContent = () => {
   const handleChat = async () => {
     if ((!inputChat.trim() && !uploadedImage) || isLoading) return;
 
-    // Nếu chưa có chat nào hoặc chưa chọn chat nào, tạo chat mới
+
     if (!currentChatId || !currentChat) {
       dispatch(addChat());
-      // Lấy ID của chat mới vừa tạo
+      
       const newChatId = store.getState().chat.currentChatId;
       if (!newChatId) return;
       
       setIsLoading(true);
       try {
         const userInput = inputChat.trim();
-        setInputChat(""); // Clear input ngay khi bắt đầu xử lý
+        setInputChat(""); 
         
         let botResponse;
         let displayUserMessage = userInput;
@@ -163,7 +162,6 @@ const ChatBotContent = () => {
           botMessage: botResponse
         }));
         
-        // Reset uploaded image after sending
         setUploadedImage(null);
         setImageFile(null);
       } catch (error) {
@@ -175,7 +173,7 @@ const ChatBotContent = () => {
       setIsLoading(true);
       try {
         const userInput = inputChat.trim();
-        setInputChat(""); // Clear input ngay khi bắt đầu xử lý
+        setInputChat(""); 
         
         let botResponse;
         let displayUserMessage = userInput;
@@ -194,7 +192,6 @@ const ChatBotContent = () => {
           botMessage: botResponse
         }));
         
-        // Reset uploaded image after sending
         setUploadedImage(null);
         setImageFile(null);
       } catch (error) {

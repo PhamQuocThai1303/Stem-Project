@@ -16,12 +16,10 @@ const defaultConfig: GenerationConfig = {
   topK: 64,
 };
 
-// Khởi tạo model một lần
 const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
 
 export const generateResponse = async (prompt: string, history: ChatHistory = []) => {
   try {
-    // Format chat history for Gemini
     const formattedHistory: GeminiMessage[] = history.map(msg => ({
       role: msg.isBot ? 'model' : 'user',
       parts: [{ text: msg.text }]
@@ -32,13 +30,11 @@ export const generateResponse = async (prompt: string, history: ChatHistory = []
       parts: [{ text: prompt }]
     });
 
-    // Khởi tạo chat với lịch sử
     const chat = model.startChat({
-      history: formattedHistory.slice(0, -1), // Không bao gồm prompt hiện tại trong history
+      history: formattedHistory.slice(0, -1),
       generationConfig: defaultConfig,
     });
 
-    // Gửi tin nhắn mới
     const result = await chat.sendMessage(prompt);
     const response = await result.response;
     const text = response.text();
@@ -55,23 +51,19 @@ export const generateResponse = async (prompt: string, history: ChatHistory = []
 
 export const generateResponseWithImage = async (prompt: string, imageFile: File, history: ChatHistory = []) => {
   try {
-    // Sử dụng cùng một model flash cho xử lý hình ảnh thay vì model vision riêng biệt
-    // vì gemini-2.0-flash cũng hỗ trợ xử lý multimodal
     
-    // Chuyển đổi file thành định dạng phù hợp cho Gemini
+    // Chuyển đổi file thành định dạng phù hợp
     const imageData = await fileToGenerativePart(imageFile);
     
-    // Format chat history for Gemini (chỉ sử dụng history text, không kèm ảnh cũ)
     const formattedHistory: GeminiMessage[] = history.map(msg => ({
       role: msg.isBot ? 'model' : 'user',
       parts: [{ text: msg.text }]
     }));
     
-    // Gửi cả tin nhắn và hình ảnh
     const result = await model.generateContent([
-      ...formattedHistory.flatMap(msg => msg.parts), // Thêm lịch sử trò chuyện
-      { text: prompt }, // Thêm prompt hiện tại
-      imageData // Thêm hình ảnh
+      ...formattedHistory.flatMap(msg => msg.parts), 
+      { text: prompt },
+      imageData 
     ]);
     
     const response = await result.response;
@@ -87,7 +79,6 @@ export const generateResponseWithImage = async (prompt: string, imageFile: File,
   }
 };
 
-// Hàm chuyển đổi File thành định dạng phù hợp cho Gemini API
 const fileToGenerativePart = async (file: File): Promise<{ inlineData: { data: string, mimeType: string } }> => {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();

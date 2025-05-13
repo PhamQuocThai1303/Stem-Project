@@ -57,7 +57,7 @@ class CodeUploadRequest(BaseModel):
 
 class WifiCredentials(BaseModel):
     ssid: str
-    password: str
+    password: Optional[str] = None
 
 class ClassData(BaseModel):
     name: str
@@ -80,10 +80,6 @@ active_connections: Dict[str, dict] = {}
 data_dir = Path(__file__).parent / "data"
 data_dir.mkdir(exist_ok=True)
 FILE_PATH = data_dir / "data.txt"
-
-# Configure upload folder
-folder_dir = Path(__file__).parent / "pi_predict"
-folder_dir.mkdir(exist_ok=True)
 
 model_trainer = ModelTrainer()
 # Create thread pool for processing frames
@@ -216,7 +212,7 @@ async def get_wifi_list(connection_id: str):
         for line in output.strip().split("\n"):
             if line:
                 ssid, signal = line.split(":")
-                if ssid:  # Bỏ qua kết quả trống
+                if ssid:
                     networks.append({
                         "ssid": ssid,
                         "signal": int(signal)
@@ -358,7 +354,6 @@ async def train_model(request: TrainingRequest):
 
 @app.post("/api/predict-image")
 async def predict_image(request: ImagePredictRequest):
-    """Endpoint để dự đoán từ một ảnh (không phải stream)"""
     try:
         if not model_trainer.model:
             raise HTTPException(status_code=400, detail="Model chưa được train")
@@ -370,7 +365,6 @@ async def predict_image(request: ImagePredictRequest):
         # Mở rộng thêm một chiều cho batch
         processed_image = np.expand_dims(processed_image, axis=0)
         
-        # Dự đoán
         predictions = model_trainer.predict(processed_image)
         
         return {
@@ -386,7 +380,6 @@ async def predict_stream(websocket: WebSocket):
     await websocket.accept()
     try:
         while True:
-            # Receive frame from client
             frame_data = await websocket.receive_text()
             
             # Convert base64 image to numpy array
@@ -399,10 +392,8 @@ async def predict_stream(websocket: WebSocket):
             frame = frame / 255.0
             frame = np.expand_dims(frame, axis=0)
             
-            # Make prediction
             predictions = model_trainer.predict(frame)
             
-            # Send predictions back to client
             await websocket.send_json(predictions)
             
             # Sleep for 500ms (2 FPS)
@@ -417,15 +408,12 @@ async def predict_stream(websocket: WebSocket):
 
 @app.post("/api/export-model")
 async def export_model(format: str, type: str = 'download'):
-    """Export model theo format và type được chọn"""
     try:
         if not model_trainer.model:
             raise HTTPException(status_code=400, detail="Model chưa được train")
 
-        # Export model
         zip_path = model_trainer.export_model(format=format, type=type)
 
-        # Trả về file zip
         return FileResponse(
             zip_path,
             media_type='application/zip',
@@ -437,12 +425,10 @@ async def export_model(format: str, type: str = 'download'):
 
 @app.post("/api/export-to-pi/{connection_id}")
 async def export_to_pi(connection_id: str):
-    """Export model và các file cần thiết cho Raspberry Pi"""
     try:
         if not model_trainer.model:
             raise HTTPException(status_code=400, detail="Model chưa được train")
 
-        # Export model và các file cần thiết
         result = model_trainer.export_model_to_pi()
         
         if connection_id not in ssh_managers:
@@ -451,23 +437,18 @@ async def export_to_pi(connection_id: str):
         ssh_manager = ssh_managers[connection_id]
         connection_info = active_connections[connection_id]
         
-        # Upload từng file vào thư mục pi_predict trên Raspberry Pi
         remote_dir = f"/home/{connection_info['username']}/Documents/library/pi_predict"
         
-        # Tạo thư mục nếu chưa tồn tại
         await ssh_manager.execute_command(f"mkdir -p {remote_dir}")
             
-        # Upload model.h5
         remote_model_path = f"{remote_dir}/model.tflite"
         with open(result['model_path'], 'rb') as f:
             await ssh_manager.upload_file(remote_model_path, f.read())
             
-        # Upload metadata.json
         remote_metadata_path = f"{remote_dir}/metadata.json"
         with open(result['metadata_path'], 'rb') as f:
             await ssh_manager.upload_file(remote_metadata_path, f.read())
             
-        # Upload raspberry_predict.py
         remote_script_path = f"{remote_dir}/raspberry_predict.py"
         with open(result['predict_script_path'], 'rb') as f:
             await ssh_manager.upload_file(remote_script_path, f.read())
@@ -496,7 +477,6 @@ async def stop_pi_predict(connection_id: str):
     try:
         ssh_manager = ssh_managers[connection_id]
         
-        # Find Python process
         output, error = await ssh_manager.execute_command('pgrep -f "python raspberry_predict.py"')
         if error:
             raise Exception(error)
@@ -505,7 +485,7 @@ async def stop_pi_predict(connection_id: str):
         if not pids or not pids[0]:
             return {"message": "Không tìm thấy tiến trình đang chạy"}
         print(pids)   
-        # Kill the process
+
         pid = pids[1]
         _, error = await ssh_manager.execute_command(f"sudo kill -SIGINT {pid}")
         if error:
@@ -517,12 +497,10 @@ async def stop_pi_predict(connection_id: str):
 
 @app.post("/api/export-to-jetson/{connection_id}")
 async def export_to_jetson(connection_id: str):
-    """Export model và các file cần thiết cho Jetson"""
     try:
         if not model_trainer.model:
             raise HTTPException(status_code=400, detail="Model chưa được train")
 
-        # Export model và các file cần thiết
         result = model_trainer.export_model_to_jetson()
         
         if connection_id not in ssh_managers:
@@ -531,28 +509,22 @@ async def export_to_jetson(connection_id: str):
         ssh_manager = ssh_managers[connection_id]
         connection_info = active_connections[connection_id]
         
-        # Upload từng file vào thư mục jetson_predict trên Jetson
         remote_dir = f"/home/{connection_info['username']}/Documents/library/jetson_predict"
         
-        # Tạo thư mục nếu chưa tồn tại
         await ssh_manager.execute_command(f"mkdir -p {remote_dir}")
             
-        # Upload model.tflite
         remote_model_path = f"{remote_dir}/model.tflite"
         with open(result['model_path'], 'rb') as f:
             await ssh_manager.upload_file(remote_model_path, f.read())
             
-        # Upload metadata.json
         remote_metadata_path = f"{remote_dir}/metadata.json"
         with open(result['metadata_path'], 'rb') as f:
             await ssh_manager.upload_file(remote_metadata_path, f.read())
             
-        # Upload jetson_predict.py
         remote_script_path = f"{remote_dir}/jetson_predict.py"
         with open(result['predict_script_path'], 'rb') as f:
             await ssh_manager.upload_file(remote_script_path, f.read())
         
-        # Chạy script trong background với nohup
         command = f"cd {remote_dir} && DISPLAY=:0 nohup python jetson_predict.py > /dev/null 2>&1 &"
         await ssh_manager.execute_command(command)
         

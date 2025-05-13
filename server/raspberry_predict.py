@@ -8,7 +8,6 @@ import time
 from picamera2 import Picamera2
 
 def preprocess_image(image, target_size=(224, 224)):
-    """Tiền xử lý ảnh từ frame camera"""
     
     # Chuyển đổi từ BGR sang RGB
     image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
@@ -22,9 +21,7 @@ def preprocess_image(image, target_size=(224, 224)):
     return image
 
 def load_model_and_metadata():
-    """Load model và metadata từ thư mục hiện tại"""
     try:
-        # Đường dẫn mặc định trong thư mục hiện tại
         current_dir = os.path.dirname(os.path.abspath(__file__))
         model_path = os.path.join(current_dir, 'model.tflite')
         metadata_path = os.path.join(current_dir, 'metadata.json')
@@ -38,7 +35,6 @@ def load_model_and_metadata():
         interpreter = tflite.Interpreter(model_path=model_path)
         interpreter.allocate_tensors()
         
-        # Get input và output details
         input_details = interpreter.get_input_details()
         output_details = interpreter.get_output_details()
         
@@ -58,9 +54,7 @@ def load_model_and_metadata():
         raise
 
 def predict_frame(interpreter, input_details, output_details, metadata, frame):
-    """Dự đoán class cho một frame từ camera"""
     try:
-        # Tiền xử lý ảnh
         processed_image = preprocess_image(frame)
         
         # Reshape để phù hợp với input shape của model
@@ -93,9 +87,7 @@ def predict_frame(interpreter, input_details, output_details, metadata, frame):
         return []
 
 def draw_predictions(frame, results):
-    """Vẽ kết quả dự đoán lên frame"""
     try:
-        # Vẽ khung cho ảnh
         height, width = frame.shape[:2]
         cv2.rectangle(frame, (10, 10), (width-10, height-10), (0, 255, 0), 2)
         
@@ -103,10 +95,8 @@ def draw_predictions(frame, results):
         y_offset = 40
         for result in results:
             text = f"{result['class']}: {result['confidence']:.1f}%"
-            # Vẽ background cho text
             (text_width, text_height), _ = cv2.getTextSize(text, cv2.FONT_HERSHEY_SIMPLEX, 0.7, 2)
             cv2.rectangle(frame, (10, y_offset-text_height-5), (10+text_width+10, y_offset+5), (0, 0, 0), -1)
-            # Vẽ text
             cv2.putText(frame, text, (15, y_offset), 
                        cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
             y_offset += 30
@@ -118,7 +108,7 @@ def draw_predictions(frame, results):
         return frame
 
 def main():
-    picam2 = None  # Khởi tạo biến picam2 ở ngoài try block
+    picam2 = None  
     try:
         print("Đang load model và metadata...")
         interpreter, input_details, output_details, metadata = load_model_and_metadata()
@@ -136,7 +126,7 @@ def main():
         
         last_prediction_time = 0
         prediction_interval = 0.1  # Thời gian giữa các lần dự đoán (giây)
-        results = []  # Khởi tạo results ở ngoài vòng lặp
+        results = [] 
         
         while True:
             frame = picam2.capture_array()
@@ -149,13 +139,10 @@ def main():
                 results = predict_frame(interpreter, input_details, output_details, metadata, frame)
                 last_prediction_time = current_time
             
-            # Vẽ kết quả lên frame
             frame = draw_predictions(frame, results)
             
-            # Hiển thị frame
             cv2.imshow('Raspberry Pi Prediction', frame)
             
-            # Thoát nếu nhấn 'q'
             if cv2.waitKey(1) & 0xFF == ord('q'):
                 break
             

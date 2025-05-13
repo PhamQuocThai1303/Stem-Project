@@ -120,7 +120,6 @@ function App() {
         return;
       }
 
-      // Tạo promise cho API upload
       const uploadPromise = fetch(`http://localhost:3000/api/upload/${connectionId}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -129,10 +128,8 @@ function App() {
         }),
       });
 
-      // Không đợi API upload hoàn thành
       toast.info("Đang tải lên và thực thi code...");
       
-      // Xử lý kết quả trong background
       uploadPromise
         .then(response => {
           if (!response.ok) {
@@ -169,16 +166,13 @@ function App() {
         return;
       }
 
-      // Tạo promise cho API stop
       const stopPromise = fetch(`http://localhost:3000/api/execute/${connectionId}/stop`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
       });
 
-      // Không đợi API stop hoàn thành
       toast.info("Đang dừng tiến trình...");
       
-      // Xử lý kết quả trong background
       stopPromise
         .then(response => {
           if (!response.ok) {
@@ -209,14 +203,11 @@ function App() {
 
   const handleDownloadBlocks = () => {
     try {
-      // Lấy workspace hiện tại
       const workspace = Blockly.getMainWorkspace();
       
-      // Chuyển đổi các khối thành XML
       const xml = Blockly.Xml.workspaceToDom(workspace);
       const xmlText = Blockly.Xml.domToText(xml);
       
-      // Tạo file XML để tải xuống
       const blob = new Blob([xmlText], { type: 'text/xml' });
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -235,7 +226,6 @@ function App() {
 
   const handleImportBlocks = () => {
     try {
-      // Tạo input file ẩn
       const input = document.createElement('input');
       input.type = 'file';
       input.accept = '.xml';
@@ -251,10 +241,8 @@ function App() {
               const xmlText = event.target?.result as string;
               const workspace = Blockly.getMainWorkspace();
               
-              // Xóa workspace hiện tại
               workspace.clear();
               
-              // Parse XML và load vào workspace
               const dom = Blockly.utils.xml.textToDom(xmlText);
               Blockly.Xml.domToWorkspace(dom, workspace);
               

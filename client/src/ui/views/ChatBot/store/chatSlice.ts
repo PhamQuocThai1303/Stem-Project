@@ -67,12 +67,10 @@ const chatSlice = createSlice({
       };
       state.data.push(newChat);
       state.currentChatId = newChat.id;
-      // Save to localStorage after adding new chat
       localStorage.setItem('chatState', JSON.stringify(state));
     },
     selectChat: (state, action: PayloadAction<string>) => {
       state.currentChatId = action.payload;
-      // Save to localStorage after selecting chat
       localStorage.setItem('chatState', JSON.stringify(state));
     },
     addMessage: (state, action: PayloadAction<{ chatId: string; userMessage: string; botMessage: string }>) => {
@@ -89,7 +87,6 @@ const chatSlice = createSlice({
           { id: uuidv4(), text: userMessage, isBot: false, createdAt: new Date() },
           { id: uuidv4(), text: botMessage, isBot: true, createdAt: new Date() }
         );
-        // Save to localStorage after adding messages
         localStorage.setItem('chatState', JSON.stringify(state));
       }
     },
@@ -98,7 +95,6 @@ const chatSlice = createSlice({
       if (state.currentChatId === action.payload) {
         state.currentChatId = state.data[0]?.id || null;
       }
-      // Save to localStorage after removing chat
       localStorage.setItem('chatState', JSON.stringify(state));
     },
     updateChatTitle: (state, action: PayloadAction<{ chatId: string; title: string }>) => {
@@ -106,14 +102,12 @@ const chatSlice = createSlice({
       const chat = state.data.find(chat => chat.id === chatId);
       if (chat) {
         chat.title = title;
-        // Save to localStorage after updating title
         localStorage.setItem('chatState', JSON.stringify(state));
       }
     },
     clearChats: (state) => {
       state.data = [];
       state.currentChatId = null;
-      // Clear localStorage
       localStorage.removeItem('chatState');
     }
   }
