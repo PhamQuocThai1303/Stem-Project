@@ -38,9 +38,8 @@ export const defineLEDBlocks  = () => {
         "message0": "Bật LED trên chân %1 với trạng thái %2",
         "args0": [
           {
-            "type": "field_number",
-            "name": "PINS",
-            "value": 1
+            "type": "input_value",
+            "name": "NAME"
           },
           {
             "type": "field_dropdown",
@@ -53,8 +52,18 @@ export const defineLEDBlocks  = () => {
         ],
         "previousStatement": null,
         "nextStatement": null,
+        "inputsInline": true,
         "colour": 15,
         "tooltip": "Nhấp nháy LED theo thứ tự tuần tự"
+      },
+
+      {
+        "type": "led_clear",
+        "message0": "Xóa hết LEDs",
+        "nextStatement": null,
+        "previousStatement": null,
+        "colour": 15,
+        "tooltip": "Xóa hết LEDs"
       },
   ]);
 
@@ -72,12 +81,16 @@ export const defineLEDBlocks  = () => {
 
 
   pythonGenerator.forBlock['led_sequential_blink'] = function(block: Block) {
-    const pins = block.getFieldValue('PINS');
+    const value_name = pythonGenerator.valueToCode(block, 'NAME', pythonGenerator.ORDER_ATOMIC) || '0';
     const STATUS = block.getFieldValue('STATUS');
-    return `LEDs.update(${pins},${STATUS})\n`
+    return `LEDs.update(${value_name},${STATUS})\n`
   };
 
+  pythonGenerator.forBlock['led_clear'] = function() {
+    return "LEDs.clear()\n"
+
 };
+}
 
 export const ledToolboxConfig = {
     kind: "category",
@@ -95,6 +108,10 @@ export const ledToolboxConfig = {
       {
         kind: "block",
         type: "led_sequential_blink"
+      },
+      {
+        kind: "block",
+        type: "led_clear"
       }
     ]
   };

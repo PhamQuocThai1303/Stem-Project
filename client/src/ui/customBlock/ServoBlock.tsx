@@ -15,18 +15,18 @@ export const defineServoBlocks  = () => {
     },
       {
         "type": "Servo_start",
-        "message0": "Khối bật buzzer",
+        "message0": "Khối bật servo",
         "colour": 255,
-        "tooltip": "Bật buzzer",
+        "tooltip": "Bật servo",
         "nextStatement": null,
         "previousStatement": null,
         "helpUrl": ""
       },
       {
         "type": "Servo_stop",
-        "message0": "Khối tắt buzzer",
+        "message0": "Khối tắt servo",
         "colour": 255,
-        "tooltip": "Tắt buzzer",
+        "tooltip": "Tắt servo",
         "helpUrl": "",
         "nextStatement": null,
         "previousStatement": null,
@@ -36,7 +36,7 @@ export const defineServoBlocks  = () => {
         "message0": "Chỉnh Servo sang góc %1 độ",
         "args0": [
           {
-            "type": "field_number",
+            "type": "input_value",
             "name": "ANGLE",
             "value": 0,
             "min": -360,
@@ -64,8 +64,9 @@ pythonGenerator.forBlock['Servo_start'] = function () {
   };
 
   pythonGenerator.forBlock['Servo_angle'] = function(block: Block) {
-    const pin = block.getFieldValue('ANGLE');
-    return `SERVO.angle(${pin})\n`;
+    const angle = pythonGenerator.valueToCode(block, 'ANGLE', pythonGenerator.ORDER_ATOMIC) || '0';
+    // const pin = block.getFieldValue('ANGLE');
+    return `SERVO.angle(${angle})\n`;
   };
 
 };

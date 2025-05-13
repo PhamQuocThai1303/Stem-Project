@@ -14,6 +14,7 @@ const ExportModal: React.FC<ExportModalProps> = ({ isOpen, onClose }) => {
   const [modelType, setModelType] = useState(initialExport[0].type[0]);
   const [selectedCodeTab, setSelectedCodeTab] = useState('Realtime');
   const [isExporting, setIsExporting] = useState(false);
+  const [isDownloading, setIsDownloading] = useState(false);
   const {t} = useTranslation()
   if (!isOpen) return null;
 
@@ -39,6 +40,7 @@ const ExportModal: React.FC<ExportModalProps> = ({ isOpen, onClose }) => {
           return;
         }
         setIsExporting(true);
+        setIsDownloading(true);
         const response = await fetch(`http://localhost:3000/api/export-to-pi/${connectionId}`, {
           method: 'POST',
         });
@@ -47,6 +49,7 @@ const ExportModal: React.FC<ExportModalProps> = ({ isOpen, onClose }) => {
           throw new Error('Export failed');
         }
         toast.success("Export model cho Raspberry Pi thành công");
+        setIsDownloading(false);
       } else if (selectedFormat === "Jetson") {
         const connectionId = localStorage.getItem('connection_id');
         if (!connectionId) {
@@ -54,6 +57,7 @@ const ExportModal: React.FC<ExportModalProps> = ({ isOpen, onClose }) => {
           return;
         }
         setIsExporting(true);
+        setIsDownloading(true);
         const response = await fetch(`http://localhost:3000/api/export-to-jetson/${connectionId}`, {
           method: 'POST',
         });
@@ -62,7 +66,9 @@ const ExportModal: React.FC<ExportModalProps> = ({ isOpen, onClose }) => {
           throw new Error('Export failed');
         }
         toast.success("Export model cho Jetson thành công");
+        setIsDownloading(false);
       } else {
+        setIsDownloading(true);
         const response = await fetch(`http://localhost:3000/api/export-model?format=${selectedFormat}&type=${modelType}`, {
           method: 'POST',
         });
@@ -78,9 +84,11 @@ const ExportModal: React.FC<ExportModalProps> = ({ isOpen, onClose }) => {
         a.click();
         window.URL.revokeObjectURL(url);
         document.body.removeChild(a);
+        setIsDownloading(false);
       }
     } catch (error) {
       console.error('Export error:', error);
+      setIsDownloading(false);
     }
   };
 
@@ -105,6 +113,7 @@ const ExportModal: React.FC<ExportModalProps> = ({ isOpen, onClose }) => {
       const result = await response.json();
       toast.info(result.message);
       setIsExporting(false);
+      setIsDownloading(false);
     } catch (error) {
       if (error instanceof Error) {
         toast.error("❌ Lỗi khi dừng xuất: " + error.message);
@@ -161,10 +170,11 @@ const ExportModal: React.FC<ExportModalProps> = ({ isOpen, onClose }) => {
                 </label>
               ))}
               <button 
-                className="download-button" 
+                className={`download-button ${isDownloading ? 'download-button-downloading' : ''}`}
+                disabled={isDownloading}
                 onClick={() => handleExportModel(modelType, selectedFormat)}
               >
-                {selectedFormat === "Raspberry Pi" ? t("Import to Pi") : t("Download my model")}
+                {isDownloading ? t("Downloading model...") : (selectedFormat === "Raspberry Pi" ? t("Import to Pi") : t("Download my model"))}
               </button>
               {
                 isExporting && (

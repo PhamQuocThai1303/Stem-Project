@@ -147,7 +147,7 @@ function App() {
         })
         .catch(error => {
           if (error instanceof Error) {
-            toast.error("❌ Lỗi khi lưu code: " + error.message);
+            // toast.error("❌ Lỗi khi lưu code: " + error.message);
           } else {
             toast.error("❌ Lỗi không xác định khi lưu code");
           }

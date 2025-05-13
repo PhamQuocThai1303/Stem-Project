@@ -75,15 +75,15 @@ export const defineCommonBlocks  = () => {
         "message0": "%1",
         "args0": [
           {
-            "type": "field_number",
+            "type": "field_input",
             "name": "VAR",
             "value": 1,
-            "min": 1,
+            "min": 0,
             "max": 999
           }
         ],
         "colour": 230,
-        "output": "Number",
+        "output": ["Number", "String", "Boolean"],
         "helpUrl": ""
       },
   ]);
@@ -116,6 +116,7 @@ export const defineCommonBlocks  = () => {
   };
 
   pythonGenerator.forBlock['get_variable'] = function (block: Block) {
+    // const pin = pythonGenerator.valueToCode(block, 'VAR', pythonGenerator.ORDER_ATOMIC) || 'None';
     const pin = block.getFieldValue('VAR');
     return [`${pin}`, pythonGenerator.ORDER_ATOMIC];
   };

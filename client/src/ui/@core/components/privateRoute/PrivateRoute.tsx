@@ -9,7 +9,6 @@ const PrivateRoute = ({ element }: PrivateRouteProps) => {
   const { isAuthenticated } = useAuth();
 
   return isAuthenticated ? element : <Navigate to="/login" />;
-  // return element;
 };
 
 export default PrivateRoute;

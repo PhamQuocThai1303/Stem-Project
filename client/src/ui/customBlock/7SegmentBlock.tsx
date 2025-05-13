@@ -18,7 +18,7 @@ export const define7SegmentBlocks  = () => {
       "message0": "Bật chấm trên LED %1 với trạng thái %2",
       "args0": [
         {
-          "type": "field_number",
+          "type": "input_value",
           "name": "PINS",
           "value": 1
         },
@@ -57,20 +57,21 @@ export const define7SegmentBlocks  = () => {
         "message0": "Bật LED trên chân %1 với số %2",
         "args0": [
           {
-            "type": "field_number",
+            "type": "input_value",
             "name": "PINS",
             "value": 1
           },
           {
-            "type": "field_number",
+            "type": "input_value",
             "name": "PINS2",
             "value": 1
-          },
+          }
         ],
         "previousStatement": null,
         "nextStatement": null,
         "colour": 120,
-        "tooltip": "Nhấp nháy LED theo thứ tự tuần tự"
+        "tooltip": "Nhấp nháy LED theo thứ tự tuần tự",
+        "inputsInline": true,
       },
 
   ]);
@@ -81,7 +82,8 @@ export const define7SegmentBlocks  = () => {
 };
 
 pythonGenerator.forBlock['dot_7_turn_on'] = function(block: Block) {
-  const pins = block.getFieldValue('PINS');
+  const pins = pythonGenerator.valueToCode(block, 'PINS', pythonGenerator.ORDER_ATOMIC) || '0';
+  // const pins = block.getFieldValue('PINS');
   const STATUS = block.getFieldValue('STATUS');
   return `SEG7.dot_update(${pins},${STATUS})\n`
   };
@@ -95,8 +97,10 @@ pythonGenerator.forBlock['led_7_stop'] = function() {
 };
 
 pythonGenerator.forBlock['led_7_turn_on'] = function(block: Block) {
-    const pins = block.getFieldValue('PINS');
-    const pins2 = block.getFieldValue('PINS2');
+  const pins = pythonGenerator.valueToCode(block, 'PINS', pythonGenerator.ORDER_ATOMIC) || '0';
+  const pins2 = pythonGenerator.valueToCode(block, 'PINS2', pythonGenerator.ORDER_ATOMIC) || '0';
+    // const pins = block.getFieldValue('PINS');
+    // const pins2 = block.getFieldValue('PINS2');
     return `SEG7.update(${pins2},${pins})\n`
   };
 
