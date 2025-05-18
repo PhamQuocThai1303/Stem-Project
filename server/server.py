@@ -22,6 +22,7 @@ from concurrent.futures import ThreadPoolExecutor
 from ml_utils import ModelTrainer
 import shutil
 import zipfile
+import subprocess
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -54,6 +55,7 @@ class FileUploadInfo(BaseModel):
 
 class CodeUploadRequest(BaseModel):
     code: str
+    isSensor: bool = False
 
 class WifiCredentials(BaseModel):
     ssid: str
@@ -158,10 +160,27 @@ async def upload_file(connection_id: str, code_req: CodeUploadRequest):
         await ssh_manager.upload_file(remote_path, code_req.code)
         print(f"File uploaded to Raspberry Pi: {remote_path}")
         
-        # Execute the uploaded code
-        command = f"cd /home/{connection_info['username']}/Documents/library && sudo python data.py"
-        output, error = await ssh_manager.execute_command(command)
-        print(f"Command output: {output}")
+        if code_req.isSensor:
+            # Open terminal and run sensor code
+            command = f"DISPLAY=:0 lxterminal -e 'cd /home/{connection_info['username']}/Documents/library && sudo python data.py'"
+            output, error = await ssh_manager.execute_command(command)
+            print(f"Sensor code started in terminal")
+            
+            # Check if terminal was opened successfully
+            # if error and "command not found" in error:
+            #     # Try with lxterminal if xterm is not available
+            #     command = f"DISPLAY=:0 lxterminal -e 'cd /home/{connection_info['username']}/Documents/library && sudo python data.py' &"
+            #     output, error = await ssh_manager.execute_command(command)
+            
+            if error:
+                raise Exception(error)
+                
+            return {"message": "Sensor code đang chạy trong terminal", "output": "Terminal window opened"}
+        else:
+            # Execute the uploaded code
+            command = f"cd /home/{connection_info['username']}/Documents/library && sudo python data.py"
+            output, error = await ssh_manager.execute_command(command)
+            print(f"Command output: {output}")
         
         if error:
             raise Exception(error)
@@ -189,6 +208,7 @@ async def stop_execution(connection_id: str):
             
         # Kill the process
         pid = pids[0]
+        print(f"Killing process with PID: {pid}")
         _, error = await ssh_manager.execute_command(f"sudo kill -SIGINT {pid}")
         if error:
             raise Exception(error)

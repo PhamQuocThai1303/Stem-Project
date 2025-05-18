@@ -111,6 +111,13 @@ function App() {
       }
     }
   };
+
+    const containsSensorBlocks = (code: string) => {
+    return code.includes("import DHT") 
+    || code.includes("import SONAR") 
+    || code.includes("import BUTTON") 
+    || code.includes("import SWITCH");
+    }
    
   const handleSave = async () => {
     try {
@@ -120,11 +127,14 @@ function App() {
         return;
       }
 
+      const isSensor = containsSensorBlocks(generatedCode);
+
       const uploadPromise = fetch(`http://localhost:3000/api/upload/${connectionId}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ 
-          code: generatedCode
+          code: generatedCode,
+          isSensor: isSensor
         }),
       });
 
