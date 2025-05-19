@@ -161,23 +161,14 @@ async def upload_file(connection_id: str, code_req: CodeUploadRequest):
         print(f"File uploaded to Raspberry Pi: {remote_path}")
         
         if code_req.isSensor:
-            # Open terminal and run sensor code
             command = f"DISPLAY=:0 lxterminal -e 'cd /home/{connection_info['username']}/Documents/library && sudo python data.py'"
             output, error = await ssh_manager.execute_command(command)
             print(f"Sensor code started in terminal")
-            
-            # Check if terminal was opened successfully
-            # if error and "command not found" in error:
-            #     # Try with lxterminal if xterm is not available
-            #     command = f"DISPLAY=:0 lxterminal -e 'cd /home/{connection_info['username']}/Documents/library && sudo python data.py' &"
-            #     output, error = await ssh_manager.execute_command(command)
-            
             if error:
                 raise Exception(error)
                 
             return {"message": "Sensor code đang chạy trong terminal", "output": "Terminal window opened"}
         else:
-            # Execute the uploaded code
             command = f"cd /home/{connection_info['username']}/Documents/library && sudo python data.py"
             output, error = await ssh_manager.execute_command(command)
             print(f"Command output: {output}")

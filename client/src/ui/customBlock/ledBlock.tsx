@@ -69,9 +69,7 @@ export const defineLEDBlocks  = () => {
 
   // Định nghĩa Python generators
   pythonGenerator.forBlock['led_setup'] = function() {
-    return "import LEDs\n" +
-           "import time\n\n" +
-           "# Alias for time\n"
+    return "import LEDs\n" 
 };
 
   pythonGenerator.forBlock['led_turn_off'] = function(block: Block) {

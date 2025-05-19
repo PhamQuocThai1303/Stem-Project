@@ -7,6 +7,7 @@ import { CommonToolboxConfig } from "../customBlock/CommonBlock";
 import { DHTToolboxConfig } from "../customBlock/DHTBlock";
 import { FanToolboxConfig } from "../customBlock/FanBlock";
 import { functionToolboxConfig } from "../customBlock/functionBlock";
+import { KeyPadToolboxConfig } from "../customBlock/KeyPadBlock";
 import { LCDToolboxConfig } from "../customBlock/LCDBlock";
 import { ledToolboxConfig } from "../customBlock/ledBlock";
 import { listToolboxConfig } from "../customBlock/listBlock";
@@ -41,6 +42,7 @@ const INITIAL_TOOLBOX_JSON = {
     FanToolboxConfig,
     LCDToolboxConfig,
     RGBToolboxConfig,
+    KeyPadToolboxConfig,
     logicToolboxConfig,
     loopToolboxConfig,
     mathToolboxConfig,

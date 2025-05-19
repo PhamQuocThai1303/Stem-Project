@@ -21,6 +21,7 @@ import { defineCommonBlocks } from '../../customBlock/CommonBlock';
 import { defineLCDBlocks } from '../../customBlock/LCDBlock';
 import { defineRGBBlocks } from '../../customBlock/RGBBlock';
 import { FaUpload, FaStop, FaDownload } from 'react-icons/fa';
+import { defineKeyPadBlocks } from '../../customBlock/KeyPadBlock';
 
 function App() {
   const [generatedCode, setGeneratedCode] = useState("");
@@ -44,6 +45,7 @@ function App() {
     defineFanBlocks();
     defineLCDBlocks();
     defineRGBBlocks();
+    defineKeyPadBlocks();
   }, []);
 
   const onWorkspaceChange = useCallback((workspace: Blockly.Workspace) => {
@@ -116,7 +118,8 @@ function App() {
     return code.includes("import DHT") 
     || code.includes("import SONAR") 
     || code.includes("import BUTTON") 
-    || code.includes("import SWITCH");
+    || code.includes("import SWITCH")
+    || code.includes("import KEYPAD");
     }
    
   const handleSave = async () => {

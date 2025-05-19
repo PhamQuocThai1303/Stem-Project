@@ -1,6 +1,20 @@
-import SONAR
+import SEG7
+import KEYPAD
 try:
+    KEYPAD.start('')
     while not False:
-      print(SONAR.distance())
+      if KEYPAD.available():
+        SEG7.start()
+        a = KEYPAD.readBuffer()
+        if a == '4':
+          SEG7.update(4,1)
+        elif a == '1':
+          SEG7.update(1,1)
+        elif a == '2':
+          SEG7.update(2,1)
+        elif a == '3':
+          SEG7.update(3,1)
+        else:
+          SEG7.stop()
 finally:
-  pass
+    KEYPAD.stop()
