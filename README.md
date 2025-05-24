@@ -1,12 +1,12 @@
 # STEM Project
 
-A comprehensive educational platform integrating STEM learning, Machine Learning, and IoT capabilities, built with modern web technologies and edge computing support.
+A comprehensive educational platform integrating STEM learning, Machine Learning, and IoT capabilities, built with electronjs and edge computing support.
 
 ## 🌟 Features
 
 ### 🔧 STEM Module
 
-- Visual block-based programming interface (similar to Scratch)
+- Visual block-based programming interface
 - Real-time code execution on edge devices (Raspberry Pi/Jetson Nano)
 - Support for various sensors and components:
   - LED, 7-Segment Display
@@ -32,9 +32,7 @@ A comprehensive educational platform integrating STEM learning, Machine Learning
   - SavedModel for production
   - H5 for development
   - TFLite for edge devices
-- Real-time inference on edge devices:
-  - 2-5 FPS on Raspberry Pi
-  - 15-30 FPS on Jetson Nano
+- Real-time inference on edge devices
 
 ### 💬 ChatBot Module
 
@@ -50,7 +48,6 @@ A comprehensive educational platform integrating STEM learning, Machine Learning
 
 - Electron + React + TypeScript
 - Vite for build optimization
-- React Router for navigation
 - Redux for state management
 - WebSocket for real-time communication
 - i18next for internationalization
@@ -75,7 +72,7 @@ A comprehensive educational platform integrating STEM learning, Machine Learning
 ### Prerequisites
 
 - Node.js and npm
-- Python 3.8+
+- Python 3.11
 - TensorFlow 2.x
 - Raspberry Pi or Jetson Nano
 - Required Python packages:
@@ -100,16 +97,11 @@ cd client
 npm install
 ```
 
-3. Start the development server:
+3. Start manually app:
 
 ```bash
-# Terminal 1 - Frontend
 cd client
 npm run dev
-
-# Terminal 2 - Backend
-cd server
-python server.py
 ```
 
 ## 📁 Project Structure
@@ -127,13 +119,12 @@ python server.py
 │   ├── ssh_manager.py    # SSH connection manager
 │   ├── server.py         # Main FastAPI server
 │   └── requirements.txt  # Python dependencies
-└── ĐATN/                 # Documentation
 ```
 
-## 📝 License
+## License
 
 MIT
 
-## 👥 Contributors
+## Power by
 
-- Mai Trọng Nhân
+- Pham Quoc Thai
