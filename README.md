@@ -1,4 +1,4 @@
-# STEM Project
+# Teach Craft
 
 A comprehensive educational platform integrating STEM learning, Machine Learning, and IoT capabilities, built with electronjs and edge computing support.
 
